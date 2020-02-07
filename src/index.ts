@@ -5,6 +5,7 @@ import { polyMapGenerate } from "./polyMapGenerate"
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
 import { commandLineArgSplit } from "./utilities"
+import { commands } from "./Command"
 
 //hack so that graphvis doesnt fuck me
 if ((global as any).util === undefined) {
@@ -26,7 +27,7 @@ if ((global as any).util === undefined) {
 
 const prefix = "/poly "
 
-const client = new Discord.Client();
+export const client = new Discord.Client();
 
 client.on("ready", () => {
     console.log("im on")
@@ -34,10 +35,19 @@ client.on("ready", () => {
 })
 
 client.on("message", message => {
-    message.author
     if (message.content.startsWith(prefix)) {
-        let command = commandLineArgSplit(message.content.substring(prefix.length))
-        console.log(command)
+        let userCommand = commandLineArgSplit(message.content.substring(prefix.length))
+        let command = commands.filter(x => x.name === userCommand.commandName && userCommand.args.length === x.arguments.length)[0] || null
+        if (command === null) {
+            message.channel.send("there is no command with that name and that amount of arguments")
+            return;
+        }
+        let invalidArgs = command.argErrors(userCommand.args)
+        if (invalidArgs.length > 0) {
+            message.channel.send("argument " + invalidArgs.join(", ") + " did not receive the proper type")
+            return;
+        }
+        command.call(userCommand.args, message.author).respond(message)
     }
 
 })

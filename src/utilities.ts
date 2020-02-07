@@ -1,8 +1,8 @@
-export function commandLineArgSplit(str: string): { command: string, args: string[] } {
+export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ")
     if (commandNameIndex === -1) {
         return {
-            command: str,
+            commandName: str,
             args: []
         }
     }
@@ -42,7 +42,7 @@ export function commandLineArgSplit(str: string): { command: string, args: strin
     args[args.length] = strBuilder
     strBuilder = "";
     return {
-        command: commandName,
+        commandName: commandName,
         args: args
     }
 }
