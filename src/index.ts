@@ -5,8 +5,8 @@ import { polyMapGenerate } from "./polyMapGenerate"
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
 import { commandLineArgSplit } from "./utilities"
-import { commands } from "./Command"
 import { openDB } from "./db"
+import { commands } from "./commands"
 
 //hack so that graphvis doesnt fuck me
 if ((global as any).util === undefined) {
@@ -44,19 +44,20 @@ client.on("message", async message => {
     if (message.content.startsWith(prefix)) {
         if (message.channel.type !== "text") {
             return;
-        }   
+        }
+        let channel = message.channel as Discord.TextChannel;
         let userCommand = commandLineArgSplit(message.content.substring(prefix.length))
         let command = commands.filter(x => x.name === userCommand.commandName && userCommand.args.length === x.arguments.length)[0] || null
         if (command === null) {
             await message.channel.send("there is no command with that name and that amount of arguments")
             return;
         }
-        let invalidArgs = command.argErrors(userCommand.args)
+        let invalidArgs = await command.argErrors(userCommand.args, channel)
         if (invalidArgs.length > 0) {
             await message.channel.send("argument " + invalidArgs.join(", ") + " did not receive the proper type")
             return;
         }
-        (await command.call(userCommand.args, message.author, message.channel as Discord.TextChannel)).respond(message)
+        (await command.call(userCommand.args, message.author, channel)).respond(message)
     }
 
 })

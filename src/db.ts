@@ -59,12 +59,30 @@ export async function createNewUser(user: User): Promise<boolean> {
     }
 }
 
-export async function getUser(guildId: string, discordId: string): Promise<User | null> {
+export async function createNewRelationship(relationship: Relationship): Promise<void> {
+    await client.query("INSERT INTO relationships (relationship_type, left_username, right_username, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUser.name, relationship.rightUser.name, relationship.guildId])
+}
+
+export async function removeRelationship(guildId: string, leftUsername: string, rightUsername: string): Promise<void> {
+    await client.query("DELETE FROM relationships WHERE guild_id = $1 AND left_username = $2 AND right_username = $3", [guildId, leftUsername, rightUsername])
+}
+
+
+
+export async function getUserByDiscordId(guildId: string, discordId: string): Promise<User | null> {
     let result = await client.query("SELECT username, gender FROM users WHERE guild_id = $1 AND discord_id = $2", [guildId, discordId])
     if (result.rows.length === 0) {
         return null
     }
     return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], guildId, discordId)
+}
+
+export async function getUserByUsername(guildId: string, username: string): Promise<User | null> {
+    let result = await client.query("SELECT gender, discord_id FROM users WHERE guild_id = $1 AND discord_id = $2", [guildId, username])
+    if (result.rows.length === 0) {
+        return null
+    }
+    return new User(username, genderIntToString[result.rows[0].gender], guildId, result.rows[0].discord_id)
 }
 
 export async function getRelationshipsByDiscordId(guildId: string, discordId: string): Promise<Relationship[]> {

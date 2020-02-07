@@ -1,12 +1,14 @@
 import * as Discord from "discord.js"
 import { client } from "./index"
-import { createNewUser, getUser } from "./db";
+import { createNewUser, getUserByDiscordId, getUserByUsername, createNewRelationship } from "./db";
 import { Gender, User } from "./User";
 import { getType } from "./utilities"
+import { checkServerIdentity } from "tls";
+import { Relationship, RelationshipType } from "./Relationship";
 
 export abstract class Argument {
-    abstract valid(input: string): boolean
-    abstract parse(input: string): Promise<any>
+    abstract valid(input: string, channel: Discord.TextChannel): Promise<boolean>
+    abstract parse(input: string, channel: Discord.TextChannel): Promise<any>
 }
 
 export class OrArgument extends Argument {
@@ -15,24 +17,21 @@ export class OrArgument extends Argument {
         super();
         this.args = args
     }
-    valid(input: string) {
-        let res = false;
-        this.args.forEach(x => {
-            res = res || x.valid(input)
-        })
-        return res;
+    async valid(input: string, channel: Discord.TextChannel) {
+        let stuff = (await Promise.all(this.args.map(x => x.valid(input, channel))))
+        return stuff.length !== 0;
     }
-    async parse(input: string) {
+    async parse(input: string, channel: Discord.TextChannel) {
         for (let i = 0; i < this.args.length; i++) {
-            if (this.args[i].valid(input)) {
-                return this.args[i].parse(input)
+            if (await this.args[i].valid(input, channel)) {
+                return await this.args[i].parse(input, channel)
             }
         }
     }
 }
 
 export class AnyArgument extends Argument {
-    valid(input: string) {
+    async valid(input: string) {
         return true
     }
     async parse(input: string) {
@@ -41,16 +40,38 @@ export class AnyArgument extends Argument {
 }
 
 export class DiscordUserArgument extends Argument {
-    valid(input: string) {
+    async valid(input: string) {
         return input.length > 4 && input.startsWith("<@") && input[input.length - 1] === ">"
     }
     async parse(input: string) {
-        return await client.fetchUser(input.substring(2, input.length - 1))
+        let start = 2;
+        if (input.startsWith("<@!")) {
+            start = 3;
+        }
+        return await client.fetchUser(input.substring(start, input.length - 1))
+    }
+}
+
+export class UserArgument extends Argument {
+    userCache: User | null | undefined
+    async valid(input: string, channel: Discord.TextChannel) {
+        let user = await getUserByUsername(channel.guild.id, input)
+        this.userCache = user;
+        if (user === null) {
+            return false;
+        }
+        return true;
+    }
+    async parse(input: string, channel: Discord.TextChannel) {
+        if (this.userCache === undefined) {
+            await this.valid(input, channel)
+        }
+        return this.userCache
     }
 }
 
 export class NumberArgument extends Argument {
-    valid(input: string) {
+    async valid(input: string) {
         return !isNaN(parseFloat(input))
     }
     async parse(input: string) {
@@ -64,7 +85,7 @@ export class SpecificArgument extends Argument {
         super()
         this.specificStrings = specificString
     }
-    valid(input: string) {
+    async valid(input: string) {
         return this.specificStrings.includes(input)
     }
     async parse(input: string) {
@@ -117,19 +138,19 @@ export class Command {
     arguments: Argument[]
     func: (input: CommandFuncInput) => Promise<CommandReponseBase>
 
-    argErrors(args: string[]): number[] {
+    async argErrors(args: string[], channel: Discord.TextChannel): Promise<number[]> {
         let res: number[] = []
-        this.arguments.forEach((x, i) => {
-            if (!x.valid(args[i])) {
+        await Promise.all(this.arguments.map(async (x, i) => {
+            if (!await x.valid(args[i], channel)) {
                 res[res.length] = i
             }
-        })
+        }))
         return res;
     }
 
     async call(args: string[], author: Discord.User, channel: Discord.TextChannel): Promise<CommandReponseBase> {
         return await this.func({
-            args: await Promise.all(args.map((x, i) => this.arguments[i].parse(x))),
+            args: await Promise.all(args.map((x, i) => this.arguments[i].parse(x, channel))),
             author: author,
             channel: channel
         });
@@ -142,43 +163,3 @@ export class Command {
     }
 }
 
-export const commands: Command[] = [
-    new Command("add", [
-        new AnyArgument(),
-        new OrArgument(
-            new SpecificArgument("me", "unknown"),
-            new DiscordUserArgument()),
-        new SpecificArgument("femme", "masc", "neuter", "system")], async input => {
-
-            let name = input.args[0] as string
-            let discordUser = input.args[1] as Discord.User | "me" | "unknown" | null
-            if (discordUser === "unknown") {
-                discordUser = null;
-            }
-            else if (discordUser === "me") {
-                discordUser = input.author
-            }
-            let discordID: string | null = null
-            if (getType(discordUser) === "object") {
-                discordID = discordUser?.id!
-            }
-            let gender = (input.args[2] + "").toUpperCase() as Gender
-            let user = new User(name, gender, input.channel.guild.id, discordID)
-
-            if (await createNewUser(user)) {
-                return new CommandResponseReaction("👍")
-            }
-            else {
-                return new CommandReponseInSameChannel("there is already a person with that name on this discord server")
-            }
-        }),
-
-
-    new Command("me", [], async input => {
-        let user = await getUser(input.channel.guild.id, input.author.id)
-        if (user === null) {
-            return new CommandReponseInSameChannel("you have not been added yet")
-        }
-        return new CommandReponseInSameChannel("```name: " + user.name +"\ngender: " + user.gender.toLowerCase() + "```")
-    })
-]
