@@ -3,13 +3,15 @@ import { User } from "./User"
 export type RelationshipType = "ROMANTIC" | "SEXUAL" | "FRIEND" | "LIVES WITH" | "IN SYSTEM WITH" | "CUDDLES WITH"
 
 export class Relationship {
+    guildId: string
     type: RelationshipType
     leftUser: User
     rightUser: User
-    constructor(type: RelationshipType, leftUser: User, rightUser: User) {
+    constructor(type: RelationshipType, leftUser: User, rightUser: User, guildId: string) {
         this.type = type
         this.leftUser = leftUser;
         this.rightUser = rightUser
+        this.guildId = guildId
     }
 }
 

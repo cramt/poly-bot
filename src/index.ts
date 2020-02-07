@@ -6,6 +6,7 @@ import * as Discord from "discord.js"
 import SECRET from "./SECRET"
 import { commandLineArgSplit } from "./utilities"
 import { commands } from "./Command"
+import { openDB } from "./db"
 
 //hack so that graphvis doesnt fuck me
 if ((global as any).util === undefined) {
@@ -25,29 +26,37 @@ if ((global as any).util === undefined) {
     })
 }
 
+process.on("unhandledRejection", console.log)
+
+const dbPromise = openDB()
+
 const prefix = "/poly "
 
 export const client = new Discord.Client();
 
-client.on("ready", () => {
-    console.log("im on")
+client.on("ready", async () => {
+    await dbPromise
     client.user.setActivity("with polyamory")
 })
 
-client.on("message", message => {
+client.on("message", async message => {
+    await dbPromise
     if (message.content.startsWith(prefix)) {
+        if (message.channel.type !== "text") {
+            return;
+        }   
         let userCommand = commandLineArgSplit(message.content.substring(prefix.length))
         let command = commands.filter(x => x.name === userCommand.commandName && userCommand.args.length === x.arguments.length)[0] || null
         if (command === null) {
-            message.channel.send("there is no command with that name and that amount of arguments")
+            await message.channel.send("there is no command with that name and that amount of arguments")
             return;
         }
         let invalidArgs = command.argErrors(userCommand.args)
         if (invalidArgs.length > 0) {
-            message.channel.send("argument " + invalidArgs.join(", ") + " did not receive the proper type")
+            await message.channel.send("argument " + invalidArgs.join(", ") + " did not receive the proper type")
             return;
         }
-        command.call(userCommand.args, message.author).respond(message)
+        (await command.call(userCommand.args, message.author, message.channel as Discord.TextChannel)).respond(message)
     }
 
 })

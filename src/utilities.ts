@@ -46,3 +46,17 @@ export function commandLineArgSplit(str: string): { commandName: string, args: s
         args: args
     }
 }
+
+export function getType(thing: any) {
+    if (Array.isArray(thing)) {
+        return "array"
+    }
+    if (thing === null) {
+        return "null"
+    }
+    let t = typeof thing;
+    if (t === "number" && isNaN(thing)) {
+        return "NaN"
+    }
+    return t
+}
