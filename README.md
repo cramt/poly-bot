@@ -15,3 +15,6 @@ export default {
     GRAPHVIZ_LOCATION: "D:\\path\\to\\graphvis\\bin"
 }
 ```
+
+## database
+the database that this bot runs on is postgresql
