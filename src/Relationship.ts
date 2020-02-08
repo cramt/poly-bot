@@ -19,10 +19,10 @@ export class Relationship {
 }
 
 export const relationshipTypeToColor = {
-    "ROMANTIC": "red",
-    "SEXUAL": "purple",
-    "FRIEND": "green",
-    "LIVES WITH": "yellow",
-    "IN SYSTEM WITH": "blue",
-    "CUDDLES WITH": "orange",
+    "ROMANTIC": "#ff000",
+    "SEXUAL": "#8E7CC3",
+    "FRIEND": "#6AA84F",
+    "LIVES WITH": "#FFFF00",
+    "IN SYSTEM WITH": "#FFE599",
+    "CUDDLES WITH": "#F6B26B",
 }

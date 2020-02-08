@@ -6,7 +6,7 @@ export class User {
     name: string
     gender: Gender
     constructor(name: string, gender: Gender, guildId: string, discordId: string | null) {
-        this.name = name.split(" ").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" ");
+        this.name = name.split(" ").map(x => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()).join(" ");
         this.gender = gender
         this.guildId = guildId
         this.discordId = discordId
@@ -14,8 +14,8 @@ export class User {
 }
 
 export const genderToColor = {
-    "FEMME": "red",
-    "MASC": "blue",
-    "NEUTER": "grey",
-    "SYSTEM": "yellow"
+    "FEMME": "#F7A8B8",
+    "MASC": "#55CDFC",
+    "NEUTER": "#FFFFFF",
+    "SYSTEM": "#FFE599"
 }
