@@ -59,8 +59,14 @@ export async function createNewUser(user: User): Promise<boolean> {
     }
 }
 
-export async function createNewRelationship(relationship: Relationship): Promise<void> {
-    await client.query("INSERT INTO relationships (relationship_type, left_username, right_username, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUser.name, relationship.rightUser.name, relationship.guildId])
+export async function createNewRelationship(relationship: Relationship): Promise<boolean> {
+    try {
+        await client.query("INSERT INTO relationships (relationship_type, left_username, right_username, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUser.name, relationship.rightUser.name, relationship.guildId])
+        return true
+    }
+    catch (e) {
+        return false
+    }
 }
 
 export async function removeRelationship(guildId: string, leftUsername: string, rightUsername: string): Promise<void> {
@@ -98,6 +104,19 @@ export async function getRelationshipsByDiscordId(guildId: string, discordId: st
     return []
 }
 
+export async function getRelationshipsByUser(guildId: string, user: User): Promise<Relationship[]> {
+    let result = await client.query(`SELECT relationship_type, users.username, users.gender, users.discord_id FROM relationships
+    INNER JOIN users ON 
+    (
+        right_username != $2 AND users.username = right_username
+        OR
+        left_username != $2 AND users.username = left_username
+    )
+    WHERE relationships.guild_id = $1 AND users.guild_id = $1 
+    AND (right_username = $2 OR left_username = $2)`, [guildId, user.name])
+    return result.rows.map(x => new Relationship(relationshipIntToString[x.relationship_type], user, new User(x.username, genderIntToString[x.gender], guildId, x.discord_id), guildId))
+}
+
 export async function getAllInGuild(guildId: string): Promise<{ relationships: Relationship[], users: User[] }> {
     let [relationshipResults, userResults] = await Promise.all([
         client.query("SELECT relationship_type, left_username, right_username FROM relationships WHERE guild_id = $1", [guildId]),
@@ -113,4 +132,13 @@ export async function getAllInGuild(guildId: string): Promise<{ relationships: R
         relationships: relationships,
         users: users
     }
+}
+
+export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string, discordId: string) {
+    await client.query(`with username_of_deleted as (
+        DELETE FROM users WHERE guild_id = $1 AND discord_id = $2
+        returning username
+    )
+    DELETE FROM relationships WHERE guild_id = $1
+     AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
 }

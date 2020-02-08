@@ -9,8 +9,11 @@ export class Relationship {
     rightUser: User
     constructor(type: RelationshipType, leftUser: User, rightUser: User, guildId: string) {
         this.type = type
+        if (leftUser.name > rightUser.name) {
+            [leftUser, rightUser] = [rightUser, leftUser]
+        }
         this.leftUser = leftUser;
-        this.rightUser = rightUser
+        this.rightUser = rightUser;
         this.guildId = guildId
     }
 }

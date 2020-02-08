@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId } from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -57,11 +57,12 @@ export const commands: Command[] = [
 
 
     new Command("me", "print out information about yourself", [], async input => {
-        let user = await getUserByDiscordId(input.channel.guild.id, input.author.id)
+        let user = (await getUserByDiscordId(input.channel.guild.id, input.author.id))
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + "```")
+        let relationships = await getRelationshipsByUser(input.channel.guild.id, user)
+        return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => "\nyoure in a " + x.type.toLowerCase() + " relationship with " + x.rightUser.name).join("") + "```")
     }),
 
     new Command("new-relationship",
@@ -78,10 +79,16 @@ export const commands: Command[] = [
             new SpecificArgument("romantic", "sexual", "friend", "lives with", "in system with", "cuddles with")
         ], async input => {
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], input.channel.guild.id), parseDiscordUserOrUser(input.args[1], input.channel.guild.id)])
-
+            if (leftUser.name === rightUser.name) {
+                return new CommandReponseInSameChannel("you cant make a relationship with yourself")
+            }
             let relationship = new Relationship(input.args[2].toUpperCase() as RelationshipType, leftUser, rightUser, input.channel.guild.id)
-            await createNewRelationship(relationship)
-            return new CommandReponseInSameChannel("a " + relationship.type.toLowerCase() + " relationship between " + leftUser.name + " and " + rightUser.name + " has been created")
+            if (await createNewRelationship(relationship)) {
+                return new CommandReponseInSameChannel("a " + relationship.type.toLowerCase() + " relationship between " + leftUser.name + " and " + rightUser.name + " has been created")
+            }
+            else {
+                return new CommandReponseInSameChannel("a relationship like that already exists")
+            }
         }),
 
     new Command("remove-relationship",
@@ -105,5 +112,10 @@ export const commands: Command[] = [
         let all = await getAllInGuild(input.channel.guild.id)
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
+    }),
+
+    new Command("remove-me", "deletes you from the polycule and all relationships youre in", [], async input => {
+        await removeUserAndTheirRelationshipsByDiscordId(input.channel.guild.id, input.author.id)
+        return new CommandResponseReaction("👍")
     })
 ]
