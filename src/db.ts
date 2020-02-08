@@ -45,7 +45,7 @@ const relationshipStringToInt: {
 const relationshipIntToString: {
     [key: number]: RelationshipType
 } = Object.getOwnPropertyNames(relationshipStringToInt).reduce((curr, acc) => {
-    (curr as any)[relationshipStringToInt[acc as RelationshipType]]
+    (curr as any)[relationshipStringToInt[acc as RelationshipType]] = acc
     return curr
 }, {})
 
@@ -85,6 +85,8 @@ export async function getUserByUsername(guildId: string, username: string): Prom
     return new User(username, genderIntToString[result.rows[0].gender], guildId, result.rows[0].discord_id)
 }
 
+
+//probably doesnt work
 export async function getRelationshipsByDiscordId(guildId: string, discordId: string): Promise<Relationship[]> {
     let result = await client.query(
         `SELECT type, left_username, right_username FROM relationship
@@ -94,4 +96,21 @@ export async function getRelationshipsByDiscordId(guildId: string, discordId: st
           OR left_username = (SELECT username FROM users WHERE users.guild_id = $1 AND users.discord_id = $2))`
         , [guildId, discordId])
     return []
+}
+
+export async function getAllInGuild(guildId: string): Promise<{ relationships: Relationship[], users: User[] }> {
+    let [relationshipResults, userResults] = await Promise.all([
+        client.query("SELECT relationship_type, left_username, right_username FROM relationships WHERE guild_id = $1", [guildId]),
+        client.query("SELECT username, discord_id, gender FROM users WHERE guild_id = $1", [guildId])])
+    let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], guildId, user.discord_id))
+    let userMap = new Map<string, User>()
+    users.forEach(x => {
+        userMap.set(x.name, x)
+    })
+    let relationships = relationshipResults.rows.map(relationship =>
+        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_username)!, userMap.get(relationship.right_username)!, guildId));
+    return {
+        relationships: relationships,
+        users: users
+    }
 }

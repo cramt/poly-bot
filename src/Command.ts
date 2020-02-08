@@ -2,13 +2,14 @@ import * as Discord from "discord.js"
 import { client } from "./index"
 import { createNewUser, getUserByDiscordId, getUserByUsername, createNewRelationship } from "./db";
 import { Gender, User } from "./User";
-import { getType } from "./utilities"
+import { getType, humanPrintArray } from "./utilities"
 import { checkServerIdentity } from "tls";
 import { Relationship, RelationshipType } from "./Relationship";
 
 export abstract class Argument {
     abstract valid(input: string, channel: Discord.TextChannel): Promise<boolean>
     abstract parse(input: string, channel: Discord.TextChannel): Promise<any>
+    abstract get description(): string;
 }
 
 export class OrArgument extends Argument {
@@ -28,6 +29,9 @@ export class OrArgument extends Argument {
             }
         }
     }
+    get description() {
+        return humanPrintArray(this.args.map(x => x.description))
+    }
 }
 
 export class AnyArgument extends Argument {
@@ -36,6 +40,9 @@ export class AnyArgument extends Argument {
     }
     async parse(input: string) {
         return input
+    }
+    get description() {
+        return "literally anything"
     }
 }
 
@@ -49,6 +56,9 @@ export class DiscordUserArgument extends Argument {
             start = 3;
         }
         return await client.fetchUser(input.substring(start, input.length - 1))
+    }
+    get description() {
+        return "@'ing someone"
     }
 }
 
@@ -68,6 +78,9 @@ export class UserArgument extends Argument {
         }
         return this.userCache
     }
+    get description() {
+        return "your username if you have added yourself"
+    }
 }
 
 export class NumberArgument extends Argument {
@@ -76,6 +89,9 @@ export class NumberArgument extends Argument {
     }
     async parse(input: string) {
         return parseFloat(input)
+    }
+    get description() {
+        return "any number"
     }
 }
 
@@ -90,6 +106,9 @@ export class SpecificArgument extends Argument {
     }
     async parse(input: string) {
         return input
+    }
+    get description() {
+        return humanPrintArray(this.specificStrings)
     }
 }
 
@@ -133,7 +152,26 @@ export class CommandResponseReaction extends CommandReponseBase {
     }
 }
 
+export class CommandResponseFile extends CommandReponseBase {
+    file: Buffer
+    filename: string
+    constructor(file: Buffer, filename: string) {
+        super()
+        this.file = file
+        this.filename = filename
+    }
+    async respond(message: Discord.Message) {
+        await message.channel.send("", {
+            file: {
+                attachment: this.file,
+                name: this.filename
+            }
+        })
+    }
+}
+
 export class Command {
+    description: string
     name: string
     arguments: Argument[]
     func: (input: CommandFuncInput) => Promise<CommandReponseBase>
@@ -156,10 +194,11 @@ export class Command {
         });
     }
 
-    constructor(name: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
+    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
         this.name = name
         this.arguments = args
         this.func = func
+        this.description = description
     }
 }
 

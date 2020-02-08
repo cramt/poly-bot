@@ -60,3 +60,7 @@ export function getType(thing: any) {
     }
     return t
 }
+
+export function humanPrintArray(arr: string[], andOr = "or"): string {
+    return arr.slice(0, arr.length - 1).join(", ") + " " + andOr + " " + arr[arr.length - 1]
+}

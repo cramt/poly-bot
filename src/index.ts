@@ -30,7 +30,7 @@ process.on("unhandledRejection", console.log)
 
 const dbPromise = openDB()
 
-const prefix = "/poly "
+export const prefix = "/poly "
 
 export const client = new Discord.Client();
 
