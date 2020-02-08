@@ -70,7 +70,7 @@ export async function createNewRelationship(relationship: Relationship): Promise
 }
 
 export async function removeRelationship(guildId: string, leftUsername: string, rightUsername: string): Promise<void> {
-    await client.query("DELETE FROM relationships WHERE guild_id = $1 AND left_username = $2 AND right_username = $3", [guildId, leftUsername, rightUsername])
+    await client.query("DELETE FROM relationships WHERE guild_id = $1 AND (left_username = $2 AND right_username = $3) OR (right_username = $2 AND left_username = $3)", [guildId, leftUsername, rightUsername])
 }
 
 
