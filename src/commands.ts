@@ -62,7 +62,7 @@ export const commands: Command[] = [
             return new CommandReponseInSameChannel("you have not been added yet")
         }
         let relationships = await getRelationshipsByUser(input.channel.guild.id, user)
-        return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => "\nyoure in a " + x.type.toLowerCase() + " relationship with " + user?.name === x.rightUser.name ? x.leftUser.name : x.rightUser.name).join("") + "```")
+        return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => "\nyoure in a " + x.type.toLowerCase() + " relationship with " + (user?.name === x.rightUser.name ? x.leftUser.name : x.rightUser.name)).join("") + "```")
     }),
 
     new Command("new-relationship",
