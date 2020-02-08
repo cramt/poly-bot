@@ -16,6 +16,6 @@ export class User {
 export const genderToColor = {
     "FEMME": "red",
     "MASC": "blue",
-    "NEUTER": "white",
+    "NEUTER": "grey",
     "SYSTEM": "yellow"
 }
