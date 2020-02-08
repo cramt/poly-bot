@@ -1,3 +1,4 @@
 src/SECRET.ts
 node_modules/
 dist/
+output.png
