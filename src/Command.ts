@@ -73,7 +73,7 @@ export class UserArgument extends Argument {
         return true;
     }
     async parse(input: string, channel: Discord.TextChannel) {
-        if (this.userCache === undefined) {
+        if (getType(this.userCache) === "null") {
             await this.valid(input, channel)
         }
         return this.userCache

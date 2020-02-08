@@ -78,7 +78,7 @@ export async function getUserByDiscordId(guildId: string, discordId: string): Pr
 }
 
 export async function getUserByUsername(guildId: string, username: string): Promise<User | null> {
-    let result = await client.query("SELECT gender, discord_id FROM users WHERE guild_id = $1 AND discord_id = $2", [guildId, username])
+    let result = await client.query("SELECT gender, discord_id FROM users WHERE guild_id = $1 AND LOWER(username) = LOWER($2)", [guildId, username])
     if (result.rows.length === 0) {
         return null
     }
