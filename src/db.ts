@@ -151,3 +151,7 @@ export async function removeUserAndTheirRelationshipsByUsername(guildId: string,
     DELETE FROM relationships WHERE guild_id = $1
      AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, username])
 }
+
+export async function setDiscordIdForUser(user: User) {
+    await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
+}

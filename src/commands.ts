@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser } from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -122,5 +122,15 @@ export const commands: Command[] = [
     new AdminCommand("remove", "removes a person from polycule", [new UserArgument()], async input => {
         await removeUserAndTheirRelationshipsByUsername(input.channel.guild.id, (input.args[0] as User).name)
         return new CommandResponseReaction("👍")
+    }),
+
+    new Command("im", "adds your @ to a user without an @", [new UserArgument()], async input => {
+        let user = input.args[0] as User
+        if (user.discordId !== null) {
+            return new CommandReponseInSameChannel("this user already have an @")
+        }
+        user.discordId = input.author.id
+        await setDiscordIdForUser(user)
+        return new CommandResponseReaction("👍");
     })
 ]
