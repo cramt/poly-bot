@@ -7,8 +7,8 @@ import { checkServerIdentity } from "tls";
 import { Relationship, RelationshipType } from "./Relationship";
 
 export abstract class Argument {
-    abstract valid(input: string, channel: Discord.TextChannel): Promise<boolean>
-    abstract parse(input: string, channel: Discord.TextChannel): Promise<any>
+    abstract valid(input: string, channel: Discord.Channel): Promise<boolean>
+    abstract parse(input: string, channel: Discord.Channel): Promise<any>
     abstract get description(): string;
 }
 
@@ -18,11 +18,11 @@ export class OrArgument extends Argument {
         super();
         this.args = args
     }
-    async valid(input: string, channel: Discord.TextChannel) {
+    async valid(input: string, channel: Discord.Channel) {
         let stuff = (await Promise.all(this.args.map(x => x.valid(input, channel))))
         return stuff.length !== 0;
     }
-    async parse(input: string, channel: Discord.TextChannel) {
+    async parse(input: string, channel: Discord.Channel) {
         for (let i = 0; i < this.args.length; i++) {
             if (await this.args[i].valid(input, channel)) {
                 return await this.args[i].parse(input, channel)
@@ -115,7 +115,7 @@ export class SpecificArgument extends Argument {
 export interface CommandFuncInput {
     args: any[]
     author: Discord.User,
-    channel: Discord.TextChannel
+    channel: Discord.Channel
 }
 
 export abstract class CommandReponseBase {
@@ -170,13 +170,16 @@ export class CommandResponseFile extends CommandReponseBase {
     }
 }
 
+export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' | 'news' | 'store'
+
 export class Command {
     description: string
     name: string
     arguments: Argument[]
     func: (input: CommandFuncInput) => Promise<CommandReponseBase>
+    channelType: DiscordChannelType[]
 
-    async argErrors(args: string[], channel: Discord.TextChannel): Promise<number[]> {
+    async argErrors(args: string[], channel: Discord.Channel): Promise<number[]> {
         let res: number[] = []
         await Promise.all(this.arguments.map(async (x, i) => {
             if (!await x.valid(args[i], channel)) {
@@ -186,7 +189,7 @@ export class Command {
         return res;
     }
 
-    async call(args: string[], author: Discord.User, channel: Discord.TextChannel): Promise<CommandReponseBase> {
+    async call(args: string[], author: Discord.User, channel: Discord.Channel): Promise<CommandReponseBase> {
         return await this.func({
             args: await Promise.all(args.map((x, i) => this.arguments[i].parse(x, channel))),
             author: author,
@@ -194,18 +197,24 @@ export class Command {
         });
     }
 
-    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
+    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>, channelType: DiscordChannelType | DiscordChannelType[] = "text") {
         this.name = name
         this.arguments = args
         this.func = func
         this.description = description
+        if (getType(channelType) === "string") {
+            this.channelType = [channelType as DiscordChannelType]
+        }
+        else {
+            this.channelType = channelType as DiscordChannelType[]
+        }
     }
 }
 
 export class AdminCommand extends Command {
     constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
         super(name, description + ", can only be used by admin", args, async input => {
-            if ((await (await input.channel.guild.fetchMember(input.author.id)).hasPermission("ADMINISTRATOR"))) {
+            if ((await (input.channel as Discord.TextChannel).guild.fetchMember(input.author.id)).hasPermission("ADMINISTRATOR")) {
                 return await func(input)
             }
             return new CommandReponseInSameChannel("this command is an admin command, and can only be used by adminstators")

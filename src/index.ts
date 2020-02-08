@@ -42,12 +42,9 @@ client.on("ready", async () => {
 client.on("message", async message => {
     await dbPromise
     if (message.content.startsWith(prefix)) {
-        if (message.channel.type !== "text") {
-            return;
-        }
-        let channel = message.channel as Discord.TextChannel;
+        let channel = message.channel;
         let userCommand = commandLineArgSplit(message.content.substring(prefix.length))
-        let command = commands.filter(x => x.name === userCommand.commandName && userCommand.args.length === x.arguments.length)[0] || null
+        let command = commands.filter(x => x.name === userCommand.commandName && userCommand.args.length === x.arguments.length && x.channelType.includes(channel.type))[0] || null
         if (command === null) {
             await message.channel.send("there is no command with that name and that amount of arguments")
             return;

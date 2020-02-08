@@ -31,7 +31,7 @@ export const commands: Command[] = [
                 new SpecificArgument("me", "unknown"),
                 new DiscordUserArgument()),
             new SpecificArgument("femme", "masc", "neuter", "system")], async input => {
-
+                let guildId = (input.channel as Discord.TextChannel).guild.id
                 let name = input.args[0] as string
                 let discordUser = input.args[1] as Discord.User | "me" | "unknown" | null
                 if (discordUser === "unknown") {
@@ -45,7 +45,7 @@ export const commands: Command[] = [
                     discordID = discordUser?.id!
                 }
                 let gender = (input.args[2] + "").toUpperCase() as Gender
-                let user = new User(name, gender, input.channel.guild.id, discordID)
+                let user = new User(name, gender, guildId, discordID)
 
                 if (await createNewUser(user)) {
                     return new CommandResponseReaction("👍")
@@ -57,11 +57,12 @@ export const commands: Command[] = [
 
 
     new Command("me", "print out information about yourself", [], async input => {
-        let user = (await getUserByDiscordId(input.channel.guild.id, input.author.id))
+        let guildId = (input.channel as Discord.TextChannel).guild.id
+        let user = (await getUserByDiscordId(guildId, input.author.id))
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await getRelationshipsByUser(input.channel.guild.id, user)
+        let relationships = await getRelationshipsByUser(guildId, user)
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => "\nyoure in a " + x.type.toLowerCase() + " relationship with " + (user?.name === x.rightUser.name ? x.leftUser.name : x.rightUser.name)).join("") + "```")
     }),
 
@@ -78,11 +79,12 @@ export const commands: Command[] = [
             ),
             new SpecificArgument("romantic", "sexual", "friend", "lives with", "in system with", "cuddles with")
         ], async input => {
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], input.channel.guild.id), parseDiscordUserOrUser(input.args[1], input.channel.guild.id)])
+            let guildId = (input.channel as Discord.TextChannel).guild.id
+            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
             if (leftUser.name === rightUser.name) {
                 return new CommandReponseInSameChannel("you cant make a relationship with yourself")
             }
-            let relationship = new Relationship(input.args[2].toUpperCase() as RelationshipType, leftUser, rightUser, input.channel.guild.id)
+            let relationship = new Relationship(input.args[2].toUpperCase() as RelationshipType, leftUser, rightUser, guildId)
             if (await createNewRelationship(relationship)) {
                 return new CommandReponseInSameChannel("a " + relationship.type.toLowerCase() + " relationship between " + leftUser.name + " and " + rightUser.name + " has been created")
             }
@@ -103,24 +105,28 @@ export const commands: Command[] = [
                 new DiscordUserArgument()
             ),
         ], async input => {
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], input.channel.guild.id), parseDiscordUserOrUser(input.args[1], input.channel.guild.id)])
-            await removeRelationship(input.channel.guild.id, leftUser.name, rightUser.name)
+            let guildId = (input.channel as Discord.TextChannel).guild.id
+            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
+            await removeRelationship(guildId, leftUser.name, rightUser.name)
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 
     new Command("generate", "generates the polycule map", [], async input => {
-        let all = await getAllInGuild(input.channel.guild.id)
+        let guildId = (input.channel as Discord.TextChannel).guild.id
+        let all = await getAllInGuild(guildId)
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", [], async input => {
-        await removeUserAndTheirRelationshipsByDiscordId(input.channel.guild.id, input.author.id)
+        let guildId = (input.channel as Discord.TextChannel).guild.id
+        await removeUserAndTheirRelationshipsByDiscordId(guildId, input.author.id)
         return new CommandResponseReaction("👍")
     }),
 
     new AdminCommand("remove", "removes a person from polycule", [new UserArgument()], async input => {
-        await removeUserAndTheirRelationshipsByUsername(input.channel.guild.id, (input.args[0] as User).name)
+        let guildId = (input.channel as Discord.TextChannel).guild.id
+        await removeUserAndTheirRelationshipsByUsername(guildId, (input.args[0] as User).name)
         return new CommandResponseReaction("👍")
     }),
 
@@ -132,5 +138,9 @@ export const commands: Command[] = [
         user.discordId = input.author.id
         await setDiscordIdForUser(user)
         return new CommandResponseReaction("👍");
-    })
+    }),
+
+    new Command("im-plural", "changed your user to a plural user", [new AnyArgument()], async input => {
+        return new CommandResponseReaction("👍");
+    }, "dm")
 ]
