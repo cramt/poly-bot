@@ -2,6 +2,7 @@ import { Client } from 'pg'
 import SECRET from './SECRET';
 import { Gender, User } from './User';
 import { Relationship, RelationshipType } from './Relationship';
+import { PluralKitApi } from './PluralKitApi';
 
 let client: Client;
 export async function openDB() {
@@ -15,7 +16,7 @@ export async function openDB() {
     await client.connect()
 }
 
-const genderStringToInt: {
+export const genderStringToInt: {
     [P in Gender]: number
 } = {
     "FEMME": 0,
@@ -24,14 +25,14 @@ const genderStringToInt: {
     "SYSTEM": 3,
 }
 
-const genderIntToString: {
+export const genderIntToString: {
     [key: number]: Gender
 } = Object.getOwnPropertyNames(genderStringToInt).reduce((curr, acc) => {
     (curr as any)[genderStringToInt[acc as Gender]] = acc
     return curr;
 }, {})
 
-const relationshipStringToInt: {
+export const relationshipStringToInt: {
     [P in RelationshipType]: number
 } = {
     "ROMANTIC": 0,
@@ -42,12 +43,17 @@ const relationshipStringToInt: {
     "CUDDLES WITH": 5
 }
 
-const relationshipIntToString: {
+export const relationshipIntToString: {
     [key: number]: RelationshipType
 } = Object.getOwnPropertyNames(relationshipStringToInt).reduce((curr, acc) => {
     (curr as any)[relationshipStringToInt[acc as RelationshipType]] = acc
     return curr
 }, {})
+
+function generatePreparedKeys(colums: number, rows: number): string {
+    let index = 1;
+    return new Array(colums).fill(null).map(() => "(" + new Array(rows).fill(null).map(() => "$" + (index++)).join(", ") + ")").join(", ")
+}
 
 export async function createNewUser(user: User): Promise<boolean> {
     try {
@@ -143,6 +149,15 @@ export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string
      AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
 }
 
+export async function removeUserAndTheirRelationshipsByDiscordIdNotPlural(guildId: string, discordId: string) {
+    await client.query(`with username_of_deleted as (
+        DELETE FROM users WHERE guild_id = $1 AND discord_id = $2 AND system_member_id = null
+        returning username
+    )
+    DELETE FROM relationships WHERE guild_id = $1
+     AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
+}
+
 export async function removeUserAndTheirRelationshipsByUsername(guildId: string, username: string) {
     await client.query(`with username_of_deleted as (
         DELETE FROM users WHERE guild_id = $1 AND username = $2
@@ -156,6 +171,18 @@ export async function setDiscordIdForUser(user: User) {
     await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
 }
 
-export async function changeToPlural(user: User): Promise<boolean> {
-    return true
+export async function changeToPlural(guildId: string, discordId: string, api: PluralKitApi, users: User[]): Promise<boolean> {
+    let data: any[] = []
+    users.forEach(user => {
+        data[data.length] = user.guildId
+        data[data.length] = user.memberId
+        data[data.length] = user.name
+        data[data.length] = user.discordId
+        data[data.length] = genderStringToInt[user.gender]
+    })
+
+    await Promise.all([client.query("INSERT INTO users (guild_id, system_member_id, username, discord_id, gender) VALUES " + generatePreparedKeys(users.length, 5), data),
+    removeUserAndTheirRelationshipsByDiscordIdNotPlural(guildId, discordId),
+    client.query("INSERT INTO plural_tokens (token, id) VALUES ($1, $2)", [api.token, users[0].systemId])])
+    return true;
 }

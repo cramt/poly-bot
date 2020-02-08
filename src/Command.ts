@@ -191,7 +191,7 @@ export class Command {
 
     async call(args: string[], author: Discord.User, channel: Discord.Channel): Promise<CommandReponseBase> {
         return await this.func({
-            args: await Promise.all(args.map((x, i) => this.arguments[i].parse(x, channel))),
+            args: this instanceof AnyArgumentCommand ? args : await Promise.all(args.map((x, i) => this.arguments[i].parse(x, channel))),
             author: author,
             channel: channel
         });
@@ -219,5 +219,11 @@ export class AdminCommand extends Command {
             }
             return new CommandReponseInSameChannel("this command is an admin command, and can only be used by adminstators")
         })
+    }
+}
+
+export class AnyArgumentCommand extends Command {
+    constructor(name: string, description: string, func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
+        super(name, description, [], func)
     }
 }

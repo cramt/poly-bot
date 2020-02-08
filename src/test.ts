@@ -1,8 +1,8 @@
-import { openDB, getAllInGuild } from "./db";
+import { openDB, getAllInGuild, createNewRelationship } from "./db";
 import { polyMapGenerate } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
-import { PolyKitApi } from "./PolyKitApi";
+import { PluralKitApi } from "./PluralKitApi";
 
 /*
 //hack so that graphvis doesnt fuck me
@@ -50,9 +50,9 @@ const outputFile = "output.png";
 
 (async () => {
     const token = "y6XqIB2Jf0JD9Fs6fU3OS/pa7j0APNW7mglJjNJUfvhX43GHOLHCyIQu3LMDhlDn"
-    let api = new PolyKitApi(token)
+    let api = new PluralKitApi(token)
     await api.getSystemInfo()
-
+    await api.getMembersInfo()
 
 
 })().then(() => process.exit(0))

@@ -7,6 +7,7 @@ import SECRET from "./SECRET"
 import { commandLineArgSplit } from "./utilities"
 import { openDB } from "./db"
 import { commands } from "./commands"
+import { AnyArgumentCommand } from "./Command"
 
 //hack so that graphvis doesnt fuck me
 if ((global as any).util === undefined) {
@@ -41,10 +42,13 @@ client.on("ready", async () => {
 
 client.on("message", async message => {
     await dbPromise
+    if (message.author.bot) {
+        return;
+    }
     if (message.content.startsWith(prefix)) {
         let channel = message.channel;
         let userCommand = commandLineArgSplit(message.content.substring(prefix.length))
-        let command = commands.filter(x => x.name === userCommand.commandName && userCommand.args.length === x.arguments.length && x.channelType.includes(channel.type))[0] || null
+        let command = commands.filter(x => x.name === userCommand.commandName && (userCommand.args.length === x.arguments.length || x instanceof AnyArgumentCommand) && x.channelType.includes(channel.type))[0] || null
         if (command === null) {
             await message.channel.send("there is no command with that name and that amount of arguments")
             return;

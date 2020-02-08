@@ -1,11 +1,12 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand } from "./Command";
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, changeToPlural, genderStringToInt } from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
+import { PluralKitApi } from "./PluralKitApi"
 
 async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: string): Promise<User> {
     if ((thing as User).gender === undefined) {
@@ -140,7 +141,30 @@ export const commands: Command[] = [
         return new CommandResponseReaction("👍");
     }),
 
-    new Command("im-plural", "changed your user to a plural user", [new AnyArgument()], async input => {
+    new AnyArgumentCommand("im-plural", "changed your user to a plural user", async input => {
+        let guild = (input.channel as Discord.TextChannel).guild
+        if (input.args.length % 2 === 0) {
+            return new CommandReponseInSameChannel("can only take an unqual amount of arguments")
+        }
+        if (input.args.length < 4) {
+            return new CommandReponseInSameChannel("you need to add atleast on member of the system")
+        }
+        let api = new PluralKitApi(input.args[0])
+        let systemInfo = await api.getSystemInfo();
+        let memberInfo = await api.getMembersInfo();
+        input.args = input.args.slice(1)
+        let users: User[] = []
+        for (let i = 0; i < input.args.length; i += 2) {
+            let member = memberInfo.filter(x => x.id === input.args[i] || x.name?.toLocaleLowerCase() == input.args[i].toLocaleLowerCase())[0] || null
+            if (member === null) {
+                return new CommandReponseInSameChannel(input.args[i] + " could not be found")
+            }
+            if (!Object.getOwnPropertyNames(genderStringToInt).map(x => x.toLowerCase()).includes(input.args[i + 1])) {
+                return new CommandReponseInSameChannel(input.args[i + 1] + " is not a gender")
+            }
+            users.push(new User(member.name!, input.args[i + 1].toUpperCase(), guild.id, input.author.id, systemInfo.id, member.id))
+        }
+        await changeToPlural(guild.id, input.author.id, api, users)
         return new CommandResponseReaction("👍");
-    }, "dm")
+    })
 ]
