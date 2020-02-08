@@ -155,3 +155,7 @@ export async function removeUserAndTheirRelationshipsByUsername(guildId: string,
 export async function setDiscordIdForUser(user: User) {
     await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
 }
+
+export async function changeToPlural(user: User): Promise<boolean> {
+    return true
+}

@@ -2,7 +2,9 @@ import { openDB, getAllInGuild } from "./db";
 import { polyMapGenerate } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
+import { PolyKitApi } from "./PolyKitApi";
 
+/*
 //hack so that graphvis doesnt fuck me
 if ((global as any).util === undefined) {
     (global as any).util = new Proxy(() => { }, {
@@ -44,21 +46,12 @@ function parseHexToObj(hex: string) {
 const id = "634515225369903114";
 const outputFile = "output.png";
 
-(async () => {
-    await openDB();
-    let all = await getAllInGuild(id)
-    let buffer = await polyMapGenerate(all.users, all.relationships)
+*/
 
-    if (fs.existsSync(outputFile)) {
-        fs.unlinkSync(outputFile)
-    }
-    let stream = fs.createWriteStream(outputFile)
-    await new Promise((resolve, reject) => {
-        stream.write(buffer, () => {
-            stream.close()
-            resolve();
-        })
-    })
+(async () => {
+    const token = "y6XqIB2Jf0JD9Fs6fU3OS/pa7j0APNW7mglJjNJUfvhX43GHOLHCyIQu3LMDhlDn"
+    let api = new PolyKitApi(token)
+    await api.getSystemInfo()
 
 
 
