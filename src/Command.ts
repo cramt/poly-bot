@@ -202,3 +202,13 @@ export class Command {
     }
 }
 
+export class AdminCommand extends Command {
+    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
+        super(name, description + ", can only be used by admin", args, async input => {
+            if ((await (await input.channel.guild.fetchMember(input.author.id)).hasPermission("ADMINISTRATOR"))) {
+                return await func(input)
+            }
+            return new CommandReponseInSameChannel("this command is an admin command, and can only be used by adminstators")
+        })
+    }
+}

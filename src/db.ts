@@ -142,3 +142,12 @@ export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string
     DELETE FROM relationships WHERE guild_id = $1
      AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
 }
+
+export async function removeUserAndTheirRelationshipsByUsername(guildId: string, username: string) {
+    await client.query(`with username_of_deleted as (
+        DELETE FROM users WHERE guild_id = $1 AND username = $2
+        returning username
+    )
+    DELETE FROM relationships WHERE guild_id = $1
+     AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, username])
+}
