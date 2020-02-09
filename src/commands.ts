@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, createNewPolySystem } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, createNewPolySystem } from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -64,7 +64,7 @@ export const commands: Command[] = [
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await getRelationshipsByUser(guildId, user)
+        let relationships = await getRelationshipsByUsers(guildId, [user])
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => "\nyoure in a " + x.type.toLowerCase() + " relationship with " + (user?.name === x.rightUser.name ? x.leftUser.name : x.rightUser.name)).join("") + "```")
     }),
 
@@ -120,6 +120,24 @@ export const commands: Command[] = [
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
+    new AnyArgumentCommand("generate-personal", "generates the polycule map for an individual person", async input => {
+        let guildId = (input.channel as Discord.TextChannel).guild.id
+        let relationships = await getRelationshipsByUsers(guildId, (await Promise.all(input.args.map(async x => {
+            let a = new OrArgument(new DiscordUserArgument(), new UserArgument());
+            if (!await a.valid(x, input.channel)) {
+                return null
+            }
+            return await parseDiscordUserOrUser(await a.parse(x, input.channel), guildId)
+        }))).filter(x => x !== null) as User[])
+        let users: User[] = []
+        relationships.forEach(rel => {
+            users.push(rel.leftUser)
+            users.push(rel.rightUser)
+        })
+        let buffer = await polyMapGenerate(users, relationships)
+        return new CommandResponseFile(buffer, "polycule_map.png")
+    }),
+
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeUserAndTheirRelationshipsByDiscordId(guildId, input.author.id)
@@ -142,6 +160,7 @@ export const commands: Command[] = [
         return new CommandResponseReaction("👍");
     }),
 
+    /*
     new Command("add-system", "add your system to the polycule", [], async input => {
         let channel = input.channel as Discord.TextChannel
         let api = await PluralKitApi.fromDiscord(input.author.id)
@@ -164,7 +183,7 @@ export const commands: Command[] = [
         }
         await createNewPolySystem(new PluralSystem(input.author.id, (await api.getSystemInfo()).id))
         return new CommandResponseReaction("👍");
-    })
+    })*/
 
     /*new AnyArgumentCommand("im-plural", "changed your user to a plural user", async input => {
         let guild = (input.channel as Discord.TextChannel).guild

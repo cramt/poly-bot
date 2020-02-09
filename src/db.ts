@@ -111,17 +111,39 @@ export async function getRelationshipsByDiscordId(guildId: string, discordId: st
     return []
 }
 
-export async function getRelationshipsByUser(guildId: string, user: User): Promise<Relationship[]> {
-    let result = await client.query(`SELECT relationship_type, users.username, users.gender, users.discord_id FROM relationships
+export async function getRelationshipsByUsers(guildId: string, users: User[]): Promise<Relationship[]> {
+    let result = await client.query(`SELECT relationship_type, users.username, right_username, left_username, users.gender, users.discord_id FROM relationships
     INNER JOIN users ON 
     (
-        right_username != $2 AND users.username = right_username
+        (${users.map((x, i) => "right_username != $" + (i + 2)).join(" AND ")}) AND users.username = right_username
         OR
-        left_username != $2 AND users.username = left_username
+        (${users.map((x, i) => "left_username != $" + (i + 2)).join(" AND ")}) AND users.username = left_username
     )
     WHERE relationships.guild_id = $1 AND users.guild_id = $1 
-    AND (right_username = $2 OR left_username = $2)`, [guildId, user.name])
-    return result.rows.map(x => new Relationship(relationshipIntToString[x.relationship_type], user, new User(x.username, genderIntToString[x.gender], guildId, x.discord_id), guildId))
+    AND (${users.map((x, i) => "right_username = $" + (i + 2) + " OR left_username = $" + (i + 2)).join(" OR ")})`, [guildId, ...users.map(x => x.name)])
+    let userMap = new Map<string, User>()
+    users.forEach(x => {
+        userMap.set(x.name, x)
+    })
+    return result.rows.map(x => {
+        let leftUser: User;
+        if (userMap.has(x.left_username)) {
+            leftUser = userMap.get(x.left_username)!
+        }
+        else {
+            leftUser = new User(x.username, genderIntToString[x.gender], guildId, x.discord_id)
+            userMap.set(leftUser.name, leftUser)
+        }
+        let rightUser: User;
+        if (userMap.has(x.right_username)) {
+            rightUser = userMap.get(x.right_username)!
+        }
+        else {
+            rightUser = new User(x.username, genderIntToString[x.gender], guildId, x.discord_id)
+            userMap.set(rightUser.name, leftUser)
+        }
+        return new Relationship(relationshipIntToString[x.relationship_type], leftUser, rightUser, guildId)
+    })
 }
 
 export async function getAllInGuild(guildId: string): Promise<{ relationships: Relationship[], users: User[] }> {
