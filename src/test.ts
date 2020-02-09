@@ -49,10 +49,8 @@ const outputFile = "output.png";
 */
 
 (async () => {
-    const token = "y6XqIB2Jf0JD9Fs6fU3OS/pa7j0APNW7mglJjNJUfvhX43GHOLHCyIQu3LMDhlDn"
-    let api = new PluralKitApi(token)
-    await api.getSystemInfo()
-    await api.getMembersInfo()
+    let api = await PluralKitApi.fromSystemId("kozxi")
+    console.log(await api?.getSystemInfo())
+    console.log(await api?.getMembersInfo())
 
-
-})().then(() => process.exit(0))
+})().then(() => process.exit(0)).catch(console.log)

@@ -29,27 +29,71 @@ export interface MemberModel {
 }
 
 export class PluralKitApi {
-    token: string
+    token: string | null = null
     systemInfo: SystemModel | null = null
     memberInfo: MemberModel[] | null = null
-    constructor(token: string) {
-        this.token = token
+    systemId: string | null = null
+    discordId: string | null = null
+    private constructor() {
+
+    }
+    public static fromSystemId(systemId: string): Promise<PluralKitApi | null> {
+        let api = new PluralKitApi();
+        api.systemId = systemId
+        return api.init()
+    }
+    public static fromToken(token: string): Promise<PluralKitApi | null> {
+        let api = new PluralKitApi();
+        api.token = token
+        return api.init()
+    }
+    public static fromDiscord(discordId: string): Promise<PluralKitApi | null> {
+        let api = new PluralKitApi();
+        api.discordId = discordId
+        return api.init()
+    }
+
+    private async init(): Promise<PluralKitApi | null> {
+        if (await this.valid()) {
+            return this
+        }
+        return null
     }
 
     private async request<T>(url: string) {
-        return await (await fetch(url, {
+        return await (await fetch(url, this.token ? {
             headers: {
                 Authorization: this.token
             }
-        })).json() as T
+        } : {})).json() as T
     }
 
     async getSystemInfo() {
         if (this.systemInfo !== null) {
             return this.systemInfo
         }
-        this.systemInfo = await this.request<SystemModel>("https://api.pluralkit.me/v1/s")
+        let url = "https://api.pluralkit.me/v1"
+        if (this.systemId !== null) {
+            url += "/s/" + this.systemId
+        }
+        else if (this.discordId !== null) {
+            url += "/a/" + this.discordId
+        }
+        else{
+            url += "/s"
+        }
+        this.systemInfo = await this.request<SystemModel>(url)
         return this.systemInfo
+    }
+
+    async valid() {
+        try {
+            await this.getSystemInfo()
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
     }
 
     async getMembersInfo() {

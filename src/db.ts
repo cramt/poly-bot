@@ -3,6 +3,7 @@ import SECRET from './SECRET';
 import { Gender, User } from './User';
 import { Relationship, RelationshipType } from './Relationship';
 import { PluralKitApi } from './PluralKitApi';
+import { PluralSystem } from './PluralSystem';
 
 let client: Client;
 export async function openDB() {
@@ -149,15 +150,6 @@ export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string
      AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
 }
 
-export async function removeUserAndTheirRelationshipsByDiscordIdNotPlural(guildId: string, discordId: string) {
-    await client.query(`with username_of_deleted as (
-        DELETE FROM users WHERE guild_id = $1 AND discord_id = $2 AND system_member_id = null
-        returning username
-    )
-    DELETE FROM relationships WHERE guild_id = $1
-     AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
-}
-
 export async function removeUserAndTheirRelationshipsByUsername(guildId: string, username: string) {
     await client.query(`with username_of_deleted as (
         DELETE FROM users WHERE guild_id = $1 AND username = $2
@@ -171,6 +163,11 @@ export async function setDiscordIdForUser(user: User) {
     await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
 }
 
+export async function createNewPolySystem(system: PluralSystem) {
+    await client.query("INSERT INTO plural_system (discord_id, system_id) VALUES ($1, $2)", [system.discordId, system.systemId])
+}
+
+/*
 export async function changeToPlural(guildId: string, discordId: string, api: PluralKitApi, users: User[]): Promise<boolean> {
     let data: any[] = []
     users.forEach(user => {
@@ -186,3 +183,4 @@ export async function changeToPlural(guildId: string, discordId: string, api: Pl
     client.query("INSERT INTO plural_tokens (token, id) VALUES ($1, $2)", [api.token, users[0].systemId])])
     return true;
 }
+*/

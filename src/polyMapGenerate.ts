@@ -43,10 +43,17 @@ export async function polyMapGenerate(users: User[], relationships: Relationship
 
     let graph = await Jimp.read(buffer)
     let transFlag = await Jimp.read("transflag.png")
+    let legend = await Jimp.read("legend.png")
 
-    transFlag.resize(graph.bitmap.width, graph.bitmap.height)
+    transFlag.resize(graph.bitmap.width + legend.bitmap.width, Math.max(graph.bitmap.height, legend.bitmap.height))
 
-    transFlag.composite(graph, 0, 0, {
+    transFlag.composite(legend, 0, 0, {
+        mode: Jimp.BLEND_SOURCE_OVER,
+        opacityDest: 1,
+        opacitySource: 1
+    })
+
+    transFlag.composite(graph, legend.bitmap.width, 0, {
         mode: Jimp.BLEND_SOURCE_OVER,
         opacityDest: 1,
         opacitySource: 1,

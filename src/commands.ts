@@ -2,11 +2,12 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, changeToPlural, genderStringToInt } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUser, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, createNewPolySystem } from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
 import { PluralKitApi } from "./PluralKitApi"
+import { PluralSystem } from "./PluralSystem";
 
 async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: string): Promise<User> {
     if ((thing as User).gender === undefined) {
@@ -141,7 +142,31 @@ export const commands: Command[] = [
         return new CommandResponseReaction("👍");
     }),
 
-    new AnyArgumentCommand("im-plural", "changed your user to a plural user", async input => {
+    new Command("add-system", "add your system to the polycule", [], async input => {
+        let channel = input.channel as Discord.TextChannel
+        let api = await PluralKitApi.fromDiscord(input.author.id)
+        if (api === null) {
+            return new CommandReponseInSameChannel("you dont have a pluralkit system")
+        }
+        let argProblems = (await Promise.all([(async () => {
+            if (await getUserByDiscordId(channel.guild.id, input.author.id) !== null) {
+                return new CommandReponseInSameChannel("you already have a non-plural user, please delete that one first")
+            }
+            return null
+        })(), (async () => {
+            if (!await api.valid()) {
+                return new CommandReponseInSameChannel("not a valid token")
+            }
+            return null
+        })()])).filter(x => x !== null)
+        if (argProblems.length > 0) {
+            return argProblems[0]!
+        }
+        await createNewPolySystem(new PluralSystem(input.author.id, (await api.getSystemInfo()).id))
+        return new CommandResponseReaction("👍");
+    })
+
+    /*new AnyArgumentCommand("im-plural", "changed your user to a plural user", async input => {
         let guild = (input.channel as Discord.TextChannel).guild
         if (input.args.length % 2 === 0) {
             return new CommandReponseInSameChannel("can only take an unqual amount of arguments")
@@ -166,5 +191,5 @@ export const commands: Command[] = [
         }
         await changeToPlural(guild.id, input.author.id, api, users)
         return new CommandResponseReaction("👍");
-    })
+    })*/
 ]
