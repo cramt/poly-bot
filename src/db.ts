@@ -2,8 +2,6 @@ import { Client } from 'pg'
 import SECRET from './SECRET';
 import { Gender, User } from './User';
 import { Relationship, RelationshipType } from './Relationship';
-import { PluralKitApi } from './PluralKitApi';
-import { PluralSystem } from './PluralSystem';
 
 let client: Client;
 export async function openDB() {
@@ -184,25 +182,3 @@ export async function removeUserAndTheirRelationshipsByUsername(guildId: string,
 export async function setDiscordIdForUser(user: User) {
     await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
 }
-
-export async function createNewPolySystem(system: PluralSystem) {
-    await client.query("INSERT INTO plural_system (discord_id, system_id) VALUES ($1, $2)", [system.discordId, system.systemId])
-}
-
-/*
-export async function changeToPlural(guildId: string, discordId: string, api: PluralKitApi, users: User[]): Promise<boolean> {
-    let data: any[] = []
-    users.forEach(user => {
-        data[data.length] = user.guildId
-        data[data.length] = user.memberId
-        data[data.length] = user.name
-        data[data.length] = user.discordId
-        data[data.length] = genderStringToInt[user.gender]
-    })
-
-    await Promise.all([client.query("INSERT INTO users (guild_id, system_member_id, username, discord_id, gender) VALUES " + generatePreparedKeys(users.length, 5), data),
-    removeUserAndTheirRelationshipsByDiscordIdNotPlural(guildId, discordId),
-    client.query("INSERT INTO plural_tokens (token, id) VALUES ($1, $2)", [api.token, users[0].systemId])])
-    return true;
-}
-*/
