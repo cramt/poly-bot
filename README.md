@@ -18,5 +18,3 @@ export default {
 
 ## database
 the database that this bot runs on is postgresql
-
-a script for how to setup the database schema can be found in polybot.sql

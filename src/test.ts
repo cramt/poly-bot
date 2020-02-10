@@ -3,6 +3,8 @@ import { polyMapGenerate } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
 import { PluralKitApi } from "./PluralKitApi";
+import { Relationship } from "./Relationship";
+import { User } from "./User";
 
 /*
 //hack so that graphvis doesnt fuck me
@@ -43,14 +45,37 @@ function parseHexToObj(hex: string) {
     return obj;
 }
 
-const id = "634515225369903114";
-const outputFile = "output.png";
+
 
 */
 
-(async () => {
-    let api = await PluralKitApi.fromSystemId("kozxi")
-    console.log(await api?.getSystemInfo())
-    console.log(await api?.getMembersInfo())
+const id = "634515225369903114";
+const outputFile = "output.png";
 
-})().then(() => process.exit(0)).catch(console.log)
+
+(async () => {
+    let relationships: Relationship[] = []
+    let users: User[] = []
+    let keira = new User("Campfire.Keira", "FEMME", id, null)
+    let camp = new User("Campfire.Camp", "FEMME", id, null)
+    let mistress = new User("Campfire.Mistress", "FEMME", id, null)
+    let alex = new User("Alexandra", "FEMME", id, null)
+    users.push(keira)
+    users.push(camp)
+    users.push(alex)
+    users.push(mistress)
+
+    relationships.push(new Relationship("SEXUAL", alex, camp, id))
+    relationships.push(new Relationship("SEXUAL", alex, keira, id))
+
+    let buffer = await polyMapGenerate(users, relationships)
+
+    if (fs.existsSync(outputFile)) {
+        fs.unlinkSync(outputFile)
+    }
+    let stream = fs.createWriteStream(outputFile)
+    stream.write(buffer)
+    stream.close()
+
+
+})().then().catch(console.log)

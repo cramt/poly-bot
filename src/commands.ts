@@ -2,12 +2,11 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, createNewPolySystem } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt} from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
 import { PluralKitApi } from "./PluralKitApi"
-import { PluralSystem } from "./PluralSystem";
 
 async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: string): Promise<User> {
     if ((thing as User).gender === undefined) {
