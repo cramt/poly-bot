@@ -46,6 +46,28 @@ export class AnyArgument extends Argument {
     }
 }
 
+export class StringExcludedArgument extends Argument {
+    strings: string[]
+    constructor(...str: string[]) {
+        super()
+        this.strings = str;
+    }
+    async valid(input: string) {
+        for (let i = 0; i < this.strings.length; i++) {
+            if (input.includes(this.strings[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    async parse(input: string) {
+        return input
+    }
+    get description() {
+        return "literally anything except " + humanPrintArray(this.strings)
+    }
+}
+
 export class DiscordUserArgument extends Argument {
     async valid(input: string) {
         return input.length > 4 && input.startsWith("<@") && input[input.length - 1] === ">"

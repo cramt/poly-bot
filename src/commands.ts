@@ -1,4 +1,4 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand, StringExcludedArgument } from "./Command";
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
@@ -27,7 +27,7 @@ export const commands: Command[] = [
     new Command("add",
         "adds you to the polycule",
         [
-            new AnyArgument(),
+            new StringExcludedArgument("_"),
             new OrArgument(
                 new SpecificArgument("me", "unknown"),
                 new DiscordUserArgument()),
