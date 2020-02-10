@@ -5,15 +5,11 @@ export class User {
     guildId: string
     name: string
     gender: Gender
-    pluralSystemId: string | null
-    pluralMemberId: string | null
-    constructor(name: string, gender: Gender, guildId: string, discordId: string | null, pluralSystemId: string | null = null, pluralMemberId: string | null = null) {
+    constructor(name: string, gender: Gender, guildId: string, discordId: string | null) {
         this.name = name.split(" ").map(x => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase()).join(" ");
         this.gender = gender
         this.guildId = guildId
         this.discordId = discordId
-        this.pluralSystemId = pluralSystemId
-        this.pluralMemberId = pluralMemberId
     }
 }
 
