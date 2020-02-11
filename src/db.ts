@@ -49,14 +49,24 @@ export const relationshipIntToString: {
     return curr
 }, {})
 
-function generatePreparedKeys(colums: number, rows: number): string {
+function generatePreparedKeys(rows: number, colums: number): string {
     let index = 1;
     return new Array(colums).fill(null).map(() => "(" + new Array(rows).fill(null).map(() => "$" + (index++)).join(", ") + ")").join(", ")
 }
 
 export async function createNewUser(user: User): Promise<boolean> {
+    let data = []
+    let split = user.name.split(".")
+    for (let i = 0; i < split.length; i++) {
+        data[data.length] = user.guildId;
+        data[data.length] = split.slice(0, i + 1).join(".")
+        data[data.length] = null;
+        data[data.length] = genderStringToInt["SYSTEM"]
+    }
+    data[data.length - 2] = user.discordId
+    data[data.length - 1] = genderStringToInt[user.gender]
     try {
-        await client.query("INSERT INTO users (guild_id, username, discord_id, gender) VALUES ($1, $2, $3, $4)", [user.guildId, user.name, user.discordId, genderStringToInt[user.gender]])
+        await client.query("INSERT INTO users (guild_id, username, discord_id, gender) VALUES " + generatePreparedKeys(4, split.length), data)
         return true
     }
     catch (e) {

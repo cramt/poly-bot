@@ -1,6 +1,6 @@
 import { User, genderToColor } from "./User";
 import { Relationship, relationshipTypeToColor } from "./Relationship";
-import { graph, Node, Graph } from "graphviz";
+import { graph, Node, Graph, Edge, digraph } from "graphviz";
 import SECRET from "./SECRET";
 import Jimp from "jimp";
 
@@ -8,17 +8,22 @@ interface SystemClusterMap {
     [k: string]: {
         subSystems: SystemClusterMap
         cluster: Graph
+        user: User
     } | undefined
 }
 
 function graphGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
         const backgroundColor = "#00000000"
+        let usersSystems = users.filter(x => x.gender === "SYSTEM")
+        let usersNotSystems = users.filter(x => x.gender !== "SYSTEM")
         const userNodeMap = new Map<User, Node>();
         const systemClusterMap: SystemClusterMap = {}
-        const g = graph("G")
+        const sytemUserMap = new Map<string, User>()
+        usersSystems.forEach(x => sytemUserMap.set(x.name, x))
+        const g = digraph("G")
         g.set("bgcolor", backgroundColor)
-
+        g.set("compound", true)
 
         function buildNode(user: User, graph: Graph) {
             let systems = user.name.split(".")
@@ -26,10 +31,12 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
             systems = systems.slice(0, systems.length - 1)
             systems.forEach((system, i) => {
                 if (systemClusterMap[system] === undefined) {
-                    let cluster = g.addCluster("cluster_" + systems.slice(0, i).join("_"));
+                    let systemName = systems.splice(0, i + 1).join(".")
+                    let cluster = g.addCluster("cluster_" + systemName);
                     systemClusterMap[system] = {
                         cluster: cluster,
-                        subSystems: {}
+                        subSystems: {},
+                        user: sytemUserMap.get(systemName)!
                     }
                     cluster.set("label", system)
                     cluster.set("fontname", "arial")
@@ -50,23 +57,57 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
             }
             buildNode(user, memberName, c)
             */
-
             let color = genderToColor[user.gender];
             let node = graph.addNode(username, { color: "black", fillcolor: color, style: "filled", shape: "ellipse", fontname: "arial" })
             node.set("fillcolor", color)
             userNodeMap.set(user, node)
         }
 
-        users.forEach(x => buildNode(x, g))
+        usersNotSystems.forEach(x => buildNode(x, g))
         relationships.forEach(x => {
-            let n1 = userNodeMap.get(x.rightUser);
-            let n2 = userNodeMap.get(x.leftUser);
+            function getUserNode(user: User): {
+                node: Node,
+                cluster: Graph | null
+            } {
+                if (user.gender === "SYSTEM") {
+                    let temp = systemClusterMap;
+                    let cluster: Graph | null = null;
+                    user.name.split(".").forEach(x => {
+                        let t = temp[x]!
+                        cluster = t.cluster!;
+                        temp = t.subSystems
+                    })
+
+                    let n = userNodeMap.get(usersNotSystems.find(x => x.name.startsWith(user.name))!)!
+                    return {
+                        node: n!,
+                        cluster: cluster
+                    }
+                }
+                else {
+                    return {
+                        node: userNodeMap.get(user)!,
+                        cluster: null
+                    }
+                }
+            }
+            let n1 = getUserNode(x.rightUser)
+            let n2 = getUserNode(x.leftUser);
             if (n1 && n2) {
-                let edge = g.addEdge(n1, n2)
+                let edge = g.addEdge(n1.node, n2.node);
                 edge.set("color", relationshipTypeToColor[x.type])
                 edge.set("arrowhead", "none")
+                
+                if (n1.cluster !== null) {
+                    edge.set("ltail", (n1.cluster as any).id)
+                }
+                if (n2.cluster !== null) {
+                    edge.set("lhead", (n2.cluster as any).id)
+                }
+                
             }
         });
+        console.log(g.to_dot());
         (g as any).output({
             type: "png",
             path: SECRET.GRAPHVIZ_LOCATION
