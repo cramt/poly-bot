@@ -162,12 +162,12 @@ export const commands: Command[] = [
     new Command("bernie-time", "its bernie time 😎", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId)
-        let buffer = await polyMapGenerate(all.users, all.relationships)
         let bernie = new User("president bernie sanders", "MASC", guildId, null)
         all.users.push(bernie);
         all.users.forEach(user => {
             all.relationships.push(new Relationship("ROMANTIC", bernie, user, guildId))
         })
+        let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     })
 
