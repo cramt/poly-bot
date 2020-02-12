@@ -64,6 +64,6 @@ const outputFile = "output.png";
     let stream = fs.createWriteStream(outputFile)
     stream.write(buffer)
     stream.close()
-
+    console.log("done")
 
 })().then().catch(console.log)

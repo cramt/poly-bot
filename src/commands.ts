@@ -162,7 +162,7 @@ export const commands: Command[] = [
     new Command("bernie-time", "its bernie time 😎", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId)
-        let bernie = new User("president Bernie Sanders", "MASC", guildId, null)
+        let bernie = new User("President Bernie Sanders", "MASC", guildId, null)
         all.users.push(bernie);
         all.users.forEach(user => {
             all.relationships.push(new Relationship("ROMANTIC", bernie, user, guildId))
