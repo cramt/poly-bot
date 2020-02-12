@@ -3,7 +3,7 @@ import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
 import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt } from "./db";
-import { Relationship, RelationshipType } from "./Relationship";
+import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
 import { PluralKitApi } from "./PluralKitApi"
@@ -78,7 +78,7 @@ export const commands: Command[] = [
                 new UserArgument(),
                 new DiscordUserArgument()
             ),
-            new SpecificArgument("romantic", "sexual", "friend", "lives with", "in system with", "cuddles with")
+            new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase()))
         ], async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
