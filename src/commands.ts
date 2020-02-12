@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt} from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt } from "./db";
 import { Relationship, RelationshipType } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -158,6 +158,18 @@ export const commands: Command[] = [
         await setDiscordIdForUser(user)
         return new CommandResponseReaction("👍");
     }),
+
+    new Command("bernie-time", "its bernie time 😎", [], async input => {
+        let guildId = (input.channel as Discord.TextChannel).guild.id
+        let all = await getAllInGuild(guildId)
+        let buffer = await polyMapGenerate(all.users, all.relationships)
+        let bernie = new User("president bernie sanders", "MASC", guildId, null)
+        all.users.push(bernie);
+        all.users.forEach(user => {
+            all.relationships.push(new Relationship("ROMANTIC", bernie, user, guildId))
+        })
+        return new CommandResponseFile(buffer, "polycule_map.png")
+    })
 
     /*
     new Command("add-system", "add your system to the polycule", [], async input => {
