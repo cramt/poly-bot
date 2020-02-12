@@ -66,8 +66,8 @@ export async function createNewUser(user: User): Promise<boolean> {
         
         
     }
+    data[1] = user.discordId
     data = data.reverse()
-    data[2] = user.discordId
     data[3] = genderStringToInt[user.gender]
     try {
         await client.query("INSERT INTO users (guild_id, username, discord_id, gender) VALUES " + generatePreparedKeys(4, split.length) + " ON CONFLICT(guild_id, username) DO NOTHING", data)
@@ -182,6 +182,15 @@ export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string
     )
     DELETE FROM relationships WHERE guild_id = $1
      AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
+}
+
+export async function removeSystemMemberAndTheirRelationshipsByDiscordId(guildId: string, discordId: string, username: string) {
+    await client.query(`with username_of_deleted as (
+        DELETE FROM users WHERE guild_id = $1 AND username = $3 AND position('.' in username) > 0 AND substring(username from 0 for position('.' in username)) = (SELECT username FROM users WHERE discord_id = $2)
+        returning username
+    )
+    DELETE FROM relationships WHERE guild_id = $1
+     AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId, username])
 }
 
 export async function removeUserAndTheirRelationshipsByUsername(guildId: string, username: string) {
