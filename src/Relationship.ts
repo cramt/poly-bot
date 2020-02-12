@@ -1,6 +1,6 @@
 import { User } from "./User"
 
-export type RelationshipType = "ROMANTIC" | "SEXUAL" | "FRIEND" | "LIVES WITH" | "IN SYSTEM WITH" | "CUDDLES WITH"
+export type RelationshipType = "ROMANTIC" | "SEXUAL" | "FRIEND" | "LIVES WITH" | "IN SYSTEM WITH" | "CUDDLES WITH" | "QUEERPLATONIC"
 
 export class Relationship {
     guildId: string
@@ -18,11 +18,14 @@ export class Relationship {
     }
 }
 
-export const relationshipTypeToColor = {
+export const relationshipTypeToColor: {
+    [P in RelationshipType]: string
+} = {
     "ROMANTIC": "#ff000",
     "SEXUAL": "#8E7CC3",
     "FRIEND": "#6AA84F",
     "LIVES WITH": "#FFFF00",
     "IN SYSTEM WITH": "#FFE599",
     "CUDDLES WITH": "#F6B26B",
+    "QUEERPLATONIC": "#2A2A2A"
 }

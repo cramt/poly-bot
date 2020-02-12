@@ -39,7 +39,8 @@ export const relationshipStringToInt: {
     "FRIEND": 2,
     "LIVES WITH": 3,
     "IN SYSTEM WITH": 4,
-    "CUDDLES WITH": 5
+    "CUDDLES WITH": 5,
+    "QUEERPLATONIC": 6
 }
 
 export const relationshipIntToString: {
