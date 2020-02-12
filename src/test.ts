@@ -54,21 +54,9 @@ const outputFile = "output.png";
 
 
 (async () => {
-    let relationships: Relationship[] = []
-    let users: User[] = []
-    let keira = new User("Campfire.Keira", "FEMME", id, null)
-    let camp = new User("Campfire.Camp", "FEMME", id, null)
-    let mistress = new User("Campfire.Mistress", "FEMME", id, null)
-    let alex = new User("Alexandra", "FEMME", id, null)
-    users.push(keira)
-    users.push(camp)
-    users.push(alex)
-    users.push(mistress)
-
-    relationships.push(new Relationship("SEXUAL", alex, camp, id))
-    relationships.push(new Relationship("SEXUAL", alex, keira, id))
-
-    let buffer = await polyMapGenerate(users, relationships)
+    await openDB()
+    let all = await getAllInGuild('634515225369903114')
+    let buffer = await polyMapGenerate(all.users, all.relationships)
 
     if (fs.existsSync(outputFile)) {
         fs.unlinkSync(outputFile)
