@@ -24,6 +24,7 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
         const g = digraph("G")
         g.set("bgcolor", backgroundColor)
         g.set("compound", true)
+        g.set("shape", "square")
 
         function buildNode(user: User, graph: Graph) {
             let systems = user.name.split(".")
