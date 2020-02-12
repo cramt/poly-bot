@@ -1,6 +1,6 @@
 import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand, StringExcludedArgument } from "./Command";
 import * as Discord from "discord.js"
-import { User, Gender } from "./User";
+import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
 import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt } from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
@@ -31,7 +31,7 @@ export const commands: Command[] = [
             new OrArgument(
                 new SpecificArgument("me", "unknown"),
                 new DiscordUserArgument()),
-            new SpecificArgument("femme", "masc", "neuter", "system")], async input => {
+            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x=>x.toLowerCase()))], async input => {
                 let guildId = (input.channel as Discord.TextChannel).guild.id
                 let name = input.args[0] as string
                 let discordUser = input.args[1] as Discord.User | "me" | "unknown" | null
