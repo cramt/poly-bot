@@ -12,7 +12,8 @@ export default {
     DB_PORT: "5432 or anothing port you might like",
     DB_PASSWORD: "a super secure password",
     DB_USER: "a super cool username",
-    GRAPHVIZ_LOCATION: "D:\\path\\to\\graphvis\\bin"
+    GRAPHVIZ_LOCATION: "D:\\path\\to\\graphvis\\bin",
+    PREFIX: "/poly "
 }
 ```
 
