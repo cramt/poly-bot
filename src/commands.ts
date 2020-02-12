@@ -19,7 +19,7 @@ export const commands: Command[] = [
     new Command("help", "prints all the commands the bot has available", [], async input => {
         let str = "```"
         str += "prefix = \"" + prefix + "\"\r\n\r\n"
-        str += commands.map(x => x.name + ": " + x.description + x.arguments.map((x, i) => "\r\nargument " + i + ": " + x.description).join("")).join("\r\n\r\n\r\n")
+        str += commands.map(x => x.name + ": " + x.description + x.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.usage !== "" ? x.usage + ", can be" : "") + x.description).join("")).join("\r\n\r\n\r\n")
         str += "```"
         return new CommandReponseInSameChannel(str)
     }),
@@ -31,7 +31,7 @@ export const commands: Command[] = [
             new OrArgument(
                 new SpecificArgument("me", "unknown"),
                 new DiscordUserArgument()),
-            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x=>x.toLowerCase()))], async input => {
+            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase()))], async input => {
                 let guildId = (input.channel as Discord.TextChannel).guild.id
                 let name = input.args[0] as string
                 let discordUser = input.args[1] as Discord.User | "me" | "unknown" | null

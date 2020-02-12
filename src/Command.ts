@@ -7,9 +7,14 @@ import { checkServerIdentity } from "tls";
 import { Relationship, RelationshipType } from "./Relationship";
 
 export abstract class Argument {
+    usage: string = ""
     abstract valid(input: string, channel: Discord.Channel): Promise<boolean>
     abstract parse(input: string, channel: Discord.Channel): Promise<any>
     abstract get description(): string;
+    setUsage(usage: string): Argument {
+        this.usage = usage
+        return this;
+    }
 }
 
 export class OrArgument extends Argument {
