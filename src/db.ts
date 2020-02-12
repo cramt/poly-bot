@@ -56,17 +56,17 @@ function generatePreparedKeys(rows: number, colums: number): string {
 
 export async function createNewUser(user: User): Promise<boolean> {
     let data = []
-    let split = user.name.split(".")
+    let split = user.name.split(".").reverse()
     for (let i = 0; i < split.length; i++) {
         data[data.length] = user.guildId;
         data[data.length] = split.slice(0, i + 1).join(".")
         data[data.length] = null;
         data[data.length] = genderStringToInt["SYSTEM"]
     }
-    data[data.length - 2] = user.discordId
-    data[data.length - 1] = genderStringToInt[user.gender]
+    data[2] = user.discordId
+    data[3] = genderStringToInt[user.gender]
     try {
-        await client.query("INSERT INTO users (guild_id, username, discord_id, gender) VALUES " + generatePreparedKeys(4, split.length), data)
+        await client.query("INSERT INTO users (guild_id, username, discord_id, gender) VALUES " + generatePreparedKeys(4, split.length) + " ON CONFLICT(guild_id, username) DO NOTHING", data)
         return true
     }
     catch (e) {
