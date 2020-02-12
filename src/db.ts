@@ -56,13 +56,16 @@ function generatePreparedKeys(rows: number, colums: number): string {
 
 export async function createNewUser(user: User): Promise<boolean> {
     let data = []
-    let split = user.name.split(".").reverse()
+    let split = user.name.split(".")
     for (let i = 0; i < split.length; i++) {
-        data[data.length] = user.guildId;
-        data[data.length] = split.slice(0, i + 1).join(".")
-        data[data.length] = null;
         data[data.length] = genderStringToInt["SYSTEM"]
+        data[data.length] = null;
+        data[data.length] = split.slice(0, i + 1).join(".")
+        data[data.length] = user.guildId;
+        
+        
     }
+    data = data.reverse()
     data[2] = user.discordId
     data[3] = genderStringToInt[user.gender]
     try {

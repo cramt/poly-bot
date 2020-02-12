@@ -15,8 +15,8 @@ interface SystemClusterMap {
 function graphGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
         const backgroundColor = "#00000000"
-        let usersSystems = users.filter(x => x.gender === "SYSTEM")
-        let usersNotSystems = users.filter(x => x.gender !== "SYSTEM")
+        let usersSystems = users.filter(x => x.gender === "SYSTEM" && users.find(y => y.name.startsWith(x.name + ".")))
+        let usersNotSystems = users.filter(x => !usersSystems.includes(x))
         const userNodeMap = new Map<User, Node>();
         const systemClusterMap: SystemClusterMap = {}
         const sytemUserMap = new Map<string, User>()
@@ -69,7 +69,7 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
                 node: Node,
                 cluster: Graph | null
             } {
-                if (user.gender === "SYSTEM") {
+                if (usersSystems.includes(user)) {
                     let temp = systemClusterMap;
                     let cluster: Graph | null = null;
                     user.name.split(".").forEach(x => {
@@ -97,17 +97,16 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
                 let edge = g.addEdge(n1.node, n2.node);
                 edge.set("color", relationshipTypeToColor[x.type])
                 edge.set("arrowhead", "none")
-                
+
                 if (n1.cluster !== null) {
                     edge.set("ltail", (n1.cluster as any).id)
                 }
                 if (n2.cluster !== null) {
                     edge.set("lhead", (n2.cluster as any).id)
                 }
-                
+
             }
         });
-        console.log(g.to_dot());
         (g as any).output({
             type: "png",
             path: SECRET.GRAPHVIZ_LOCATION
