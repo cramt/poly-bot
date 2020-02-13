@@ -32,7 +32,7 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
             systems.forEach((system, i) => {
                 if (systemClusterMap[system] === undefined) {
                     let systemName = systems.splice(0, i + 1).join(".")
-                    let cluster = g.addCluster("cluster_" + systemName);
+                    let cluster = g.addCluster("\"cluster_" + systemName + "\"");
                     systemClusterMap[system] = {
                         cluster: cluster,
                         subSystems: {},
@@ -99,10 +99,12 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
                 edge.set("arrowhead", "none")
 
                 if (n1.cluster !== null) {
-                    edge.set("ltail", (n1.cluster as any).id)
+                    let id = (n1.cluster as any).id + ""
+                    edge.set("ltail", id.substring(1, id.length - 1))
                 }
                 if (n2.cluster !== null) {
-                    edge.set("lhead", (n2.cluster as any).id)
+                    let id = (n2.cluster as any).id + ""
+                    edge.set("lhead", id.substring(1, id.length - 1))
                 }
 
             }
