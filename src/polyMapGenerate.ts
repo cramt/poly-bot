@@ -22,6 +22,7 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
         const sytemUserMap = new Map<string, User>()
         usersSystems.forEach(x => sytemUserMap.set(x.name, x))
         const g = digraph("G")
+        g.set("splines", "polyline")
         g.set("bgcolor", backgroundColor)
         g.set("compound", true)
 

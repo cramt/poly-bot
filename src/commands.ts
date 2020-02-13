@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, removeSystemMemberAndTheirRelationshipsByDiscordId } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, removeSystemMemberAndTheirRelationshipsByDiscordId, getSystemMembers } from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -79,12 +79,19 @@ export const commands: Command[] = [
 
     new Command("me", "print out information about yourself", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
-        let user = (await getUserByDiscordId(guildId, input.author.id))
+        let user = (await getUserByDiscordId(guildId, input.author.id)) as User
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await getRelationshipsByUsers(guildId, [user])
-        return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => "\nyoure in a " + x.type.toLowerCase() + " relationship with " + (user?.name === x.rightUser.name ? x.leftUser.name : x.rightUser.name)).join("") + "```")
+        let relationships = await getRelationshipsByUsers(guildId, [user, ...await getSystemMembers(guildId, user.name)])
+        return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
+            let you = x.rightUser
+            let them = x.leftUser
+            if (!user.name.startsWith(you.name)) {
+                [them, you] = [you, them]
+            }
+            return "\n" + you.name + " is in a " + x.type.toLowerCase() + " relationship with " + them.name
+        }).join("") + "```")
     }),
 
     new Command("new-relationship",

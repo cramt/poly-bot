@@ -63,8 +63,8 @@ export async function createNewUser(user: User): Promise<boolean> {
         data[data.length] = null;
         data[data.length] = split.slice(0, i + 1).join(".")
         data[data.length] = user.guildId;
-        
-        
+
+
     }
     data[1] = user.discordId
     data = data.reverse()
@@ -204,4 +204,10 @@ export async function removeUserAndTheirRelationshipsByUsername(guildId: string,
 
 export async function setDiscordIdForUser(user: User) {
     await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
+}
+
+export async function getSystemMembers(guildId: string, username: string) {
+    username += "."
+    let results = await client.query("SELECT username, gender, discord_id FROM users WHERE substring(username from 0 for LENGTH($2)+1) = $2 AND guild_id = $1", [guildId, username])
+    return results.rows.map(x => new User(x.username, genderIntToString[x.gender], guildId, x.discord_id))
 }
