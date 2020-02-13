@@ -148,13 +148,20 @@ export const commands: Command[] = [
 
     new AnyArgumentCommand("generate-personal", "generates the polycule map for an individual person", async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
-        let relationships = await getRelationshipsByUsers(guildId, (await Promise.all(input.args.map(async x => {
+
+        let startUsers: User[] = []
+
+        await Promise.all(input.args.map(async x => {
             let a = new OrArgument(new DiscordUserArgument(), new UserArgument());
             if (!await a.valid(x, input.channel)) {
                 return null
             }
-            return await parseDiscordUserOrUser(await a.parse(x, input.channel), guildId)
-        }))).filter(x => x !== null) as User[])
+            let user = await parseDiscordUserOrUser(await a.parse(x, input.channel), guildId)
+
+            startUsers.push(user, ...await getSystemMembers(guildId, user.name))
+        }));
+
+        let relationships = (await getRelationshipsByUsers(guildId, startUsers)).filter(x => x !== null)
         let users: User[] = []
         relationships.forEach(rel => {
             users.push(rel.leftUser)

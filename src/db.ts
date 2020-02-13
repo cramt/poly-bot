@@ -124,6 +124,9 @@ export async function getRelationshipsByDiscordId(guildId: string, discordId: st
 }
 
 export async function getRelationshipsByUsers(guildId: string, users: User[]): Promise<Relationship[]> {
+    if (users.length === 0) {
+        return []
+    }
     let result = await client.query(`SELECT relationship_type, users.username, right_username, left_username, users.gender, users.discord_id FROM relationships
     INNER JOIN users ON 
     (
