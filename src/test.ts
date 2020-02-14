@@ -5,6 +5,7 @@ import * as fs from "fs"
 import { PluralKitApi } from "./PluralKitApi";
 import { Relationship } from "./Relationship";
 import { User } from "./User";
+import { spawn } from "child_process";
 
 /*
 //hack so that graphvis doesnt fuck me
@@ -54,7 +55,6 @@ const outputFile = "output.png";
 
 
 (async () => {
-    /*
     await openDB()
     let all = await getAllInGuild('634515225369903114')
     let buffer = await polyMapGenerate(all.users, all.relationships)
@@ -66,24 +66,5 @@ const outputFile = "output.png";
     stream.write(buffer)
     stream.close()
     console.log("done")
-    */
-
-    let user = new User("Coding System.Kassandra.Alex", "NEUTER", "634515225369903114", "test_discord_id")
-
-   let data = []
-   let split = user.name.split(".")
-   for (let i = 0; i < split.length; i++) {
-       data[data.length] = genderStringToInt["SYSTEM"]
-       data[data.length] = null;
-       data[data.length] = split.slice(0, i + 1).join(".")
-       data[data.length] = user.guildId;
-       
-       
-   }
-   data[1] = user.discordId
-   data = data.reverse()
-   data[3] = genderStringToInt[user.gender]
-
-   console.log(data)
 
 })().then().catch(console.log)

@@ -19,6 +19,8 @@
         "jimp": "^0.9.3",
         "node-fetch": "^2.6.0",
         "pg": "^7.18.1",
-        "typescript": "^3.7.5"
+        "svg2img": "^0.6.1",
+        "typescript": "^3.7.5",
+        "viz.js": "^2.1.2"
     }
 }

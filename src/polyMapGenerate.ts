@@ -3,6 +3,10 @@ import { Relationship, relationshipTypeToColor } from "./Relationship";
 import { graph, Node, Graph, Edge, digraph } from "graphviz";
 import SECRET from "./SECRET";
 import Jimp from "jimp";
+import * as fs from "fs"
+import { exec } from "child_process";
+import * as path from "path"
+const svg2img = require("svg2img")
 
 interface SystemClusterMap {
     [k: string]: {
@@ -11,6 +15,8 @@ interface SystemClusterMap {
         user: User
     } | undefined
 }
+
+let viz = new (require("viz.js"))(require("viz.js/full.render.js"));
 
 function graphGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
@@ -60,6 +66,7 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
             */
             let color = genderToColor[user.gender];
             let node = graph.addNode(username, { color: "black", fillcolor: color, style: "filled", shape: "ellipse", fontname: "arial" })
+            node.set("label", username)
             node.set("fillcolor", color)
             userNodeMap.set(user, node)
         }
@@ -110,14 +117,31 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
 
             }
         });
-        (g as any).output({
-            type: "png",
-            path: SECRET.GRAPHVIZ_LOCATION
-        }, (e: Buffer) => {
-            resolve(e)
-        }, (e: object) => {
-            reject("couldnt generate\n" + g.to_dot())
-        })
+
+        viz.renderString(g.to_dot()).then((x: string) => {
+            svg2img(x, (err: any, buffer: Buffer) => {
+                if (err) {
+                    reject(err)
+                }
+                else {
+                    resolve(buffer)
+                }
+            })
+        }).catch(reject)
+        /*
+            (g as any).output({
+                type: "png",
+                path: SECRET.GRAPHVIZ_LOCATION
+            }, (e: Buffer) => {
+                resolve(e)
+            }, (code: number, out: string, err: string) => {
+                reject({
+                    code,
+                    err,
+                    out
+                })
+            })
+            */
     })
 }
 
