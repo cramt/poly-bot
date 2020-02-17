@@ -18,4 +18,8 @@ export default {
 ```
 
 ## database
-the database that this bot runs on is postgresql
+the bot uses a postgresql database
+
+## TODO
+- add alias' to commands
+- 

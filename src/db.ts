@@ -178,12 +178,32 @@ export async function getAllInGuild(guildId: string): Promise<{ relationships: R
     }
 }
 
+export async function getAllInSystem(systemName: string, guildId: string): Promise<{ relationships: Relationship[], users: User[] }> {
+    if (systemName[systemName.length - 1] !== ".") {
+        systemName += "."
+    }
+    let [relationshipResults, userResults] = await Promise.all([
+        client.query(`SELECT relationship_type, left_username, right_username FROM relationships WHERE guild_id = $1 AND (right_username LIKE $3 OR CONCAT(right_username, '.') = $2) AND (left_username LIKE $3 OR CONCAT(left_username, '.') = $2)`, [guildId, systemName, systemName + "%"]),
+        client.query("SELECT username, discord_id, gender FROM users WHERE guild_id = $1 AND (username LIKE $3 OR CONCAT(username, '.') = $2)", [guildId, systemName, systemName + "%"])])
+    let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], guildId, user.discord_id))
+    let userMap = new Map<string, User>()
+    users.forEach(x => {
+        userMap.set(x.name, x)
+    })
+    let relationships = relationshipResults.rows.map(relationship =>
+        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_username)!, userMap.get(relationship.right_username)!, guildId));
+    return {
+        relationships: relationships,
+        users: users
+    }
+}
+
 export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string, discordId: string) {
     await client.query(`with username_of_deleted as (
         DELETE FROM users WHERE guild_id = $1 AND discord_id = $2
         returning username
     )
-    DELETE FROM relationships WHERE guild_id = $1
+    DELETE FROM relationships WHERE guild_id = $11
      AND (left_username = (SELECT username FROM username_of_deleted) OR right_username = (SELECT username FROM username_of_deleted))`, [guildId, discordId])
 }
 

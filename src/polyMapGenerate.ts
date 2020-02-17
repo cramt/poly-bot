@@ -117,7 +117,7 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
 
             }
         });
-
+        /*
         viz.renderString(g.to_dot()).then((x: string) => {
             svg2img(x, (err: any, buffer: Buffer) => {
                 if (err) {
@@ -128,20 +128,20 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
                 }
             })
         }).catch(reject)
-        /*
-            (g as any).output({
-                type: "png",
-                path: SECRET.GRAPHVIZ_LOCATION
-            }, (e: Buffer) => {
-                resolve(e)
-            }, (code: number, out: string, err: string) => {
-                reject({
-                    code,
-                    err,
-                    out
-                })
+        */
+        (g as any).output({
+            type: "png",
+            path: SECRET.GRAPHVIZ_LOCATION
+        }, (e: Buffer) => {
+            resolve(e)
+        }, (code: number, out: string, err: string) => {
+            reject({
+                code,
+                err,
+                out
             })
-            */
+        })
+
     })
 }
 

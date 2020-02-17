@@ -202,6 +202,7 @@ export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' 
 export class Command {
     description: string
     name: string
+    alias: string[] = []
     arguments: Argument[]
     func: (input: CommandFuncInput) => Promise<CommandReponseBase>
     channelType: DiscordChannelType[]
@@ -224,7 +225,7 @@ export class Command {
         });
     }
 
-    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>, channelType: DiscordChannelType | DiscordChannelType[] = "text") {
+    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>, alias: string[] = [], channelType: DiscordChannelType | DiscordChannelType[] = "text") {
         this.name = name
         this.arguments = args
         this.func = func
@@ -235,6 +236,7 @@ export class Command {
         else {
             this.channelType = channelType as DiscordChannelType[]
         }
+        this.alias = alias;
     }
 }
 
