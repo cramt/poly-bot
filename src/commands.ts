@@ -1,4 +1,4 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand, StringExcludedArgument, CommandReponseBase } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand, StringExcludedArgument, CommandReponseBase, CacheCommand } from "./Command";
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
@@ -139,14 +139,14 @@ export const commands: Command[] = [
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 
-    new Command("generate", "generates the polycule map", [], async input => {
+    new CacheCommand("generate", "generates the polycule map", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId)
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
-    new Command("generate-system", "generates the polycule map but only for a system", [new UserArgument()], async input => {
+    new CacheCommand("generate-system", "generates the polycule map but only for a system", [new UserArgument()], async input => {
         let system = input.args[0] as User
         let systemName = system.name + "."
         let guildId = (input.channel as Discord.TextChannel).guild.id

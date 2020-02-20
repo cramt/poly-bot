@@ -251,6 +251,19 @@ export class AdminCommand extends Command {
     }
 }
 
+export class CacheCommand extends Command {
+    cache: Map<string, CommandReponseBase> = new Map()
+    constructor(name: string, description: string, args: Argument[], func: (input: CommandFuncInput) => Promise<CommandReponseBase>, alias: string[] = [], channelType: DiscordChannelType | DiscordChannelType[] = "text") {
+        super(name, description, args, async input => {
+            let val = JSON.stringify(input.args)
+            if (!this.cache.has(val)) {
+                this.cache.set(val, await func(input))
+            }
+            return this.cache.get(val)!
+        }, alias, channelType)
+    }
+}
+
 export class AnyArgumentCommand extends Command {
     constructor(name: string, description: string, func: (input: CommandFuncInput) => Promise<CommandReponseBase>) {
         super(name, description, [], func)
