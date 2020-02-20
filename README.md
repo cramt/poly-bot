@@ -22,4 +22,4 @@ the bot uses a postgresql database
 
 ## TODO
 - add alias' to commands
-- 
+- add caching for polymap generation
