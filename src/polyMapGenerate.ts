@@ -6,7 +6,8 @@ import Jimp from "jimp";
 import * as fs from "fs"
 import { exec } from "child_process";
 import * as path from "path"
-const svg2img = require("svg2img")
+import * as Thread from "worker_threads"
+import { runThreadFunction } from "./utilities";
 
 interface SystemClusterMap {
     [k: string]: {
@@ -146,25 +147,33 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
 }
 
 export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
-    let [graph, transFlag, legend] = await Promise.all([
-        graphGenerate(users, relationships).then(Jimp.read),
-        Jimp.read("transflag.png"),
-        Jimp.read("legend.png")
-    ])
+    if (Thread.isMainThread) {
+        let [graph, transFlag, legend] = await Promise.all([
+            graphGenerate(users, relationships).then(Jimp.read),
+            Jimp.read("transflag.png"),
+            Jimp.read("legend.png")
+        ])
 
-    transFlag.resize(graph.bitmap.width + legend.bitmap.width, Math.max(graph.bitmap.height, legend.bitmap.height))
+        transFlag.resize(graph.bitmap.width + legend.bitmap.width, Math.max(graph.bitmap.height, legend.bitmap.height))
 
-    transFlag.composite(legend, 0, 0, {
-        mode: Jimp.BLEND_SOURCE_OVER,
-        opacityDest: 1,
-        opacitySource: 1
-    })
+        transFlag.composite(legend, 0, 0, {
+            mode: Jimp.BLEND_SOURCE_OVER,
+            opacityDest: 1,
+            opacitySource: 1
+        })
 
-    transFlag.composite(graph, legend.bitmap.width, 0, {
-        mode: Jimp.BLEND_SOURCE_OVER,
-        opacityDest: 1,
-        opacitySource: 1,
-    })
+        transFlag.composite(graph, legend.bitmap.width, 0, {
+            mode: Jimp.BLEND_SOURCE_OVER,
+            opacityDest: 1,
+            opacitySource: 1,
+        })
 
-    return await transFlag.getBufferAsync("image/png");
+        return await transFlag.getBufferAsync("image/png");
+    }
+    else {
+        return await runThreadFunction({
+            name: "polyMapGenerate",
+            args: [users, relationships]
+        })
+    }
 }

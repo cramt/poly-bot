@@ -1,3 +1,5 @@
+import * as Thread from "worker_threads"
+
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ")
     if (commandNameIndex === -1) {
@@ -69,4 +71,19 @@ export function humanPrintArray(arr: string[], andOr = "or"): string {
         return arr[0]
     }
     return arr.slice(0, arr.length - 1).join(", ") + " " + andOr + " " + arr[arr.length - 1]
+}
+
+export interface ThreadFunctionArgs {
+    name: string
+    args: any[]
+}
+
+export function runThreadFunction(args: ThreadFunctionArgs): Promise<any> {
+    return new Promise((resolve, reject) => {
+        const worker = new Thread.Worker(__filename, {
+            workerData: args
+        })
+        worker.once("message", resolve)
+        worker.once("error", reject)
+    })
 }
