@@ -2,10 +2,13 @@ export type Gender = "FEMME" | "MASC" | "NEUTER" | "SYSTEM"
 
 export class User {
     discordId: string | null = null
-    guildId: string
+    guildId: string | null = null;
     name: string
     gender: Gender
-    constructor(name: string, gender: Gender, guildId: string, discordId: string | null) {
+    id: number | null = null
+    systemId: number | null = null;
+    system: User | null = null;
+    constructor(name: string, gender: Gender, guildId: string | null, discordId: string | null, id: number | null, systemId: number | null) {
         this.name = name.split(".").map(x => {
             x = x.split(" ").map(y => {
                 return y.charAt(0).toUpperCase() + y.slice(1).toLowerCase()
@@ -13,8 +16,15 @@ export class User {
             return x.charAt(0).toUpperCase() + x.slice(1)
         }).join(".")
         this.gender = gender
-        this.guildId = guildId
+        if (discordId !== null) {
+            this.guildId = null;
+        }
+        else {
+            this.guildId = guildId;
+        }
         this.discordId = discordId
+        this.id = id;
+        this.systemId = systemId;
     }
 }
 

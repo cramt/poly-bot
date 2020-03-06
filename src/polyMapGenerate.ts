@@ -130,11 +130,12 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
             })
         }).catch(reject)
         */
+        fs.writeFileSync("test.dot", g.to_dot());
         (g as any).output({
-            type: "png",
+            type: "svg",
             path: SECRET.GRAPHVIZ_LOCATION
         }, (e: Buffer) => {
-            resolve(e)
+            fs.writeFileSync("test.svg", e);
         }, (code: number, out: string, err: string) => {
             reject({
                 code,

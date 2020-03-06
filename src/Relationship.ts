@@ -5,15 +5,14 @@ export type RelationshipType = "ROMANTIC" | "SEXUAL" | "FRIEND" | "LIVES WITH" |
 export class Relationship {
     guildId: string
     type: RelationshipType
-    leftUser: User
-    rightUser: User
-    constructor(type: RelationshipType, leftUser: User, rightUser: User, guildId: string) {
+    leftUserId: number
+    rightUserId: number
+    leftUser: User | null = null
+    rightUser: User | null = null
+    constructor(type: RelationshipType, leftUserId: number, rightUserId: number, guildId: string) {
         this.type = type
-        if (leftUser.name > rightUser.name) {
-            [leftUser, rightUser] = [rightUser, leftUser]
-        }
-        this.leftUser = leftUser;
-        this.rightUser = rightUser;
+        this.leftUserId = leftUserId
+        this.rightUserId = rightUserId
         this.guildId = guildId
     }
 }

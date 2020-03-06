@@ -63,8 +63,6 @@ export async function createNewUser(user: User): Promise<boolean> {
         data[data.length] = null;
         data[data.length] = split.slice(0, i + 1).join(".")
         data[data.length] = user.guildId;
-
-
     }
     data[1] = user.discordId
     data = data.reverse()
@@ -80,7 +78,7 @@ export async function createNewUser(user: User): Promise<boolean> {
 
 export async function createNewRelationship(relationship: Relationship): Promise<boolean> {
     try {
-        await client.query("INSERT INTO relationships (relationship_type, left_username, right_username, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUser.name, relationship.rightUser.name, relationship.guildId])
+        await client.query("INSERT INTO relationships (relationship_type, left_user_id, right_user_id, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUserId, relationship.rightUserId, relationship.guildId])
         return true
     }
     catch (e) {
@@ -88,26 +86,30 @@ export async function createNewRelationship(relationship: Relationship): Promise
     }
 }
 
-export async function removeRelationship(guildId: string, leftUsername: string, rightUsername: string): Promise<void> {
-    await client.query("DELETE FROM relationships WHERE guild_id = $1 AND (left_username = $2 AND right_username = $3) OR (right_username = $2 AND left_username = $3)", [guildId, leftUsername, rightUsername])
+export async function removeRelationship(guildId: string, rightId: number, leftId: number): Promise<void> {
+    await client.query("DELETE FROM relationships WHERE guild_id = $1 AND (left_user_id = $2 AND right_user_id = $3) OR (right_user_id = $2 AND left_user_id = $3)", [guildId, leftId, rightId])
+}
+
+export async function removeRelationshipByNames(guildId: string, rightUsername: string, leftUsername: string): Promise<void> {
+    await client.query("DELETE FROM relationships WHERE guild_id = $1 AND (left_user_id = $2 AND right_user_id = $3) OR (right_user_id = $2 AND left_user_id = $3)", [guildId, leftId, rightId])
 }
 
 
 
 export async function getUserByDiscordId(guildId: string, discordId: string): Promise<User | null> {
-    let result = await client.query("SELECT username, gender FROM users WHERE guild_id = $1 AND discord_id = $2", [guildId, discordId])
+    let result = await client.query("SELECT username, gender, id, system_id FROM users WHERE guild_id = $1 AND discord_id = $2", [guildId, discordId])
     if (result.rows.length === 0) {
         return null
     }
-    return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], guildId, discordId)
+    return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], guildId, discordId, result.rows[0].id, result.rows[0].system_id)
 }
 
 export async function getUserByUsername(guildId: string, username: string): Promise<User | null> {
-    let result = await client.query("SELECT gender, discord_id FROM users WHERE guild_id = $1 AND LOWER(username) = LOWER($2)", [guildId, username])
+    let result = await client.query("SELECT gender, discord_id, id, system_id FROM users WHERE guild_id = $1 AND LOWER(username) = LOWER($2)", [guildId, username])
     if (result.rows.length === 0) {
         return null
     }
-    return new User(username, genderIntToString[result.rows[0].gender], guildId, result.rows[0].discord_id)
+    return new User(username, genderIntToString[result.rows[0].gender], guildId, result.rows[0].discord_id, result.rows[0].id, result.rows[0].system_id)
 }
 
 
