@@ -23,3 +23,9 @@ the bot uses a postgresql database
 ## TODO
 - add alias' to commands
 - add caching for polymap generation
+- redo entire database and make a migration system like pluralkit
+- less wide 
+- proper generation of the map THAT INCLUDES EMOJI
+
+## TODO but kinda irrelevant
+- adding custom discord emoji as stuff in to generate
