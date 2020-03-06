@@ -26,6 +26,7 @@ the bot uses a postgresql database
 - redo entire database and make a migration system like pluralkit
 - less wide 
 - proper generation of the map THAT INCLUDES EMOJI
+- better way to do variable number of arguments
 
 ## TODO but kinda irrelevant
 - adding custom discord emoji as stuff in to generate
