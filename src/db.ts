@@ -85,6 +85,10 @@ function generatePreparedKeys(rows: number, colums: number): string {
     return new Array(colums).fill(null).map(() => "(" + new Array(rows).fill(null).map(() => "$" + (index++)).join(", ") + ")").join(", ")
 }
 
+function generateNullableEvaluation(field: string, number: number) {
+    return "(" + field + " = $" + number + " OR (" + field + " IS NULL AND $" + number + " IS NULL))"
+}
+
 export async function createNewUser(user: User): Promise<boolean> {
     try {
         await client.query("INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES (?, ?, ?, ?, ?)", [user.guildId, user.name, user.discordId, genderStringToInt[user.gender], user.systemId])
@@ -118,8 +122,8 @@ export async function getUserByDiscordId(discordId: string): Promise<User | null
     return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], null, discordId, result.rows[0].id, result.rows[0].system_id)
 }
 
-export async function getUserByUsername(guildId: string, username: string): Promise<User | null> {
-    let result = await client.query("SELECT gender, discord_id, id, system_id FROM users WHERE guild_id = $1 AND LOWER(username) = LOWER($2)", [guildId, username])
+export async function getUserByUsername(guildId: string | null, username: string): Promise<User | null> {
+    let result = await client.query("SELECT gender, discord_id, id, system_id FROM users WHERE username = $1 AND " + generateNullableEvaluation("guild_id", 2), [username, guildId])
     if (result.rows.length === 0) {
         return null
     }

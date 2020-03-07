@@ -1,4 +1,4 @@
-import { openDB, getAllInGuild, createNewRelationship, genderStringToInt } from "./db";
+import { openDB, getAllInGuild, createNewRelationship, genderStringToInt, getUserByUsername } from "./db";
 import { polyMapGenerate, exportDotScript, svgToPngViaChromium } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
@@ -56,6 +56,6 @@ const outputFile = "output.png";
 
 
 (async () => {
-    let data = loadTestData("testdata.json")
-    fs.writeFileSync("output.png", await polyMapGenerate(data.users, data.relationships))
+    await openDB()
+    console.log(await getUserByUsername(null, "Alexandra"))
 })().then().catch(console.log)
