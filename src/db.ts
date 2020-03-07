@@ -5,25 +5,16 @@ import { Relationship, RelationshipType } from './Relationship';
 import * as fs from "fs"
 
 let client: Client;
-export async function openDB() {
-    client = new Client({
-        host: SECRET.DB_HOST,
-        user: SECRET.DB_USER,
-        password: SECRET.DB_PASSWORD,
-        port: parseInt(SECRET.DB_PORT),
-        database: SECRET.DB_NAME
-    });
-    await client.connect();
+
+async function setupSchema() {
     let [currentVersion, maxMigrations] = await Promise.all([
         (async () => {
-            let currentVersion: number
             try {
-                currentVersion = (await client.query("select schema_version from info")).rows[0].schema_version
+                return (await client.query("select schema_version from info")).rows[0].schema_version as number
             }
             catch (e) {
-                currentVersion = -1;
+                return -1;
             }
-            return currentVersion;
         })(),
         (async () => {
             let dir = await fs.promises.readdir("migrations")
@@ -38,8 +29,20 @@ export async function openDB() {
         return;
     }
     for (let i = currentVersion + 1; i <= maxMigrations; i++) {
-        await client.query(fs.readFileSync("migrations/" + i + ".sql").toString())
+        await client.query((await fs.promises.readFile("migrations/" + i + ".sql")).toString())
     }
+}
+
+export async function openDB() {
+    client = new Client({
+        host: SECRET.DB_HOST,
+        user: SECRET.DB_USER,
+        password: SECRET.DB_PASSWORD,
+        port: parseInt(SECRET.DB_PORT) || 5432,
+        database: SECRET.DB_NAME
+    });
+    await client.connect();
+    await setupSchema();
 }
 
 export const genderStringToInt: {
