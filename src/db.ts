@@ -81,7 +81,7 @@ export async function removeRelationship(guildId: string, rightId: number, leftI
 
 
 export async function getUserByDiscordId(discordId: string): Promise<User | null> {
-    let result = await client.query("SELECT username, gender, id, system_id FROM users WHERE discord_id = $1",[discordId])
+    let result = await client.query("SELECT username, gender, id, system_id FROM users WHERE discord_id = $1", [discordId])
     if (result.rows.length === 0) {
         return null
     }
@@ -154,14 +154,18 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
     }
 }
 
-export async function getAllInSystem(systemName: string, guildId: string): Promise<{ relationships: Relationship[], users: User[] }> {
-    if (systemName[systemName.length - 1] !== ".") {
-        systemName += "."
-    }
-    let [relationshipResults, userResults] = await Promise.all([
-        client.query(`SELECT relationship_type, left_user_id, right_user_id FROM relationships WHERE guild_id = $1 AND (right_username LIKE $3 OR CONCAT(right_username, '.') = $2) AND (left_username LIKE $3 OR CONCAT(left_username, '.') = $2)`, [guildId, systemName, systemName + "%"]),
-        client.query("SELECT username, discord_id, gender, system_id, id FROM users WHERE guild_id = $1 AND (username LIKE $3 OR CONCAT(username, '.') = $2)", [guildId, systemName, systemName + "%"])])
-    let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], guildId, user.discord_id, user.id, user.system_id))
+export async function getAllMembers(user: User): Promise<{ relationships: Relationship[], users: User[] }> {
+    let userResults = await client.query(`
+        WITH RECURSIVE members AS (
+            SELECT username, discord_id, gender, system_id, id, guild_id FROM users
+            WHERE system_id = $1
+            UNION 
+                SELECT u.username, u.discord_id, u.gender, u.system_id, u.id, u.guild_id FROM users u
+                INNER JOIN members m ON m.id = u.system_id
+        ) SELECT username, discord_id, gender, system_id, id FROM members
+    `, [user.id])
+    let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], user.guild_id, user.discord_id, user.id, user.system_id))
+    let relationshipResults = await client.query("SELECT relationship_type, left_user_id, right_user_id, guild_id FROM relationships WHERE left_user_id = ANY($1) OR right_user_id = ANY($1)", [users.map(x => x.id)])
     let userMap = new Map<number, User>()
     users.forEach(x => {
         userMap.set(x.id!, x)
