@@ -62,7 +62,7 @@ if (Thread.isMainThread) {
                 await message.channel.send("argument " + invalidArgs.join(", ") + " did not receive the proper type")
                 return;
             }
-            (await command.call(userCommand.args, message.author, channel)).respond(message)
+            (await command.call(userCommand.args, message.author, channel, message.guild)).respond(message)
         }
 
     })

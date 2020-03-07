@@ -142,7 +142,8 @@ export class SpecificArgument extends Argument {
 export interface CommandFuncInput {
     args: any[]
     author: Discord.User,
-    channel: Discord.Channel
+    channel: Discord.Channel,
+    guild: Discord.Guild
 }
 
 export abstract class CommandReponseBase {
@@ -217,11 +218,12 @@ export class Command {
         return res;
     }
 
-    async call(args: string[], author: Discord.User, channel: Discord.Channel): Promise<CommandReponseBase> {
+    async call(args: string[], author: Discord.User, channel: Discord.Channel, guild: Discord.Guild): Promise<CommandReponseBase> {
         return await this.func({
             args: this instanceof AnyArgumentCommand ? args : await Promise.all(args.map((x, i) => this.arguments[i].parse(x, channel))),
             author: author,
-            channel: channel
+            channel: channel,
+            guild: guild
         });
     }
 

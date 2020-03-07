@@ -9,10 +9,22 @@ export class Relationship {
     rightUserId: number
     leftUser: User | null = null
     rightUser: User | null = null
-    constructor(type: RelationshipType, leftUserId: number, rightUserId: number, guildId: string) {
+    constructor(type: RelationshipType, leftUserId: number | User, rightUserId: number | User, guildId: string) {
         this.type = type
-        this.leftUserId = leftUserId
-        this.rightUserId = rightUserId
+        if (typeof leftUserId === "number") {
+            this.leftUserId = leftUserId
+        }
+        else {
+            this.leftUserId = leftUserId.id!;
+            this.leftUser = leftUserId
+        }
+        if (typeof rightUserId === "number") {
+            this.rightUserId = rightUserId
+        }
+        else {
+            this.rightUserId = rightUserId.id!
+            this.rightUser = rightUserId
+        }
         this.guildId = guildId
     }
 }

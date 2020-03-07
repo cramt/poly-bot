@@ -10,7 +10,7 @@ import { PluralKitApi } from "./PluralKitApi"
 
 async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: string): Promise<User> {
     if ((thing as User).gender === undefined) {
-        return await getUserByDiscordId(guildId, (thing as Discord.User).id) as User
+        return await getUserByDiscordId((thing as Discord.User).id) as User
     }
     return thing as User
 }
@@ -48,7 +48,7 @@ export const commands: Command[] = [
                 discordID = discordUser?.id!
             }
 
-            let user = new User(name, gender, guildId, discordID)
+            let user = new User(name, gender, guildId, discordID, null, null)
             if (await createNewUser(user)) {
                 return new CommandResponseReaction("👍")
             }
@@ -67,7 +67,7 @@ export const commands: Command[] = [
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let name = input.args[0] as string
             let gender = (input.args[1] + "").toUpperCase() as Gender
-            let user = new User(name, gender, guildId, null)
+            let user = new User(name, gender, guildId, null, null, null)
             if (await createNewUser(user)) {
                 return new CommandResponseReaction("👍")
             }
@@ -79,7 +79,7 @@ export const commands: Command[] = [
 
     new Command("me", "print out information about yourself", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
-        let user = (await getUserByDiscordId(guildId, input.author.id)) as User
+        let user = (await getUserByDiscordId(input.author.id)) as User
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
@@ -87,10 +87,10 @@ export const commands: Command[] = [
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
             let you = x.rightUser
             let them = x.leftUser
-            if (!user.name.startsWith(you.name)) {
+            if (!user.name.startsWith(you!.name)) {
                 [them, you] = [you, them]
             }
-            return "\n" + you.name + " is in a " + x.type.toLowerCase() + " relationship with " + them.name
+            return "\n" + you!.name + " is in a " + x.type.toLowerCase() + " relationship with " + them!.name
         }).join("") + "```")
     }),
 
@@ -135,13 +135,13 @@ export const commands: Command[] = [
         ], async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
-            await removeRelationship(guildId, leftUser.name, rightUser.name)
+            await removeRelationship(guildId, leftUser.id!, rightUser.id!)
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 
     new Command("generate", "generates the polycule map", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
-        let all = await getAllInGuild(guildId)
+        let all = await getAllInGuild(guildId, input.guild.members.map(x => x.id))
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
@@ -173,8 +173,8 @@ export const commands: Command[] = [
         let relationships = (await getRelationshipsByUsers(guildId, startUsers)).filter(x => x !== null)
         let users: User[] = []
         relationships.forEach(rel => {
-            users.push(rel.leftUser)
-            users.push(rel.rightUser)
+            users.push(rel.leftUser!)
+            users.push(rel.rightUser!)
         })
         let buffer = await polyMapGenerate(users, relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
@@ -210,8 +210,8 @@ export const commands: Command[] = [
 
     new Command("bernie-time", "its bernie time 😎", [], async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
-        let all = await getAllInGuild(guildId)
-        let bernie = new User("President Bernie Sanders", "MASC", guildId, null)
+        let all = await getAllInGuild(guildId, input.guild.members.map(x => x.id))
+        let bernie = new User("President Bernie Sanders", "MASC", guildId, null, null, null)
         all.users.push(bernie);
         all.users.forEach(user => {
             all.relationships.push(new Relationship("ROMANTIC", bernie, user, guildId))
