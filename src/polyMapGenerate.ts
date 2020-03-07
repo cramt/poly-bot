@@ -130,7 +130,6 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
             })
         }).catch(reject)
         */
-        fs.writeFileSync("test.dot", g.to_dot());
         (g as any).output({
             type: "png",
             path: SECRET.GRAPHVIZ_LOCATION
