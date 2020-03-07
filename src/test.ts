@@ -6,6 +6,7 @@ import { PluralKitApi } from "./PluralKitApi";
 import { Relationship } from "./Relationship";
 import { User } from "./User";
 import { spawn } from "child_process";
+import { loadTestData } from "./utilities";
 
 /*
 //hack so that graphvis doesnt fuck me
@@ -55,6 +56,7 @@ const outputFile = "output.png";
 
 
 (async () => {
-    await openDB()
-    
+    let data = loadTestData("testdata.json")
+    let buffer = await polyMapGenerate(data.users, data.relationships)
+    fs.writeFileSync("test.png", buffer);
 })().then().catch(console.log)

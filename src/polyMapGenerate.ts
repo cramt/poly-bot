@@ -132,10 +132,10 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
         */
         fs.writeFileSync("test.dot", g.to_dot());
         (g as any).output({
-            type: "svg",
+            type: "png",
             path: SECRET.GRAPHVIZ_LOCATION
         }, (e: Buffer) => {
-            fs.writeFileSync("test.svg", e);
+            resolve(e)
         }, (code: number, out: string, err: string) => {
             reject({
                 code,
