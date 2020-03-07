@@ -1,5 +1,5 @@
 import { openDB, getAllInGuild, createNewRelationship, genderStringToInt } from "./db";
-import { polyMapGenerate, exportDotScript } from "./polyMapGenerate";
+import { polyMapGenerate, exportDotScript, svgToPngViaChromium } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
 import { PluralKitApi } from "./PluralKitApi";
@@ -56,6 +56,6 @@ const outputFile = "output.png";
 
 
 (async () => {
-    let svg = await exportDotScript(fs.readFileSync("test.dot"))
-    console.log(svg.length)
+    let data = loadTestData("testdata.json")
+    fs.writeFileSync("output.png", await polyMapGenerate(data.users, data.relationships))
 })().then().catch(console.log)

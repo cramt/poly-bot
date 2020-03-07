@@ -8,6 +8,7 @@ import { exec } from "child_process";
 import * as path from "path"
 import * as Thread from "worker_threads"
 import { runThreadFunction } from "./utilities";
+import puppeteer from "puppeteer"
 
 interface SystemClusterMap {
     [k: string]: {
@@ -16,8 +17,6 @@ interface SystemClusterMap {
         user: User
     } | undefined
 }
-
-let viz = new (require("viz.js"))(require("viz.js/full.render.js"));
 
 export function generateDotScript(users: User[], relationships: Relationship[]): Buffer {
     const backgroundColor = "#00000000"
@@ -134,40 +133,26 @@ export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"
     })
 }
 
-function graphGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
-    return new Promise<Buffer>((resolve, reject) => {
-        let g = "";
-        /*
-        viz.renderString(g.to_dot()).then((x: string) => {
-            svg2img(x, (err: any, buffer: Buffer) => {
-                if (err) {
-                    reject(err)
-                }
-                else {
-                    resolve(buffer)
-                }
-            })
-        }).catch(reject)
-        */
-        (g as any).output({
-            type: "png",
-            path: SECRET.GRAPHVIZ_LOCATION
-        }, (e: Buffer) => {
-            resolve(e)
-        }, (code: number, out: string, err: string) => {
-            reject({
-                code,
-                err,
-                out
-            })
-        })
+const browser = puppeteer.launch();
 
-    })
+export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
+    let page = await (await browser).newPage()
+    await page.setContent("<html><head></head><body>" + svg.toString() + "</body></html>")
+    const svgElement = await page.$("svg")
+    await page.evaluate(() => {
+        document.body.style.background = 'transparent'
+        document.getElementsByTagName("svg")[0].style.overflow = "hidden"
+        document.body.style.overflow = 'hidden'
+    });
+    let result = await svgElement?.screenshot({ omitBackground: true })!
+    await page.close()
+    return result
+
 }
 
-export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
+export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
     let [graph, transFlag, legend] = await Promise.all([
-        graphGenerate(users, relationships).then(Jimp.read),
+        Jimp.read(image),
         Jimp.read("transflag.png"),
         Jimp.read("legend.png")
     ])
@@ -187,4 +172,8 @@ export async function polyMapGenerate(users: User[], relationships: Relationship
     })
 
     return await transFlag.getBufferAsync("image/png");
+}
+
+export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
+    return await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(generateDotScript(users, relationships), "svg")))
 }

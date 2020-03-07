@@ -14,13 +14,14 @@
         "@types/node": "^13.7.0",
         "@types/node-fetch": "^2.5.4",
         "@types/pg": "^7.14.1",
+        "@types/puppeteer": "^2.0.1",
         "discord.js": "^11.5.1",
         "graphviz": "0.0.9",
         "jimp": "^0.9.3",
         "node-fetch": "^2.6.0",
         "pg": "^7.18.1",
+        "puppeteer": "^2.1.1",
         "svg2img": "^0.6.1",
-        "typescript": "^3.7.5",
-        "viz.js": "^2.1.2"
+        "typescript": "^3.7.5"
     }
 }
