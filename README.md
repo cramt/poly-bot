@@ -23,9 +23,8 @@ the bot uses a postgresql database
 ## TODO
 - add alias' to commands
 - add caching for polymap generation
-- redo entire database and make a migration system like pluralkit
-- less wide 
-- proper generation of the map THAT INCLUDES EMOJI
+- fix the database stuff
+- less wide 2 electric boogaloo
 - better way to do variable number of arguments
 
 ## TODO but kinda irrelevant
