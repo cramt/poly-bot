@@ -100,8 +100,8 @@ function graphGenerate(users: User[], relationships: Relationship[]): Promise<Bu
                     }
                 }
             }
-            let n1 = getUserNode(x.rightUser)
-            let n2 = getUserNode(x.leftUser);
+            let n1 = getUserNode(x.rightUser!)
+            let n2 = getUserNode(x.leftUser!);
             if (n1 && n2) {
                 let edge = g.addEdge(n1.node, n2.node);
                 edge.set("color", relationshipTypeToColor[x.type])

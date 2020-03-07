@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, removeSystemMemberAndTheirRelationshipsByDiscordId, getSystemMembers, getAllMembers } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, removeSystemMemberAndTheirRelationshipsByDiscordId, getAllMembers } from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -83,7 +83,7 @@ export const commands: Command[] = [
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await getRelationshipsByUsers(guildId, [user, ...await getSystemMembers(guildId, user.name)])
+        let relationships = await getRelationshipsByUsers([user, ...await getAllMembers(user)])
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
             let you = x.rightUser
             let them = x.leftUser
@@ -148,10 +148,9 @@ export const commands: Command[] = [
 
     new Command("generate-system", "generates the polycule map but only for a system", [new UserArgument()], async input => {
         let system = input.args[0] as User
-        let systemName = system.name + "."
-        let guildId = (input.channel as Discord.TextChannel).guild.id
-        let all = await getAllMembers(systemName, guildId)
-        let buffer = await polyMapGenerate(all.users, all.relationships)
+        let members = (await getAllMembers(system)).concat(system)
+        let relationships = await getRelationshipsByUsers(members)
+        let buffer = await polyMapGenerate(members, relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
@@ -167,10 +166,10 @@ export const commands: Command[] = [
             }
             let user = await parseDiscordUserOrUser(await a.parse(x, input.channel), guildId)
 
-            startUsers.push(user, ...await getSystemMembers(guildId, user.name))
+            startUsers.push(user, ...await getAllMembers(user))
         }));
 
-        let relationships = (await getRelationshipsByUsers(guildId, startUsers)).filter(x => x !== null)
+        let relationships = (await getRelationshipsByUsers(startUsers)).filter(x => x !== null)
         let users: User[] = []
         relationships.forEach(rel => {
             users.push(rel.leftUser!)

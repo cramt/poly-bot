@@ -56,7 +56,7 @@ const outputFile = "output.png";
 
 (async () => {
     await openDB()
-    let all = await getAllInGuild('634515225369903114')
+    let all = await getAllInGuild('634515225369903114', [])
     let buffer = await polyMapGenerate(all.users, all.relationships)
 
     if (fs.existsSync(outputFile)) {

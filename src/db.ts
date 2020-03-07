@@ -96,45 +96,14 @@ export async function getUserByUsername(guildId: string, username: string): Prom
     return new User(username, genderIntToString[result.rows[0].gender], guildId, result.rows[0].discord_id, result.rows[0].id, result.rows[0].system_id)
 }
 
-export async function getRelationshipsByUsers(guildId: string, users: User[]): Promise<Relationship[]> {
-    if (users.length === 0) {
-        return []
-    }
-    let result = await client.query(`SELECT relationship_type, users.username, right_user_id, left_user_id, users.gender, users.discord_id, users.id, users.system_id FROM relationships
-    INNER JOIN users ON 
-    (
-        (${users.map((x, i) => "right_user_id != $" + (i + 2)).join(" AND ")}) AND users.id = right_user_id
-        OR
-        (${users.map((x, i) => "left_user_id != $" + (i + 2)).join(" AND ")}) AND users.id = left_user_id
-    )
-    WHERE relationships.guild_id = $1 AND users.guild_id = $1 
-    AND (${users.map((x, i) => "right_user_id = $" + (i + 2) + " OR left_user_id = $" + (i + 2)).join(" OR ")})`, [guildId, ...users.map(x => x.id)])
-    let userMap = new Map<string, User>()
+export async function getRelationshipsByUsers(users: User[]): Promise<Relationship[]> {
+    let relationshipResults = await client.query("SELECT relationship_type, left_user_id, right_user_id, guild_id FROM relationships WHERE left_user_id = ANY($1) OR right_user_id = ANY($1)", [users.map(x => x.id)])
+    let userMap = new Map<number, User>()
     users.forEach(x => {
-        userMap.set(x.name, x)
+        userMap.set(x.id!, x)
     })
-    return result.rows.map(x => {
-        let leftUser: User;
-        if (userMap.has(x.left_username)) {
-            leftUser = userMap.get(x.left_username)!
-        }
-        else {
-            leftUser = new User(x.username, genderIntToString[x.gender], guildId, x.discord_id, x.id, x.system_id)
-            userMap.set(leftUser.name, leftUser)
-        }
-        let rightUser: User;
-        if (userMap.has(x.right_username)) {
-            rightUser = userMap.get(x.right_username)!
-        }
-        else {
-            rightUser = new User(x.username, genderIntToString[x.gender], guildId, x.discord_id, x.id, x.system_id)
-            userMap.set(rightUser.name, leftUser)
-        }
-        let rel = new Relationship(relationshipIntToString[x.relationship_type], leftUser.id!, rightUser.id!, guildId)
-        rel.leftUser = leftUser;
-        rel.rightUser = rightUser;
-        return rel;
-    })
+    return relationshipResults.rows.map(relationship =>
+        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_username)!, relationship.guild_id));
 }
 
 export async function getAllInGuild(guildId: string, discordIds: string[]): Promise<{ relationships: Relationship[], users: User[] }> {
@@ -154,7 +123,8 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
     }
 }
 
-export async function getAllMembers(user: User): Promise<{ relationships: Relationship[], users: User[] }> {
+
+export async function getAllMembers(user: User): Promise<User[]> {
     let userResults = await client.query(`
         WITH RECURSIVE members AS (
             SELECT username, discord_id, gender, system_id, id, guild_id FROM users
@@ -165,17 +135,7 @@ export async function getAllMembers(user: User): Promise<{ relationships: Relati
         ) SELECT username, discord_id, gender, system_id, id FROM members
     `, [user.id])
     let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], user.guild_id, user.discord_id, user.id, user.system_id))
-    let relationshipResults = await client.query("SELECT relationship_type, left_user_id, right_user_id, guild_id FROM relationships WHERE left_user_id = ANY($1) OR right_user_id = ANY($1)", [users.map(x => x.id)])
-    let userMap = new Map<number, User>()
-    users.forEach(x => {
-        userMap.set(x.id!, x)
-    })
-    let relationships = relationshipResults.rows.map(relationship =>
-        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_username)!, guildId));
-    return {
-        relationships: relationships,
-        users: users
-    }
+    return users
 }
 
 export async function removeUserAndTheirRelationshipsByDiscordId(guildId: string, discordId: string) {
@@ -206,11 +166,5 @@ export async function removeUserAndTheirRelationshipsByUsername(guildId: string,
 }
 
 export async function setDiscordIdForUser(user: User) {
-    await client.query("UPDATE users SET discord_id = $3 WHERE guild_id = $1 AND username = $2", [user.guildId, user.name, user.discordId])
-}
-
-export async function getSystemMembers(guildId: string, username: string) {
-    username += "."
-    let results = await client.query("SELECT username, gender, discord_id FROM users WHERE substring(username from 0 for LENGTH($2)+1) = $2 AND guild_id = $1", [guildId, username])
-    return results.rows.map(x => new User(x.username, genderIntToString[x.gender], guildId, x.discord_id))
+    await client.query("UPDATE users SET discord_id = $2 WHERE guild_id = NULL AND username = $1", [user.name, user.discordId])
 }
