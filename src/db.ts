@@ -2,6 +2,7 @@ import { Client } from 'pg'
 import SECRET from './SECRET';
 import { Gender, User } from './User';
 import { Relationship, RelationshipType } from './Relationship';
+import * as fs from "fs"
 
 let client: Client;
 export async function openDB() {
@@ -12,7 +13,33 @@ export async function openDB() {
         port: parseInt(SECRET.DB_PORT),
         database: SECRET.DB_NAME
     });
-    await client.connect()
+    await client.connect();
+    let [currentVersion, maxMigrations] = await Promise.all([
+        (async () => {
+            let currentVersion: number
+            try {
+                currentVersion = (await client.query("select schema_version from info")).rows[0].schema_version
+            }
+            catch (e) {
+                currentVersion = -1;
+            }
+            return currentVersion;
+        })(),
+        (async () => {
+            let dir = await fs.promises.readdir("migrations")
+            let ids = dir.map(x => x.split(".")[0]).map(x => parseInt(x)).filter(x => !isNaN(x)).sort().reverse()
+            if (ids.length === 0) {
+                return -1;
+            }
+            return ids[0];
+        })()
+    ])
+    if (currentVersion >= maxMigrations) {
+        return;
+    }
+    for (let i = currentVersion + 1; i <= maxMigrations; i++) {
+        await client.query(fs.readFileSync("migrations/" + i + ".sql").toString())
+    }
 }
 
 export const genderStringToInt: {
