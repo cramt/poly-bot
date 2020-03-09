@@ -1,10 +1,8 @@
 import * as Discord from "discord.js"
 import { client } from "./index"
-import { createNewUser, getUserByDiscordId, getUserByUsername, createNewRelationship } from "./db";
-import { Gender, User } from "./User";
+import { getUserByUsername } from "./db";
+import { User } from "./User";
 import { getType, humanPrintArray } from "./utilities"
-import { checkServerIdentity } from "tls";
-import { Relationship, RelationshipType } from "./Relationship";
 import AggregateError from "aggregate-error"
 
 export class ArgumentError extends Error {
@@ -198,11 +196,6 @@ export class CommandResponseFile extends CommandReponseBase {
 export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' | 'news' | 'store'
 
 export abstract class ArgumentList {
-    /*
-    constructor(a: { argument: Argument, type: "required" | "optional" | "default", default?: any } | Argument[] | { arguments?: Argument[], variableLengthArgument: Argument }) {
-
-    }
-    */
     abstract validLength(length: number): boolean
     protected abstract internalParse(values: string[], channel: Discord.Channel): Promise<any>[]
     parse(values: string[], channel: Discord.Channel): Promise<any[]> {
@@ -287,7 +280,6 @@ export class VariableArgumentList extends ArgumentList {
         return values.map(x => this.argument.parse(x, channel));
     }
 }
-
 
 export class Command {
     description: string

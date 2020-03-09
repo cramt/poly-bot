@@ -7,7 +7,7 @@ import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relat
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
 
-async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: string): Promise<User> {
+async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
     if ((thing as User).gender === undefined) {
         return await getUserByDiscordId((thing as Discord.User).id) as User
     }
@@ -105,7 +105,7 @@ export const commands: Command[] = [
             new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())))
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
+            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0]), parseDiscordUserOrUser(input.args[1])])
             if (leftUser.name === rightUser.name) {
                 return new CommandReponseInSameChannel("you cant make a relationship with yourself")
             }
@@ -130,7 +130,7 @@ export const commands: Command[] = [
             ))
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
+            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0]), parseDiscordUserOrUser(input.args[1])])
             await removeRelationship(guildId, leftUser.id!, rightUser.id!)
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
@@ -157,7 +157,7 @@ export const commands: Command[] = [
         async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
 
-            let startUsers = await Promise.all(input.args.map(x => parseDiscordUserOrUser(x, guildId)))
+            let startUsers = await Promise.all(input.args.map(x => parseDiscordUserOrUser(x)))
 
             let relationships = (await getRelationshipsByUsers(startUsers)).filter(x => x !== null)
             let users: User[] = []
