@@ -1,4 +1,4 @@
-import { Client } from 'pg'
+import { Client, ClientConfig } from 'pg'
 import SECRET from './SECRET';
 import { Gender, User } from './User';
 import { Relationship, RelationshipType } from './Relationship';
@@ -33,14 +33,14 @@ async function setupSchema() {
     }
 }
 
-export async function openDB() {
-    client = new Client({
-        host: SECRET.DB_HOST,
-        user: SECRET.DB_USER,
-        password: SECRET.DB_PASSWORD,
-        port: parseInt(SECRET.DB_PORT) || 5432,
-        database: SECRET.DB_NAME
-    });
+export async function openDB(config: ClientConfig = {
+    host: SECRET.DB_HOST,
+    user: SECRET.DB_USER,
+    password: SECRET.DB_PASSWORD,
+    port: parseInt(SECRET.DB_PORT) || 5432,
+    database: SECRET.DB_NAME
+}) {
+    client = new Client(config);
     await client.connect();
     await setupSchema();
 }
