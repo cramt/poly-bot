@@ -1,4 +1,4 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, AnyArgumentCommand, StringExcludedArgument, CommandReponseBase, CacheCommand } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, RegularArgumentList, VariableArgumentList } from "./Command";
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
@@ -16,23 +16,23 @@ async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: strin
 }
 
 export const commands: Command[] = [
-    new Command("help", "prints all the commands the bot has available", [], async input => {
+    new Command("help", "prints all the commands the bot has available", new StandardArgumentList(), async input => {
         let str = "```"
         str += "prefix = \"" + prefix + "\"\r\n\r\n"
-        str += commands.map(x => x.name + ": " + x.description + x.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.usage !== "" ? x.usage + ", can be" : "") + x.description).join("")).join("\r\n\r\n\r\n")
+        //TODO
+        //str += commands.map(x => x.name + ": " + x.description + x.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.usage !== "" ? x.usage + ", can be" : "") + x.description).join("")).join("\r\n\r\n\r\n")
         str += "```"
         return new CommandReponseInSameChannel(str)
     }),
 
     new Command("add",
         "adds you to the polycule",
-        [
-            new StringExcludedArgument("_"),
+        new StandardArgumentList(new StringExcludedArgument("_"),
             new OrArgument(
                 new SpecificArgument("me", "unknown"),
                 new DiscordUserArgument()),
-            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase()))
-        ], async input => {
+            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())))
+        , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let name = input.args[0] as string
             let discordUser = input.args[1] as Discord.User | "me" | "unknown" | null
@@ -58,12 +58,11 @@ export const commands: Command[] = [
         }),
     new Command("add",
         "adds you to the polycule",
-        [
-            new StringExcludedArgument("_"),
+        new StandardArgumentList(new StringExcludedArgument("_"),
             new OrArgument(
                 new DiscordUserArgument()),
-            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase()))
-        ], async input => {
+            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())))
+        , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let name = input.args[0] as string
             let gender = (input.args[1] + "").toUpperCase() as Gender
@@ -77,7 +76,7 @@ export const commands: Command[] = [
         }),
 
 
-    new Command("me", "print out information about yourself", [], async input => {
+    new Command("me", "print out information about yourself", new RegularArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let user = (await getUserByDiscordId(input.author.id)) as User
         if (user === null) {
@@ -96,17 +95,16 @@ export const commands: Command[] = [
 
     new Command("new-relationship",
         "creates a new relationship between 2 people",
-        [
+        new RegularArgumentList(new OrArgument(
+            new UserArgument(),
+            new DiscordUserArgument()
+        ),
             new OrArgument(
                 new UserArgument(),
                 new DiscordUserArgument()
             ),
-            new OrArgument(
-                new UserArgument(),
-                new DiscordUserArgument()
-            ),
-            new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase()))
-        ], async input => {
+            new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())))
+        , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
             if (leftUser.name === rightUser.name) {
@@ -123,30 +121,29 @@ export const commands: Command[] = [
 
     new Command("remove-relationship",
         "removes all relationships between to people",
-        [
+        new RegularArgumentList(new OrArgument(
+            new UserArgument(),
+            new DiscordUserArgument()
+        ),
             new OrArgument(
                 new UserArgument(),
                 new DiscordUserArgument()
-            ),
-            new OrArgument(
-                new UserArgument(),
-                new DiscordUserArgument()
-            ),
-        ], async input => {
+            ))
+        , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0], guildId), parseDiscordUserOrUser(input.args[1], guildId)])
             await removeRelationship(guildId, leftUser.id!, rightUser.id!)
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 
-    new Command("generate", "generates the polycule map", [], async input => {
+    new Command("generate", "generates the polycule map", new RegularArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId, input.guild.members.map(x => x.id))
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
-    new Command("generate-system", "generates the polycule map but only for a system", [new UserArgument()], async input => {
+    new Command("generate-system", "generates the polycule map but only for a system", new RegularArgumentList(new UserArgument()), async input => {
         let system = input.args[0] as User
         let members = (await getAllMembers(system)).concat(system)
         let relationships = await getRelationshipsByUsers(members)
@@ -154,50 +151,44 @@ export const commands: Command[] = [
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
-    new AnyArgumentCommand("generate-personal", "generates the polycule map for an individual person", async input => {
-        let guildId = (input.channel as Discord.TextChannel).guild.id
+    new Command("generate-personal", "generates the polycule map for an individual person", new VariableArgumentList(
+        new OrArgument(
+            new DiscordUserArgument(),
+            new UserArgument())),
+        async input => {
+            let guildId = (input.channel as Discord.TextChannel).guild.id
 
-        let startUsers: User[] = []
+            let startUsers = await Promise.all(input.args.map(x => parseDiscordUserOrUser(x, guildId)))
 
-        await Promise.all(input.args.map(async x => {
-            let a = new OrArgument(new DiscordUserArgument(), new UserArgument());
-            if (!await a.valid(x, input.channel)) {
-                return null
-            }
-            let user = await parseDiscordUserOrUser(await a.parse(x, input.channel), guildId)
+            let relationships = (await getRelationshipsByUsers(startUsers)).filter(x => x !== null)
+            let users: User[] = []
+            relationships.forEach(rel => {
+                users.push(rel.leftUser!)
+                users.push(rel.rightUser!)
+            })
+            let buffer = await polyMapGenerate(users, relationships)
+            return new CommandResponseFile(buffer, "polycule_map.png")
+        }),
 
-            startUsers.push(user, ...await getAllMembers(user))
-        }));
-
-        let relationships = (await getRelationshipsByUsers(startUsers)).filter(x => x !== null)
-        let users: User[] = []
-        relationships.forEach(rel => {
-            users.push(rel.leftUser!)
-            users.push(rel.rightUser!)
-        })
-        let buffer = await polyMapGenerate(users, relationships)
-        return new CommandResponseFile(buffer, "polycule_map.png")
-    }),
-
-    new Command("remove-me", "deletes you from the polycule and all relationships youre in", [], async input => {
+    new Command("remove-me", "deletes you from the polycule and all relationships youre in", new RegularArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeUserAndTheirRelationshipsByDiscordId(guildId, input.author.id)
         return new CommandResponseReaction("👍")
     }),
 
-    new Command("remove-me", "deletes member of your system and all the relationships they are in", [new UserArgument()], async input => {
+    new Command("remove-me", "deletes member of your system and all the relationships they are in", new RegularArgumentList(new UserArgument()), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeSystemMemberAndTheirRelationshipsByDiscordId(guildId, input.author.id, (input.args[0] as User).name)
         return new CommandResponseReaction("👍")
     }),
 
-    new AdminCommand("remove", "removes a person from polycule", [new UserArgument()], async input => {
+    new AdminCommand("remove", "removes a person from polycule", new RegularArgumentList(new UserArgument()), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeUserAndTheirRelationshipsByUsername(guildId, (input.args[0] as User).name)
         return new CommandResponseReaction("👍")
     }),
 
-    new Command("im", "adds your @ to a user without an @", [new UserArgument()], async input => {
+    new Command("im", "adds your @ to a user without an @", new RegularArgumentList(new UserArgument()), async input => {
         let user = input.args[0] as User
         if (user.discordId !== null) {
             return new CommandReponseInSameChannel("this user already have an @")
@@ -207,7 +198,7 @@ export const commands: Command[] = [
         return new CommandResponseReaction("👍");
     }),
 
-    new Command("bernie-time", "its bernie time 😎", [], async input => {
+    new Command("bernie-time", "its bernie time 😎", new RegularArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId, input.guild.members.map(x => x.id))
         let bernie = new User("President Bernie Sanders", "MASC", guildId, null, null, null)

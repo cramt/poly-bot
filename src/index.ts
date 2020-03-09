@@ -7,7 +7,6 @@ import SECRET from "./SECRET"
 import { commandLineArgSplit, ThreadFunctionArgs } from "./utilities"
 import { openDB } from "./db"
 import { commands } from "./commands"
-import { AnyArgumentCommand } from "./Command"
 import * as Thread from "worker_threads"
 import * as threadFunctions from "./threadFunctions"
 
@@ -52,7 +51,7 @@ if (Thread.isMainThread) {
         if (message.content.startsWith(prefix)) {
             let channel = message.channel;
             let userCommand = commandLineArgSplit(message.content.substring(prefix.length))
-            let command = commands.filter(x => x.name === userCommand.commandName && (userCommand.args.length === x.arguments.length || x instanceof AnyArgumentCommand) && x.channelType.includes(channel.type))[0] || null
+            let command = commands.filter(x => x.name === userCommand.commandName && (x.arguments.validLength(userCommand.args.length)) && x.channelType.includes(channel.type))[0] || null
             if (command === null) {
                 await message.channel.send("there is no command with that name and that amount of arguments")
                 return;
