@@ -1,4 +1,4 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, RegularArgumentList, VariableArgumentList } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, VariableArgumentList } from "./Command";
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
@@ -6,7 +6,6 @@ import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelatio
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
-import { PluralKitApi } from "./PluralKitApi"
 
 async function parseDiscordUserOrUser(thing: User | Discord.User, guildId: string): Promise<User> {
     if ((thing as User).gender === undefined) {
@@ -76,7 +75,7 @@ export const commands: Command[] = [
         }),
 
 
-    new Command("me", "print out information about yourself", new RegularArgumentList(), async input => {
+    new Command("me", "print out information about yourself", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let user = (await getUserByDiscordId(input.author.id)) as User
         if (user === null) {
@@ -95,7 +94,7 @@ export const commands: Command[] = [
 
     new Command("new-relationship",
         "creates a new relationship between 2 people",
-        new RegularArgumentList(new OrArgument(
+        new StandardArgumentList(new OrArgument(
             new UserArgument(),
             new DiscordUserArgument()
         ),
@@ -121,7 +120,7 @@ export const commands: Command[] = [
 
     new Command("remove-relationship",
         "removes all relationships between to people",
-        new RegularArgumentList(new OrArgument(
+        new StandardArgumentList(new OrArgument(
             new UserArgument(),
             new DiscordUserArgument()
         ),
@@ -136,14 +135,14 @@ export const commands: Command[] = [
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 
-    new Command("generate", "generates the polycule map", new RegularArgumentList(), async input => {
+    new Command("generate", "generates the polycule map", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId, input.guild.members.map(x => x.id))
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
-    new Command("generate-system", "generates the polycule map but only for a system", new RegularArgumentList(new UserArgument()), async input => {
+    new Command("generate-system", "generates the polycule map but only for a system", new StandardArgumentList(new UserArgument()), async input => {
         let system = input.args[0] as User
         let members = (await getAllMembers(system)).concat(system)
         let relationships = await getRelationshipsByUsers(members)
@@ -170,25 +169,25 @@ export const commands: Command[] = [
             return new CommandResponseFile(buffer, "polycule_map.png")
         }),
 
-    new Command("remove-me", "deletes you from the polycule and all relationships youre in", new RegularArgumentList(), async input => {
+    new Command("remove-me", "deletes you from the polycule and all relationships youre in", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeUserAndTheirRelationshipsByDiscordId(guildId, input.author.id)
         return new CommandResponseReaction("👍")
     }),
 
-    new Command("remove-me", "deletes member of your system and all the relationships they are in", new RegularArgumentList(new UserArgument()), async input => {
+    new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeSystemMemberAndTheirRelationshipsByDiscordId(guildId, input.author.id, (input.args[0] as User).name)
         return new CommandResponseReaction("👍")
     }),
 
-    new AdminCommand("remove", "removes a person from polycule", new RegularArgumentList(new UserArgument()), async input => {
+    new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         await removeUserAndTheirRelationshipsByUsername(guildId, (input.args[0] as User).name)
         return new CommandResponseReaction("👍")
     }),
 
-    new Command("im", "adds your @ to a user without an @", new RegularArgumentList(new UserArgument()), async input => {
+    new Command("im", "adds your @ to a user without an @", new StandardArgumentList(new UserArgument()), async input => {
         let user = input.args[0] as User
         if (user.discordId !== null) {
             return new CommandReponseInSameChannel("this user already have an @")
@@ -198,7 +197,7 @@ export const commands: Command[] = [
         return new CommandResponseReaction("👍");
     }),
 
-    new Command("bernie-time", "its bernie time 😎", new RegularArgumentList(), async input => {
+    new Command("bernie-time", "its bernie time 😎", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await getAllInGuild(guildId, input.guild.members.map(x => x.id))
         let bernie = new User("President Bernie Sanders", "MASC", guildId, null, null, null)

@@ -1,7 +1,3 @@
-import { User, genderToColor } from "./User"
-import { Relationship, relationshipTypeToColor } from "./Relationship"
-import * as fs from "fs"
-import { polyMapGenerate } from "./polyMapGenerate"
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
 import { commandLineArgSplit, ThreadFunctionArgs } from "./utilities"
@@ -9,6 +5,8 @@ import { openDB } from "./db"
 import { commands } from "./commands"
 import * as Thread from "worker_threads"
 import * as threadFunctions from "./threadFunctions"
+import { ArgumentError, Argument } from "./Command"
+import AggregateError from "aggregate-error"
 
 export const prefix = SECRET.PREFIX
 
@@ -25,7 +23,7 @@ if (Thread.isMainThread) {
             set() {
                 return true;
             },
-            apply(that, args) {
+            apply() {
                 return (global as any).util;
             },
             construct() {
@@ -56,12 +54,26 @@ if (Thread.isMainThread) {
                 await message.channel.send("there is no command with that name and that amount of arguments")
                 return;
             }
-            let invalidArgs = await command.argErrors(userCommand.args, channel)
-            if (invalidArgs.length > 0) {
-                await message.channel.send("argument " + invalidArgs.join(", ") + " did not receive the proper type")
-                return;
+            try {
+                (await command.call(userCommand.args, message.author, channel, message.guild)).respond(message)
             }
-            (await command.call(userCommand.args, message.author, channel, message.guild)).respond(message)
+            catch (ae) {
+                if (ae instanceof AggregateError) {
+                    let errorMessages: string[] = []
+                    for (const argError of ae) {
+                        if (!(argError instanceof ArgumentError)) {
+                            throw argError
+                        }
+                        else {
+                            errorMessages.push(argError.message)
+                        }
+                    }
+                    await message.channel.send("***ERROR***```" + errorMessages.join("\r\n") + "```")
+                }
+                else {
+                    throw ae;
+                }
+            }
         }
 
     })

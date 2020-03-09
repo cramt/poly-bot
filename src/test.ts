@@ -7,6 +7,9 @@ import { Relationship } from "./Relationship";
 import { User } from "./User";
 import { spawn } from "child_process";
 import { loadTestData } from "./utilities";
+import { commands } from "./commands";
+import { NumberArgument, StandardArgumentList } from "./Command";
+
 
 /*
 //hack so that graphvis doesnt fuck me
@@ -56,6 +59,14 @@ const outputFile = "output.png";
 
 
 (async () => {
-    await openDB()
-    console.log(await getUserByUsername(null, "Alexandra"))
+
+    commands.length
+    try {
+        let list = new StandardArgumentList(new NumberArgument(), new NumberArgument(), new NumberArgument())
+        let results = await list.parse(["hello there", "2", "yeee"], null as any)
+        console.log(results.map(x=>x.constructor.name))
+    }
+    catch (e) {
+        console.log(e)
+    }
 })().then().catch(console.log)
