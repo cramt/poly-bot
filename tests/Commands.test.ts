@@ -3,20 +3,19 @@ import * as chai from 'chai';
 import * as Commands from '../src/commands';
 import * as CommandParser from '../src/Command';
 
+var cmd = Commands.commands;
 chai.use(chaiAsPromised)
-const expect = chai.expect
-
-/*describe('String exclude', () => {
-
-    it('Excluded string', () => {
-        let stringArg = new CommandParser.StringExcludedArgument("excluded");
-        assert.throws(async() => {await stringArg.parse("Contains excluded")}, CommandParser.ArgumentError);
-    })
-})*/
+const assert = chai.assert
 
 describe('Number Arguments', () => {
-    it('Invalid number', async () => {
-        let cmd = Commands.commands;
-        await expect(new CommandParser.NumberArgument().parse("hello there")).to.eventually.be.rejectedWith(CommandParser.ArgumentError);
+    it('Invalid number', () => {
+        assert.isRejected(new CommandParser.NumberArgument().parse("hello there"), CommandParser.ArgumentError)
     })
+    it('Valid number', () => {
+        assert.eventually.equal(new CommandParser.NumberArgument().parse("4"), 4)
+    })
+})
+
+after( () => {
+    process.exit(0)
 })
