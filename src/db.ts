@@ -8,8 +8,7 @@ let client: Client;
 
 const numberSqlRegex = /\d\.sql/.compile()
 
-async function getMaxMigrationFiles() {
-    let dir = await fs.promises.readdir("migrations")
+function getMaxMigrationFiles(dir: string[]) {
     let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
     ids.forEach((x, i) => {
         if (x !== i) {
@@ -32,7 +31,7 @@ async function setupSchema() {
                 return -1;
             }
         })(),
-        getMaxMigrationFiles()
+        fs.promises.readdir("migrations").then(x => getMaxMigrationFiles(x))
     ])
     if (currentVersion >= maxMigrations) {
         return;
