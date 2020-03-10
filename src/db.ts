@@ -8,6 +8,20 @@ let client: Client;
 
 const numberSqlRegex = /\d\.sql/.compile()
 
+async function getMaxMigrationFiles() {
+    let dir = await fs.promises.readdir("migrations")
+    let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
+    ids.forEach((x, i) => {
+        if (x !== i) {
+            throw new Error("there is no " + x + ".sql migration, even thou higher numbers of migrations exists")
+        }
+    })
+    if (ids.length === 0) {
+        return -1;
+    }
+    return ids[0];
+}
+
 async function setupSchema() {
     let [currentVersion, maxMigrations] = await Promise.all([
         (async () => {
@@ -18,19 +32,7 @@ async function setupSchema() {
                 return -1;
             }
         })(),
-        (async () => {
-            let dir = await fs.promises.readdir("migrations")
-            let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
-            ids.forEach((x, i) => {
-                if (x !== i) {
-                    throw new Error("there is no " + x + ".sql migration, even thou higher numbers of migrations exists")
-                }
-            })
-            if (ids.length === 0) {
-                return -1;
-            }
-            return ids[0];
-        })()
+        getMaxMigrationFiles()
     ])
     if (currentVersion >= maxMigrations) {
         return;
