@@ -8,7 +8,7 @@ let client: Client;
 
 const numberSqlRegex = /[1-9][0-9]*\.sql/.compile()
 
-function getMaxMigrationFiles(dir: string[]) {
+export function getMaxMigrationFiles(dir: string[]) {
     let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
     ids.forEach((x, i) => {
         if (x !== i) {
