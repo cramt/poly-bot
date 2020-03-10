@@ -6,6 +6,8 @@ import * as fs from "fs"
 
 let client: Client;
 
+const numberSqlRegex = /\d\.sql/.compile()
+
 async function setupSchema() {
     let [currentVersion, maxMigrations] = await Promise.all([
         (async () => {
@@ -18,7 +20,12 @@ async function setupSchema() {
         })(),
         (async () => {
             let dir = await fs.promises.readdir("migrations")
-            let ids = dir.map(x => x.split(".")[0]).map(x => parseInt(x)).filter(x => !isNaN(x)).sort().reverse()
+            let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
+            ids.forEach((x, i) => {
+                if (x !== i) {
+                    throw new Error("there is no " + x + ".sql migration, even thou higher numbers of migrations exists")
+                }
+            })
             if (ids.length === 0) {
                 return -1;
             }
