@@ -25,6 +25,10 @@ export class Relationship {
             this.rightUserId = rightUserId.id!
             this.rightUser = rightUserId
         }
+        if (this.rightUserId > this.leftUserId) {
+            [this.leftUser, this.rightUser] = [this.rightUser, this.leftUser];
+            [this.leftUserId, this.rightUserId] = [this.rightUserId, this.leftUserId];
+        }
         this.guildId = guildId
     }
 }
