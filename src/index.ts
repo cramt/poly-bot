@@ -32,7 +32,7 @@ if (Thread.isMainThread) {
         })
     }
 
-    process.on("unhandledRejection", console.log)
+    
 
     const dbPromise = openDB()
 

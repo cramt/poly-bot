@@ -93,5 +93,3 @@ ALTER TABLE ONLY public.users
 --
 -- PostgreSQL database dump complete
 --
-
-INSERT INTO info (schema_version) values (0)

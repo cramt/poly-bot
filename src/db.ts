@@ -21,15 +21,18 @@ export function getMaxMigrationFiles(dir: string[]) {
     return ids[0];
 }
 
-async function setupSchema() {
+export async function setupSchema(dbClient = client) {
     let [currentVersion, maxMigrations] = await Promise.all([
         (async () => {
-            try {
-                return (await client.query("select schema_version from info")).rows[0].schema_version as number
+
+            let result = (await dbClient.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'"));
+            let val = -1
+            if (result.rows[0].count !== "0") {
+                val = (await dbClient.query("select schema_version from info")).rows[0].schema_version as number
             }
-            catch (e) {
-                return -1;
-            }
+            return val
+
+
         })(),
         fs.promises.readdir("migrations").then(x => getMaxMigrationFiles(x))
     ])
@@ -37,8 +40,9 @@ async function setupSchema() {
         return;
     }
     for (let i = currentVersion + 1; i <= maxMigrations; i++) {
-        await client.query((await fs.promises.readFile("migrations/" + i + ".sql")).toString())
+        await dbClient.query((await fs.promises.readFile("migrations/" + i + ".sql")).toString())
     }
+    await dbClient.query("INSERT INTO public.info (schema_version) values ($1)", [maxMigrations])
 }
 
 export async function openDB(config: ClientConfig = {
@@ -51,6 +55,7 @@ export async function openDB(config: ClientConfig = {
     client = new Client(config);
     await client.connect();
     await setupSchema();
+    return client
 }
 
 export const genderStringToInt: {

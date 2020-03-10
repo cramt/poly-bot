@@ -2,41 +2,53 @@ import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import { Client } from 'pg';
 import SECRET from '../src/SECRET';
-import { openDB } from '../src/db';
-import { resolve } from 'dns';
+import { openDB, setupSchema } from '../src/db';
+import * as fs from "fs"
 
 chai.use(chaiAsPromised)
 const assert = chai.assert
-const client = new Client({
+
+const dbConfig = {
     host: SECRET.DB_HOST,
     user: SECRET.DB_USER,
     password: SECRET.DB_PASSWORD,
     port: parseInt(SECRET.DB_PORT) || 5432,
     database: SECRET.DB_NAME
-})
-
-before(async () => {
-    await client.connect()
-})
+}
 
 describe('Database setup', () => {
+    let client: Client
     it('Open connection', async () => {
-        let testConnectionClient = new Client({
-            host: SECRET.DB_HOST,
-            user: SECRET.DB_USER,
-            password: SECRET.DB_PASSWORD,
-            port: parseInt(SECRET.DB_PORT) || 5432,
-            database: SECRET.DB_NAME
-        })
-        assert.isFulfilled(testConnectionClient.connect())
-        testConnectionClient.end()
+        client = new Client(dbConfig)
+        await client.connect();
     })
-    
-    it('Setup schema', async () => {
-        await client.query("DROP DATABASE IF EXISTS $1", [SECRET.DB_NAME])
-        await client.query("CREATE DATABASE $1", [SECRET.DB_NAME])
-        await openDB()
-        assert.eventually.equal((await client.query("select schema_version from info")).rows[0].schema_version as number, 0)
+
+    it("Test connection", async () => {
+        const string = Math.random().toString(36).substring(4);
+        assert.eventually.equal(client.query("SELECT $1", [string]).then(x => x.rows[0]["?column?"]), string)
+    })
+
+    it('Reset database', async () => {
+
+        await client.query("CREATE DATABASE _");
+        await client.end();
+        const thisDbConfig = JSON.parse(JSON.stringify(dbConfig)) as typeof dbConfig
+        thisDbConfig.database = "_"
+        client = new Client(thisDbConfig)
+        await client.connect();
+        await client.query("DROP DATABASE IF EXISTS " + SECRET.DB_NAME)
+        await client.query("CREATE DATABASE " + SECRET.DB_NAME)
+        await client.end()
+        client = new Client(dbConfig)
+        await client.connect()
+        await client.query("DROP DATABASE IF EXISTS _")
+
+        assert.eventually.deepEqual(client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'").then(x => x.rows), [])
+    })
+
+    it("Schema setup", async () => {
+        await setupSchema(client)
+        assert.eventually.equal(client.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'").then(x => x.rows[0].count), "1")
     })
 })
 
