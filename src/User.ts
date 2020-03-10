@@ -7,7 +7,8 @@ export class User {
     gender: Gender
     id: number | null = null
     systemId: number | null = null;
-    system: User | null = null;
+    private _system: User | null = null;
+    members: User[] = [];
     constructor(name: string, gender: Gender, guildId: string | null, discordId: string | null, id: number | null, systemId: number | null) {
         this.name = name.split(".").map(x => {
             x = x.split(" ").map(y => {
@@ -25,6 +26,15 @@ export class User {
         this.discordId = discordId
         this.id = id;
         this.systemId = systemId;
+    }
+    set system(sys: User | null) {
+        this._system = sys
+        if (sys !== null && !sys.members.includes(this)) {
+            sys.members.push(this)
+        }
+    }
+    get system(): User | null {
+        return this._system
     }
 }
 
