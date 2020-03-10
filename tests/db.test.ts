@@ -29,7 +29,10 @@ describe('Database setup', () => {
     })
 
     it('Reset database', async () => {
-
+        await client.query(`SELECT pg_terminate_backend(pg_stat_activity.pid)
+        FROM pg_stat_activity
+        WHERE pg_stat_activity.datname = '` + SECRET.DB_NAME + `'
+          AND pid <> pg_backend_pid();`)
         await client.query("CREATE DATABASE _");
         await client.end();
         const thisDbConfig = JSON.parse(JSON.stringify(dbConfig)) as typeof dbConfig
