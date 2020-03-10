@@ -29,22 +29,29 @@ describe('Database setup', () => {
     })
 
     it('Reset database', async () => {
-        await client.query(`SELECT pg_terminate_backend(pg_stat_activity.pid)
-        FROM pg_stat_activity
-        WHERE pg_stat_activity.datname = '` + SECRET.DB_NAME + `'
-          AND pid <> pg_backend_pid();`)
-        await client.query("CREATE DATABASE _");
-        await client.end();
-        const thisDbConfig = JSON.parse(JSON.stringify(dbConfig)) as typeof dbConfig
-        thisDbConfig.database = "_"
-        client = new Client(thisDbConfig)
-        await client.connect();
-        await client.query("DROP DATABASE IF EXISTS " + SECRET.DB_NAME)
-        await client.query("CREATE DATABASE " + SECRET.DB_NAME)
-        await client.end()
-        client = new Client(dbConfig)
-        await client.connect()
-        await client.query("DROP DATABASE IF EXISTS _")
+        try {
+            await client.query(`SELECT pid, pg_terminate_backend(pid) 
+            FROM pg_stat_activity 
+            WHERE datname = current_database() AND pid <> pg_backend_pid();`)
+            if (await (await client.query("SELECT 1 FROM pg_database WHERE datname = '_'")).rowCount === 0) {
+                await client.query("CREATE DATABASE _");
+            }
+            await client.end();
+            const thisDbConfig = JSON.parse(JSON.stringify(dbConfig)) as typeof dbConfig
+            thisDbConfig.database = "_"
+            client = new Client(thisDbConfig)
+            await client.connect();
+
+            await client.query("REVOKE CONNECT ON DATABASE " + SECRET.DB_NAME + " FROM public");
+            await client.query("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + SECRET.DB_NAME + "';");
+            await client.query("DROP DATABASE IF EXISTS " + SECRET.DB_NAME)
+            await client.query("CREATE DATABASE " + SECRET.DB_NAME)
+            await client.end()
+            client = new Client(dbConfig)
+            await client.connect()
+            await client.query("DROP DATABASE IF EXISTS _")
+        }
+        catch (e) { console.log(e) }
 
         assert.eventually.deepEqual(client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'").then(x => x.rows), [])
     })
