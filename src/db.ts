@@ -6,6 +6,21 @@ import * as fs from "fs"
 
 let client: Client;
 
+const numberSqlRegex = /[1-9][0-9]*\.sql/.compile()
+
+export function getMaxMigrationFiles(dir: string[]) {
+    let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
+    ids.forEach((x, i) => {
+        if (x !== i) {
+            throw new Error("there is no " + x + ".sql migration, even thou higher numbers of migrations exists")
+        }
+    })
+    if (ids.length === 0) {
+        return -1;
+    }
+    return ids[0];
+}
+
 async function setupSchema() {
     let [currentVersion, maxMigrations] = await Promise.all([
         (async () => {
@@ -16,14 +31,7 @@ async function setupSchema() {
                 return -1;
             }
         })(),
-        (async () => {
-            let dir = await fs.promises.readdir("migrations")
-            let ids = dir.map(x => x.split(".")[0]).map(x => parseInt(x)).filter(x => !isNaN(x)).sort().reverse()
-            if (ids.length === 0) {
-                return -1;
-            }
-            return ids[0];
-        })()
+        fs.promises.readdir("migrations").then(x => getMaxMigrationFiles(x))
     ])
     if (currentVersion >= maxMigrations) {
         return;

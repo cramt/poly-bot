@@ -61,12 +61,6 @@ const outputFile = "output.png";
 (async () => {
 
     commands.length
-    try {
-        let list = new StandardArgumentList(new NumberArgument(), new NumberArgument(), new NumberArgument())
-        let results = await list.parse(["hello there", "2", "yeee"], null as any)
-        console.log(results.map(x=>x.constructor.name))
-    }
-    catch (e) {
-        console.log(e)
-    }
+    let data = loadTestData("testdata.json")
+    fs.writeFileSync("test2.png", await polyMapGenerate(data.users, data.relationships))
 })().then().catch(console.log)
