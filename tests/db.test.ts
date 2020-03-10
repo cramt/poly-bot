@@ -36,7 +36,7 @@ describe('Database setup', () => {
         await client.query("DROP DATABASE IF EXISTS $1", [SECRET.DB_NAME])
         await client.query("CREATE DATABASE $1", [SECRET.DB_NAME])
         await openDB()
-        assert.eventually.equal((await client.query("select schema_version from info")).rows[0].schema_version as number, 1)
+        assert.eventually.equal((await client.query("select schema_version from info")).rows[0].schema_version as number, 0)
     })
 })
 
