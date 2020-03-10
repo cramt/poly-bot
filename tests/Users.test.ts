@@ -7,8 +7,6 @@ var cmd = Commands.commands;
 chai.use(chaiAsPromised)
 const assert = chai.assert
 
-console.log("Process: " + process.pid)
-
 describe('Users', () => {
     it('constructor', () => {
         let user = new User("Lucca", "FEMME", null, "<@55437543543>", null, null)
