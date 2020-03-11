@@ -34,12 +34,13 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
     const systemClusterMap = new Map<User, Graph>();
     const sytemUserMap = new Map<string, User>()
     systems.forEach(x => sytemUserMap.set(x.name, x))
-    const g = digraph("G")
+    const g = graph("G")
+    g.set("splines", "polyline")
     g.set("bgcolor", backgroundColor)
     g.set("compound", true)
 
     systems.forEach(x => {
-        let cluster = g.addCluster("\"cluster_" + x.id + "\"")
+        let cluster = g.addCluster("cluster_" + x.id)
         cluster.set("label", x.name)
         cluster.set("fontname", "arial")
         systemClusterMap.set(x, cluster)
@@ -80,22 +81,12 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
                 throw new Error("user is neither a system nor singlet")
             }
         }
-        let n1 = getUserNode(x.rightUser!)
-        let n2 = getUserNode(x.leftUser!);
+        let n1 = userNodeMap.get(x.rightUser!) || systemClusterMap.get(x.rightUser!)
+        let n2 = userNodeMap.get(x.leftUser!) || systemClusterMap.get(x.leftUser!)
         if (n1 && n2) {
-            let edge = g.addEdge(n1.node, n2.node);
+            let edge = g.addEdge(n1, n2);
             edge.set("color", relationshipTypeToColor[x.type])
             edge.set("arrowhead", "none")
-
-            if (n1.cluster !== null) {
-                let id = (n1.cluster as any).id + ""
-                edge.set("ltail", id.substring(1, id.length - 1))
-            }
-            if (n2.cluster !== null) {
-                let id = (n2.cluster as any).id + ""
-                edge.set("lhead", id.substring(1, id.length - 1))
-            }
-
         }
     });
     return Buffer.from(g.to_dot());
@@ -103,7 +94,8 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
 
 export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
-        const pwshCommand = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "unflatten") + " -l 100 | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -T" + output
+        //" + path.resolve(SECRET.GRAPHVIZ_LOCATION, "unflatten") + " -l 100 |
+        const pwshCommand = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -Goverlap=prism -Goverlap_scaling=2 -Gsep=+20 -Gsplines -T" + output
         exec(pwshCommand, process.platform === "win32" ? {
             shell: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         } : {}, (error, stdout, stderr) => {
