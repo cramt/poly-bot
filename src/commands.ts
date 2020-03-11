@@ -2,7 +2,7 @@ import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor } from "./User";
 import { getType } from "./utilities";
-import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, removeUserAndTheirRelationshipsByDiscordId, removeUserAndTheirRelationshipsByUsername, setDiscordIdForUser, genderStringToInt, removeSystemMemberAndTheirRelationshipsByDiscordId, getAllMembers } from "./db";
+import { createNewUser, getUserByDiscordId, createNewRelationship, removeRelationship, getAllInGuild, getRelationshipsByUsers, genderStringToInt, users } from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -81,7 +81,7 @@ export const commands: Command[] = [
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await getRelationshipsByUsers([user, ...await getAllMembers(user)])
+        let relationships = await getRelationshipsByUsers([user, ...await users.getMembers(user)])
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
             let you = x.rightUser
             let them = x.leftUser
@@ -144,7 +144,7 @@ export const commands: Command[] = [
 
     new Command("generate-system", "generates the polycule map but only for a system", new StandardArgumentList(new UserArgument()), async input => {
         let system = input.args[0] as User
-        let members = (await getAllMembers(system)).concat(system)
+        let members = (await users.getMembers(system)).concat(system)
         let relationships = await getRelationshipsByUsers(members)
         let buffer = await polyMapGenerate(members, relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
@@ -171,20 +171,16 @@ export const commands: Command[] = [
 
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
-        await removeUserAndTheirRelationshipsByDiscordId(guildId, input.author.id)
+        await users.deleteByDiscord(input.author.id)
         return new CommandResponseReaction("👍")
     }),
 
     new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async input => {
-        let guildId = (input.channel as Discord.TextChannel).guild.id
-        await removeSystemMemberAndTheirRelationshipsByDiscordId(guildId, input.author.id, (input.args[0] as User).name)
-        return new CommandResponseReaction("👍")
+        return new CommandReponseInSameChannel("not implemented yet")
     }),
 
     new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async input => {
-        let guildId = (input.channel as Discord.TextChannel).guild.id
-        await removeUserAndTheirRelationshipsByUsername(guildId, (input.args[0] as User).name)
-        return new CommandResponseReaction("👍")
+        return new CommandReponseInSameChannel("not implemented yet")
     }),
 
     new Command("im", "adds your @ to a user without an @", new StandardArgumentList(new UserArgument()), async input => {
@@ -193,7 +189,7 @@ export const commands: Command[] = [
             return new CommandReponseInSameChannel("this user already have an @")
         }
         user.discordId = input.author.id
-        await setDiscordIdForUser(user)
+        await users.update(user)
         return new CommandResponseReaction("👍");
     }),
 

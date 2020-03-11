@@ -1,4 +1,3 @@
-import { openDB, getAllInGuild, createNewRelationship, genderStringToInt, getUserByUsername, relationshipIntToString, genderIntToString } from "./db";
 import { polyMapGenerate, exportDotScript, svgToPngViaChromium, addLegendAndBackground, generateDotScript } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
