@@ -61,26 +61,7 @@ const outputFile = "output.png";
 (async () => {
 
     commands.length
-    let client = await openDB()
-    let [users, relationships] = await Promise.all([
-        client.query("SELECT * FROM users").then(x => x.rows.map(y => new User(y.username, genderIntToString[y.gender], y.guild_id, y.discord_id, y.id, y.system_id))),
-        client.query("SELECT * FROM relationships").then(x => x.rows.map(y => new Relationship(relationshipIntToString[y.relationship_type], y.left_user_id, y.right_user_id, y.guild_id)))
-    ])
-    fs.writeFileSync("testdata.json", JSON.stringify({
-        users,
-        relationships
-    }))
-    let userMap = new Map<number, User>()
-    users.forEach(x => userMap.set(x.id!, x))
-    users.forEach(x => {
-        if (x.systemId !== null) {
-            x.system = userMap.get(x.systemId)!
-        }
-    })
-    relationships.forEach(x => {
-        x.leftUser = userMap.get(x.leftUserId)!
-        x.rightUser = userMap.get(x.rightUserId)!
-    })
+    let { users, relationships } = loadTestData("testdata.json")
     let dotScript = generateDotScript(users, relationships);
     fs.writeFileSync("output.dot", dotScript)
     let output = await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(dotScript, "svg")))

@@ -95,6 +95,8 @@ export function runThreadFunction(args: ThreadFunctionArgs): Promise<any> {
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
     let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] }
     let userMap = new Map<number, User>()
+    data.users.forEach(x => Object.setPrototypeOf(x, User.prototype))
+    data.relationships.forEach(x => Object.setPrototypeOf(x, Relationship.prototype))
     data.users.forEach(x => userMap.set(x.id!, x))
     data.users.forEach(x => {
         if (x.systemId !== null) {
