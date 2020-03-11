@@ -20,82 +20,64 @@ interface SystemClusterMap {
 
 export function generateDotScript(users: User[], relationships: Relationship[]): Buffer {
     const backgroundColor = "#00000000"
-    let usersSystems = users.filter(x => x.gender === "SYSTEM" && users.find(y => y.name.startsWith(x.name + ".")))
-    let usersNotSystems = users.filter(x => !usersSystems.includes(x))
+    let systems: User[] = []
+    let singlets: User[] = []
+    users.forEach(x => {
+        if (x.members.length === 0) {
+            singlets.push(x)
+        }
+        else {
+            systems.push(x)
+        }
+    })
     const userNodeMap = new Map<User, Node>();
-    const systemClusterMap: SystemClusterMap = {}
+    const systemClusterMap = new Map<User, Graph>();
     const sytemUserMap = new Map<string, User>()
-    usersSystems.forEach(x => sytemUserMap.set(x.name, x))
+    systems.forEach(x => sytemUserMap.set(x.name, x))
     const g = digraph("G")
-    g.set("splines", "polyline")
     g.set("bgcolor", backgroundColor)
     g.set("compound", true)
 
-    function buildNode(user: User, graph: Graph) {
-        let systems = user.name.split(".")
-        let username = systems[systems.length - 1]
-        systems = systems.slice(0, systems.length - 1)
-        systems.forEach((system, i) => {
-            if (systemClusterMap[system] === undefined) {
-                let systemName = systems.splice(0, i + 1).join(".")
-                let cluster = g.addCluster("\"cluster_" + systemName + "\"");
-                systemClusterMap[system] = {
-                    cluster: cluster,
-                    subSystems: {},
-                    user: sytemUserMap.get(systemName)!
-                }
-                cluster.set("label", system)
-                cluster.set("fontname", "arial")
-            }
-            graph = systemClusterMap[system]?.cluster!
-        })
-        /*
-        let c: Graph
-        let systemName = username.slice(0, dotPos)
-        let memberName = username.slice(dotPos + 1)
-        if (systemClusterMap.has(systemName)) {
-            c = systemClusterMap.get(systemName)!
-        }
-        else {
-            c = graph.addCluster("cluster_" + systemName)
-            systemClusterMap.set()
-            c.set("label", systemName)
-        }
-        buildNode(user, memberName, c)
-        */
-        let color = genderToColor[user.gender];
-        let node = graph.addNode(username, { color: "black", fillcolor: color, style: "filled", shape: "ellipse", fontname: "arial" })
-        node.set("label", username)
-        node.set("fillcolor", color)
-        userNodeMap.set(user, node)
-    }
+    systems.forEach(x => {
+        let cluster = g.addCluster("\"cluster_" + x.id + "\"")
+        cluster.set("label", x.name)
+        cluster.set("fontname", "arial")
+        systemClusterMap.set(x, cluster)
+    })
 
-    usersNotSystems.forEach(x => buildNode(x, g))
+    singlets.forEach(x => {
+        let color = genderToColor[x.gender];
+        let graph = systemClusterMap.get(x.system!)
+        if (graph === undefined) {
+            graph = g
+        }
+        let node = graph.addNode(x.id + "", { color: "black", fillcolor: color, style: "filled", shape: "ellipse", fontname: "arial" })
+        node.set("label", x.name)
+        node.set("fillcolor", color)
+        userNodeMap.set(x, node)
+    })
+
     relationships.forEach(x => {
         function getUserNode(user: User): {
             node: Node,
             cluster: Graph | null
         } {
-            if (usersSystems.includes(user)) {
-                let temp = systemClusterMap;
-                let cluster: Graph | null = null;
-                user.name.split(".").forEach(x => {
-                    let t = temp[x]!
-                    cluster = t.cluster!;
-                    temp = t.subSystems
-                })
-
-                let n = userNodeMap.get(usersNotSystems.find(x => x.name.startsWith(user.name))!)!
+            let asSinglet = userNodeMap.get(user)
+            let asSystem = systemClusterMap.get(user)
+            if (asSinglet !== undefined) {
                 return {
-                    node: n!,
-                    cluster: cluster
+                    node: asSinglet,
+                    cluster: null
+                }
+            }
+            else if (asSystem !== undefined) {
+                return {
+                    node: userNodeMap.get(user.members[0])!,
+                    cluster: asSystem
                 }
             }
             else {
-                return {
-                    node: userNodeMap.get(user)!,
-                    cluster: null
-                }
+                throw new Error("user is neither a system nor singlet")
             }
         }
         let n1 = getUserNode(x.rightUser!)

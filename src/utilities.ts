@@ -2,6 +2,7 @@ import * as Thread from "worker_threads"
 import * as fs from "fs"
 import { Relationship } from "./Relationship"
 import { User } from "./User"
+import { relationshipIntToString } from "./db"
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ")
@@ -93,8 +94,8 @@ export function runThreadFunction(args: ThreadFunctionArgs): Promise<any> {
 
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
     let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] }
-    let userMap = new Map<number, User>();
-    data.users.forEach(x => userMap.set(x.id!, x));
+    let userMap = new Map<number, User>()
+    data.users.forEach(x => userMap.set(x.id!, x))
     data.users.forEach(x => {
         if (x.systemId !== null) {
             x.system = userMap.get(x.systemId)!

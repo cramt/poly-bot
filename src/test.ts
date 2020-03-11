@@ -1,11 +1,11 @@
-import { openDB, getAllInGuild, createNewRelationship, genderStringToInt, getUserByUsername } from "./db";
-import { polyMapGenerate, exportDotScript, svgToPngViaChromium } from "./polyMapGenerate";
+import { openDB, getAllInGuild, createNewRelationship, genderStringToInt, getUserByUsername, relationshipIntToString, genderIntToString } from "./db";
+import { polyMapGenerate, exportDotScript, svgToPngViaChromium, addLegendAndBackground, generateDotScript } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
 import { PluralKitApi } from "./PluralKitApi";
 import { Relationship } from "./Relationship";
 import { User } from "./User";
-import { spawn } from "child_process";
+import { spawn, exec } from "child_process";
 import { loadTestData } from "./utilities";
 import { commands } from "./commands";
 import { NumberArgument, StandardArgumentList } from "./Command";
@@ -61,6 +61,30 @@ const outputFile = "output.png";
 (async () => {
 
     commands.length
-    let data = loadTestData("testdata.json")
-    fs.writeFileSync("test2.png", await polyMapGenerate(data.users, data.relationships))
-})().then().catch(console.log)
+    let client = await openDB()
+    let [users, relationships] = await Promise.all([
+        client.query("SELECT * FROM users").then(x => x.rows.map(y => new User(y.username, genderIntToString[y.gender], y.guild_id, y.discord_id, y.id, y.system_id))),
+        client.query("SELECT * FROM relationships").then(x => x.rows.map(y => new Relationship(relationshipIntToString[y.relationship_type], y.left_user_id, y.right_user_id, y.guild_id)))
+    ])
+    fs.writeFileSync("testdata.json", JSON.stringify({
+        users,
+        relationships
+    }))
+    let userMap = new Map<number, User>()
+    users.forEach(x => userMap.set(x.id!, x))
+    users.forEach(x => {
+        if (x.systemId !== null) {
+            x.system = userMap.get(x.systemId)!
+        }
+    })
+    relationships.forEach(x => {
+        x.leftUser = userMap.get(x.leftUserId)!
+        x.rightUser = userMap.get(x.rightUserId)!
+    })
+    let dotScript = generateDotScript(users, relationships);
+    fs.writeFileSync("output.dot", dotScript)
+    let output = await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(dotScript, "svg")))
+    fs.writeFileSync("output.png", output)
+
+    console.log("done")
+})().then(() => process.exit(0)).catch(console.log)
