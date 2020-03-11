@@ -9,13 +9,23 @@ const assert = chai.assert
 
 describe('Number Arguments', () => {
     it('Invalid number', () => {
-        assert.isRejected(new CommandParser.NumberArgument().parse("hello there"), CommandParser.ArgumentError)
+        assert.isRejected(new CommandParser.NumberArgument().parse({
+            content: "hello there",
+            channel: null as any,
+            guild: null as any,
+            author: null as any
+        }), CommandParser.ArgumentError)
     })
     it('Valid number', () => {
-        assert.eventually.equal(new CommandParser.NumberArgument().parse("4"), 4)
+        assert.eventually.equal(new CommandParser.NumberArgument().parse({
+            content: "4",
+            channel: null as any,
+            guild: null as any,
+            author: null as any
+        }), 4)
     })
 })
 
-after( () => {
+after(() => {
     process.exit(0)
 })
