@@ -27,12 +27,12 @@ describe('Database setup', () => {
         const string = Math.random().toString(36).substring(4);
         assert.eventually.equal(client.query("SELECT $1", [string]).then(x => x.rows[0]["?column?"]), string)
     })
-    
-    it("Schema setup", async () => {
+
+    it("Reset database", async () => {
         await client.query(`SELECT pid, pg_terminate_backend(pid) 
         FROM pg_stat_activity 
         WHERE datname = current_database() AND pid <> pg_backend_pid();`)
-        if (await (await client.query("SELECT 1 FROM pg_database WHERE datname = '_'")).rowCount === 0) {
+        if ((await client.query("SELECT 1 FROM pg_database WHERE datname = '_'")).rowCount === 0) {
             await client.query("CREATE DATABASE _");
         }
         await client.end();
@@ -52,6 +52,10 @@ describe('Database setup', () => {
 
         assert.eventually.deepEqual(client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'").then(x => x.rows), [])
 
+
+    })
+
+    it("Schema setup", async () => {
 
 
         await setupSchema(client)
