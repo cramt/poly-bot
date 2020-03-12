@@ -32,7 +32,7 @@ if (Thread.isMainThread) {
         })
     }
 
-    
+
 
     const dbPromise = openDB()
 
@@ -41,10 +41,21 @@ if (Thread.isMainThread) {
         client.user.setActivity("with polyamory")
     })
 
+    let listeners = new Map<string, ((message: Discord.Message) => Promise<boolean>)[]>()
+
     client.on("message", async message => {
         await dbPromise
         if (message.author.bot) {
             return;
+        }
+        if (listeners.get(message.channel.id) !== undefined) {
+            let newListeners: ((message: Discord.Message) => Promise<boolean>)[] = []
+            listeners.get(message.channel.id)!.forEach(x => {
+                if (x(message)) {
+                    newListeners.push(x)
+                }
+            })
+            listeners.set(message.channel.id, newListeners)
         }
         if (message.content.startsWith(prefix)) {
             let channel = message.channel;
@@ -55,7 +66,13 @@ if (Thread.isMainThread) {
                 return;
             }
             try {
-                (await command.call(userCommand.args, message.author, channel, message.guild)).respond(message)
+                let respond = await command.call(userCommand.args, message.author, channel, message.guild)
+                listeners.set(message.channel.id, [])
+                listeners.get(message.channel.id)!.push(...respond.listeners)
+                respond.addListner = func => {
+                    listeners.get(message.channel.id)!.push(func)
+                }
+                await respond.respond(message)
             }
             catch (ae) {
                 if (ae instanceof AggregateError) {
