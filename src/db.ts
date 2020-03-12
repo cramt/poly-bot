@@ -103,9 +103,17 @@ function generateNullableEvaluation(field: string, number: number) {
 }
 
 export const users = {
+    get: async (id: number) => {
+        let result = await client.query("SELECT username, gender, discord_id, system_id FROM users WHERE id = $1", [id])
+        if (result.rows.length === 0) {
+            return null
+        }
+        return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], null, result.rows[0].discord_id, id, result.rows[0].system_id)
+    },
     add: async (user: User) => {
         try {
-            await client.query("INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES (?, ?, ?, ?, ?)", [user.guildId, user.name, user.discordId, genderStringToInt[user.gender], user.systemId])
+            let result = await client.query("INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", [user.guildId, user.name, user.discordId, genderStringToInt[user.gender], user.systemId])
+            user.id = result.rows[0].id
             return true
         }
         catch (e) {
@@ -158,7 +166,7 @@ export const users = {
             return false
         }
     },
-    deleteByDiscord: async (discordId: string) =>{
+    deleteByDiscord: async (discordId: string) => {
         try {
             await client.query(`with id_of_deleted as (
             DELETE FROM users WHERE discord_id = $1

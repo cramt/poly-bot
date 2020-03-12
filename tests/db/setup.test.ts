@@ -1,9 +1,10 @@
 import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import { Client } from 'pg';
-import SECRET from '../src/SECRET';
-import { openDB, setupSchema } from '../src/db';
+import SECRET from '../../src/SECRET';
+import { openDB, setupSchema, users } from '../../src/db';
 import * as fs from "fs"
+import { User } from '../../src/User';
 
 chai.use(chaiAsPromised)
 const assert = chai.assert
