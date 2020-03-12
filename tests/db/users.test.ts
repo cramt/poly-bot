@@ -32,3 +32,5 @@ describe("Database User", () => {
         assert.isNull(await users.get(user.id!))
     })
 })
+
+after(() => process.exit(0))
