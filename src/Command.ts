@@ -28,6 +28,12 @@ export class ArgumentError extends Error {
     }
 }
 
+export class InsufficientDataError extends Error {
+    constructor(message: string) {
+        super(message)
+    }
+}
+
 export abstract class Argument {
     usage: string = ""
     abstract parse(input: ArgumentFuncInput): Promise<any>

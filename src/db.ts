@@ -214,27 +214,6 @@ export const relationships = {
     }
 }
 
-export function createNewUser(user: User): Promise<boolean> {
-    return users.add(user)
-}
-
-export function createNewRelationship(relationship: Relationship): Promise<boolean> {
-    return relationships.add(relationship)
-}
-
-export async function removeRelationship(guildId: string, rightId: number, leftId: number): Promise<boolean> {
-    return relationships.delete(new Relationship("CUDDLES WITH", leftId, rightId, guildId))
-}
-
-
-export function getUserByDiscordId(discordId: string): Promise<User | null> {
-    return users.getByDiscordId(discordId)
-}
-
-export function getRelationshipsByUsers(users: User[]): Promise<Relationship[]> {
-    return relationships.getByUsers(users)
-}
-
 //TODO, fix plz
 export async function getAllInGuild(guildId: string, discordIds: string[]): Promise<{ relationships: Relationship[], users: User[] }> {
     let [relationshipResults, userResults] = await Promise.all([
