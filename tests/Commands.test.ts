@@ -14,7 +14,7 @@ describe('Number Arguments', () => {
             channel: null as any,
             guild: null as any,
             author: null as any
-        }), CommandParser.ArgumentError)
+        }).then(x => x.value), CommandParser.ArgumentError)
     })
     it('Valid number', () => {
         assert.eventually.equal(new CommandParser.NumberArgument().parse({
@@ -22,7 +22,7 @@ describe('Number Arguments', () => {
             channel: null as any,
             guild: null as any,
             author: null as any
-        }), 4)
+        }).then(x => x.value), 4)
     })
 })
 
