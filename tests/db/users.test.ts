@@ -1,16 +1,20 @@
 import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
-import { users, openDB } from '../../src/db';
+import { users, openDB, genderIntToString } from '../../src/db';
 import { User } from '../../src/User';
 
 chai.use(chaiAsPromised)
 const assert = chai.assert
 
+before(async () => {
+    await openDB()
+})
+
 describe("Database User", () => {
-    it("Open connection", async () => {
-        await openDB()
-    })
-    let user = new User("Person McPersonface", "NEUTRAL", "123", null, null, null)
+    let name = Math.random().toString(36).substring(4)
+    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)]
+    let guild = Math.random().toString(36).substring(4)
+    let user = new User(name, gender, guild, null, null, null)
 
     it("Create user", async () => {
         await assert.eventually.isTrue(users.add(user))
@@ -21,8 +25,10 @@ describe("Database User", () => {
         assert.deepEqual(await users.getByUsername(user.name, user.guildId!, []), [user])
     })
 
+    let discord = Math.random().toString(36).substring(4)
+
     it("Set discord id", async () => {
-        user.discordId = "123"
+        user.discordId = discord
         user.guildId = null
         assert.isTrue(await users.update(user))
     })
