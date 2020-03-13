@@ -63,7 +63,7 @@ export const genderStringToInt: {
 } = {
     "FEMME": 0,
     "MASC": 1,
-    "NEUTER": 2,
+    "NEUTRAL": 2,
     "SYSTEM": 3,
 }
 
@@ -128,7 +128,7 @@ export const users = {
         return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], null, id, result.rows[0].id, result.rows[0].system_id)
     },
     getByUsername(username: string, guildId: string, discordIds: string[]) {
-        return client.query("SELECT id, guild_id, discord_id, gender, system_id FROM users WHERE " + generateNullableEvaluation("guild_id", 1) + " AND discord_id = ANY($2) AND username = $3", [guildId, discordIds, username])
+        return client.query("SELECT id, guild_id, discord_id, gender, system_id FROM users WHERE (" + generateNullableEvaluation("guild_id", 1) + " OR discord_id = ANY($2)) AND username = $3", [guildId, discordIds, username])
             .then(y => y.rows.map(x => new User(username, genderIntToString[x.gender], x.guild_id, x.discord_id, x.id, x.system_id)))
     },
     getMembers: async (user: User) => {

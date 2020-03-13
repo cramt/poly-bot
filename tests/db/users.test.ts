@@ -10,7 +10,7 @@ describe("Database User", () => {
     it("Open connection", async () => {
         await openDB()
     })
-    let user = new User("Person McPersonface", "NEUTER", "123", null, null, null)
+    let user = new User("Person McPersonface", "NEUTRAL", "123", null, null, null)
 
     it("Create user", async () => {
         await assert.eventually.isTrue(users.add(user))
