@@ -23,6 +23,7 @@
             "name": "Mocha Current File",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
+              "--reporter spec",
               "--no-timeouts",
               "--colors",
               "${file}",
@@ -39,6 +40,7 @@
         "name": "Mocha All Files",
         "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
         "args": [
+          "--reporter spec",
           "--no-timeouts",
           "--colors",
           "tests/**/*.test.ts",
