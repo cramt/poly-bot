@@ -43,11 +43,11 @@ export const commands: Command[] = [
         ])
         , async input => {
             let name = input.args[0].value as string
-            let discordUser = input.args[1].value as Discord.User | "me";
+            let discordUser = input.args[2].value as Discord.User | "me";
             if (discordUser === "me") {
                 discordUser = input.author;
             }
-            let gender = (input.args[2] + "").toUpperCase() as Gender
+            let gender = (input.args[1].value + "").toUpperCase() as Gender
             let user = new DiscordUser(name, gender, null, null, discordUser.id)
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
