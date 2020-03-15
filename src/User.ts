@@ -67,6 +67,6 @@ export class DiscordUser extends User {
 export const genderToColor = {
     "FEMME": "#F7A8B8",
     "MASC": "#55CDFC",
-    "NEUTER": "#FFFFFF",
+    "NEUTRAL": "#FFFFFF",
     "SYSTEM": "#FFE599"
 }

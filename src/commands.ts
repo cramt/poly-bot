@@ -1,8 +1,8 @@
 import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, VariableArgumentList } from "./Command";
 import * as Discord from "discord.js"
-import { User, Gender, genderToColor } from "./User";
+import { User, Gender, genderToColor, constructUser, GuildUser } from "./User";
 import { getType } from "./utilities";
-import  * as db from "./db";
+import * as db from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
 import { polyMapGenerate } from "./polyMapGenerate";
@@ -47,7 +47,7 @@ export const commands: Command[] = [
                 discordID = discordUser?.id!
             }
 
-            let user = new User(name, gender, guildId, discordID, null, null)
+            let user = constructUser(name, gender, guildId, discordID, null, null)
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
             }
@@ -65,7 +65,7 @@ export const commands: Command[] = [
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let name = input.args[0] as string
             let gender = (input.args[1] + "").toUpperCase() as Gender
-            let user = new User(name, gender, guildId, null, null, null)
+            let user = new GuildUser(name, gender, null, null, guildId)
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
             }
@@ -144,7 +144,7 @@ export const commands: Command[] = [
 
     new Command("generate-system", "generates the polycule map but only for a system", new StandardArgumentList(new UserArgument()), async input => {
         let system = input.args[0] as User
-        let members = (await db. users.getMembers(system)).concat(system)
+        let members = (await db.users.getMembers(system)).concat(system)
         let relationships = await db.relationships.getByUsers(members)
         let buffer = await polyMapGenerate(members, relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
@@ -185,18 +185,24 @@ export const commands: Command[] = [
 
     new Command("im", "adds your @ to a user without an @", new StandardArgumentList(new UserArgument()), async input => {
         let user = input.args[0] as User
-        if (user.discordId !== null) {
+        if (user instanceof GuildUser) {
+            user = user.toDiscordUser(input.author.id)
+            if (await db.users.update(user)) {
+                return new CommandResponseReaction("👍");
+            }
+            else {
+                return new CommandReponseInSameChannel("there was a database error")
+            }
+        }
+        else {
             return new CommandReponseInSameChannel("this user already have an @")
         }
-        user.discordId = input.author.id
-        await db.users.update(user)
-        return new CommandResponseReaction("👍");
     }),
 
     new Command("bernie-time", "its bernie time 😎", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await db.getAllInGuild(guildId, input.guild.members.map(x => x.id))
-        let bernie = new User("President Bernie Sanders", "MASC", guildId, null, null, null)
+        let bernie = new GuildUser("President Bernie Sanders", "MASC", null, null, guildId)
         all.users.push(bernie);
         all.users.forEach(user => {
             all.relationships.push(new Relationship("ROMANTIC", bernie, user, guildId))
