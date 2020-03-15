@@ -1,50 +1,45 @@
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
-import { commandLineArgSplit, ThreadFunctionArgs } from "./utilities"
+import { commandLineArgSplit } from "./utilities"
 import { openDB } from "./db"
 import { commands } from "./commands"
-import * as Thread from "worker_threads"
-import * as threadFunctions from "./threadFunctions"
 import { ArgumentError, Argument } from "./Command"
 import AggregateError from "aggregate-error"
+import * as job from "microjob"
 
 export const prefix = SECRET.PREFIX
 
 export const client = new Discord.Client();
 
-if (Thread.isMainThread) {
+//hack so that graphvis doesnt fuck me
+if ((global as any).util === undefined) {
+    (global as any).util = new Proxy(() => { }, {
+        get() {
+            return (global as any).util;
+        },
+        set() {
+            return true;
+        },
+        apply() {
+            return (global as any).util;
+        },
+        construct() {
+            return (global as any).util;
+        }
+    })
+}
 
-    //hack so that graphvis doesnt fuck me
-    if ((global as any).util === undefined) {
-        (global as any).util = new Proxy(() => { }, {
-            get() {
-                return (global as any).util;
-            },
-            set() {
-                return true;
-            },
-            apply() {
-                return (global as any).util;
-            },
-            construct() {
-                return (global as any).util;
-            }
-        })
-    }
+(async () => {
+    const [db] = await Promise.all([openDB(), job.start()])
 
-
-
-    const dbPromise = openDB()
 
     client.on("ready", async () => {
-        await dbPromise
         client.user.setActivity("with polyamory")
     })
 
     let listeners = new Map<string, ((message: Discord.Message) => Promise<boolean>)[]>()
 
     client.on("message", async message => {
-        await dbPromise
         if (message.author.bot) {
             return;
         }
@@ -98,17 +93,4 @@ if (Thread.isMainThread) {
 
     client.login(SECRET.DISCORD_TOKEN)
 
-}
-else {
-    let args = Thread.workerData as ThreadFunctionArgs
-    let functions = threadFunctions as any
-    let func = functions[args.name]
-    if (func === undefined) {
-        throw new Error("theadFunction doesnt exist")
-    }
-    else {
-        (async () => {
-            Thread.parentPort?.postMessage(await func(...args.args))
-        })()
-    }
-}
+})()

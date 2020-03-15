@@ -1,22 +1,11 @@
 import { User, genderToColor } from "./User";
 import { Relationship, relationshipTypeToColor } from "./Relationship";
-import { graph, Node, Graph, Edge, digraph } from "graphviz";
+import { graph, Node, Graph } from "graphviz";
 import SECRET from "./SECRET";
 import Jimp from "jimp";
-import * as fs from "fs"
 import { exec } from "child_process";
 import * as path from "path"
-import * as Thread from "worker_threads"
-import { runThreadFunction } from "./utilities";
 import puppeteer from "puppeteer"
-
-interface SystemClusterMap {
-    [k: string]: {
-        subSystems: SystemClusterMap
-        cluster: Graph
-        user: User
-    } | undefined
-}
 
 export function generateDotScript(users: User[], relationships: Relationship[]): Buffer {
     const backgroundColor = "#00000000"
@@ -59,28 +48,6 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
     })
 
     relationships.forEach(x => {
-        function getUserNode(user: User): {
-            node: Node,
-            cluster: Graph | null
-        } {
-            let asSinglet = userNodeMap.get(user)
-            let asSystem = systemClusterMap.get(user)
-            if (asSinglet !== undefined) {
-                return {
-                    node: asSinglet,
-                    cluster: null
-                }
-            }
-            else if (asSystem !== undefined) {
-                return {
-                    node: userNodeMap.get(user.members[0])!,
-                    cluster: asSystem
-                }
-            }
-            else {
-                throw new Error("user is neither a system nor singlet")
-            }
-        }
         let n1 = userNodeMap.get(x.rightUser!) || systemClusterMap.get(x.rightUser!)
         let n2 = userNodeMap.get(x.leftUser!) || systemClusterMap.get(x.leftUser!)
         if (n1 && n2) {
@@ -98,7 +65,7 @@ export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"
         const pwshCommand = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -Goverlap=prism -Goverlap_scaling=2 -Gsep=+20 -Gsplines -T" + output
         exec(pwshCommand, process.platform === "win32" ? {
             shell: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-        } : {}, (error, stdout, stderr) => {
+        } : {}, (error, stdout) => {
             if (error) {
                 reject(error)
             }
