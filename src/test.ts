@@ -8,6 +8,7 @@ import { spawn, exec } from "child_process";
 import { loadTestData } from "./utilities";
 import { commands } from "./commands";
 import { NumberArgument, StandardArgumentList } from "./Command";
+import AggregateError from "aggregate-error";
 
 
 /*
@@ -58,6 +59,7 @@ const outputFile = "output.png";
 
 
 (async () => {
+    /*
 
     commands.length
     let { users, relationships } = loadTestData("testdata.json")
@@ -67,4 +69,10 @@ const outputFile = "output.png";
     fs.writeFileSync("output.png", output)
 
     console.log("done")
+    */
+
+    let a = new AggregateError([])
+    for(const b of a){
+console.log("a")
+    }
 })().then(() => process.exit(0)).catch(console.log)

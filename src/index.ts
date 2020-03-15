@@ -73,11 +73,11 @@ if ((global as any).util === undefined) {
                 if (ae instanceof AggregateError) {
                     let errorMessages: string[] = []
                     for (const argError of ae) {
-                        if (!(argError instanceof ArgumentError)) {
-                            throw argError
+                        if (argError instanceof ArgumentError) {
+                            errorMessages.push(argError.message)
                         }
                         else {
-                            errorMessages.push(argError.message)
+                            throw argError
                         }
                     }
                     await message.channel.send("***ERROR***```" + errorMessages.join("\r\n") + "```")

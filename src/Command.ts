@@ -13,7 +13,7 @@ export interface DiscordInput {
 }
 
 export interface CommandFuncInput extends DiscordInput {
-    args: any[]
+    args: ParseResult[]
 }
 
 export interface ArgumentFuncInput extends DiscordInput {
@@ -404,7 +404,7 @@ export class Command {
         let parsedResults = await this.arguments.parse(args, { author, channel, guild });
         let errors = parsedResults.filter(x => x instanceof ArgumentError);
         if (errors.length !== 0) {
-            throw new AggregateError([errors])
+            throw new AggregateError(errors)
         }
         if (parsedResults.filter(x => x instanceof ExtraDataParseResult).length > 0) {
             return new CommandMoreData(parsedResults, x => this.func({

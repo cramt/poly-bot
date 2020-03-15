@@ -1,6 +1,6 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, VariableArgumentList } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, VariableArgumentList, OptionalArgumentList } from "./Command";
 import * as Discord from "discord.js"
-import { User, Gender, genderToColor, constructUser, GuildUser } from "./User";
+import { User, Gender, genderToColor, constructUser, GuildUser, DiscordUser } from "./User";
 import { getType } from "./utilities";
 import * as db from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
@@ -24,30 +24,31 @@ export const commands: Command[] = [
         return new CommandReponseInSameChannel(str)
     }),
 
-    new Command("add",
+    new Command("add-global",
         "adds you to the polycule",
-        new StandardArgumentList(new StringExcludedArgument("_"),
-            new OrArgument(
-                new SpecificArgument("me", "unknown"),
-                new DiscordUserArgument()),
-            new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())))
+        new OptionalArgumentList([
+            {
+                argument: new AnyArgument(),
+                type: "required"
+            },
+            {
+                argument: new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())),
+                type: "required"
+            },
+            {
+                argument: new DiscordUserArgument(),
+                type: "default",
+                default: "me"
+            },
+        ])
         , async input => {
-            let guildId = (input.channel as Discord.TextChannel).guild.id
-            let name = input.args[0] as string
-            let discordUser = input.args[1] as Discord.User | "me" | "unknown" | null
+            let name = input.args[0].value as string
+            let discordUser = input.args[1].value as Discord.User | "me";
+            if (discordUser === "me") {
+                discordUser = input.author;
+            }
             let gender = (input.args[2] + "").toUpperCase() as Gender
-            if (discordUser === "unknown") {
-                discordUser = null;
-            }
-            else if (discordUser === "me") {
-                discordUser = input.author
-            }
-            let discordID: string | null = null
-            if (getType(discordUser) === "object") {
-                discordID = discordUser?.id!
-            }
-
-            let user = constructUser(name, gender, guildId, discordID, null, null)
+            let user = new DiscordUser(name, gender, null, null, discordUser.id)
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
             }
@@ -55,16 +56,14 @@ export const commands: Command[] = [
                 return new CommandReponseInSameChannel("there is already a person with that name on this discord server")
             }
         }),
-    new Command("add",
+    new Command("add-local",
         "adds you to the polycule",
         new StandardArgumentList(new StringExcludedArgument("_"),
-            new OrArgument(
-                new DiscordUserArgument()),
             new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())))
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let name = input.args[0] as string
-            let gender = (input.args[1] + "").toUpperCase() as Gender
+            let name = input.args[0].value as string
+            let gender = (input.args[1].value + "").toUpperCase() as Gender
             let user = new GuildUser(name, gender, null, null, guildId)
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
@@ -105,11 +104,11 @@ export const commands: Command[] = [
             new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())))
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0]), parseDiscordUserOrUser(input.args[1])])
+            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)])
             if (leftUser.name === rightUser.name) {
                 return new CommandReponseInSameChannel("you cant make a relationship with yourself")
             }
-            let relationship = new Relationship(input.args[2].toUpperCase() as RelationshipType, leftUser, rightUser, guildId)
+            let relationship = new Relationship(input.args[2].value.toUpperCase() as RelationshipType, leftUser, rightUser, guildId)
             if (await db.relationships.add(relationship)) {
                 return new CommandReponseInSameChannel("a " + relationship.type.toLowerCase() + " relationship between " + leftUser.name + " and " + rightUser.name + " has been created")
             }
@@ -130,7 +129,7 @@ export const commands: Command[] = [
             ))
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0]), parseDiscordUserOrUser(input.args[1])])
+            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)])
             await db.relationships.delete(new Relationship("CUDDLES WITH", leftUser.id!, rightUser.id!, guildId))
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
@@ -143,7 +142,7 @@ export const commands: Command[] = [
     }),
 
     new Command("generate-system", "generates the polycule map but only for a system", new StandardArgumentList(new UserArgument()), async input => {
-        let system = input.args[0] as User
+        let system = input.args[0].value as User
         let members = (await db.users.getMembers(system)).concat(system)
         let relationships = await db.relationships.getByUsers(members)
         let buffer = await polyMapGenerate(members, relationships)
@@ -157,7 +156,7 @@ export const commands: Command[] = [
         async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
 
-            let startUsers = await Promise.all(input.args.map(x => parseDiscordUserOrUser(x)))
+            let startUsers = await Promise.all(input.args.map(x => parseDiscordUserOrUser(x.value)))
 
             let relationships = (await db.relationships.getByUsers(startUsers)).filter(x => x !== null)
             let users: User[] = []
@@ -184,7 +183,7 @@ export const commands: Command[] = [
     }),
 
     new Command("im", "adds your @ to a user without an @", new StandardArgumentList(new UserArgument()), async input => {
-        let user = input.args[0] as User
+        let user = input.args[0].value as User
         if (user instanceof GuildUser) {
             user = user.toDiscordUser(input.author.id)
             if (await db.users.update(user)) {
