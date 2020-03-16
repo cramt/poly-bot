@@ -47,7 +47,6 @@ export async function setupSchema(dbClient = client) {
     for (let i = currentVersion + 1; i <= maxMigrations; i++) {
         await dbClient.query((await fs.promises.readFile("migrations/" + i + ".sql")).toString())
     }
-    //INSERT INTO public.info (schema_version) values ($1)
     if ((await dbClient.query("UPDATE public.info SET schema_version = $1 RETURNING *", [maxMigrations])).rows.length === 0) {
         await dbClient.query("INSERT INTO public.info (schema_version) values ($1)", [maxMigrations])
     }
@@ -113,7 +112,10 @@ function generateNullableEvaluation(field: string, number: number) {
 
 export const users = {
     get: async (id: number) => {
-        let result = await client.query("SELECT username, gender, discord_id, system_id, guild_id FROM users WHERE id = $1", [id])
+        let result = await client.query(`
+        SELECT * FROM ((SELECT discord_id, guild_id FROM users WHERE id = get_topmost_system($1)) s
+        CROSS JOIN
+        (SELECT username, gender, system_id FROM users WHERE id = $1) m)`, [id])
         if (result.rows.length === 0) {
             return null
         }
