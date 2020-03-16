@@ -21,12 +21,23 @@ describe('Database setup', () => {
     let client: Client
     it('Open connection', async () => {
         client = new Client(dbConfig)
-        await client.connect();
+        return client.connect()
+        .catch((e) => {
+            console.error(e)
+            assert.fail()
+        });
     })
 
     it("Test connection", async () => {
         const string = Math.random().toString(36).substring(4);
-        assert.eventually.equal(client.query("SELECT $1", [string]).then(x => x.rows[0]["?column?"]), string)
+        return client.query("SELECT $1", [string]).then(x => x.rows[0]["?column?"])
+        .then((x) => {
+            assert.equal(x, string)
+        })
+        .catch((e) => {
+            console.error(e)
+            assert.fail()
+        })
     })
 
     it("Reset database", async () => {
@@ -40,7 +51,8 @@ describe('Database setup', () => {
         const thisDbConfig = JSON.parse(JSON.stringify(dbConfig)) as typeof dbConfig
         thisDbConfig.database = "_"
         client = new Client(thisDbConfig)
-        await client.connect();
+        await client.connect()
+        .catch((e) => console.error(e));
 
         await client.query("REVOKE CONNECT ON DATABASE " + SECRET.DB_NAME + " FROM public");
         await client.query("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + SECRET.DB_NAME + "';");
@@ -51,15 +63,30 @@ describe('Database setup', () => {
         await client.connect()
         await client.query("DROP DATABASE IF EXISTS _")
 
-        assert.eventually.deepEqual(client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'").then(x => x.rows), [])
-
-
+        return client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'").then(x => {
+            assert.deepEqual(x.rows, [])
+        })
+        .catch((e) => { 
+            console.error(e)
+            assert.fail()
+        });
     })
 
     it("Schema setup", async () => {
+
+
         await setupSchema(client)
-        assert.eventually.equal(client.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'").then(x => x.rows[0].count), "1")
+        .catch((e) => {
+            console.error(e)
+            assert.fail()
+        })
+
+        return client.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'").then((x) => { 
+            assert.equal(x.rows[0].count, "1")
+        })
+        .catch((e) => {
+            console.error(e)
+            assert.fail()
+        });
     })
 })
-
-after(() => process.exit(0))

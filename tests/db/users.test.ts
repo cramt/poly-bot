@@ -1,13 +1,17 @@
 import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import { users, openDB, genderIntToString } from '../../src/db';
+import { Client } from 'pg';
 import { User, GuildUser } from '../../src/User';
+import { client } from '../../src';
 
 chai.use(chaiAsPromised)
 const assert = chai.assert
+let dbclient :Client
 
 before(async () => {
-    await openDB()
+    dbclient = await openDB()
+    dbclient.query("DELETE FROM public.users")
 })
 
 describe("Database User", () => {
@@ -16,17 +20,22 @@ describe("Database User", () => {
     let guild = Math.random().toString(36).substring(4)
     let guildUser = new GuildUser(name, gender, null, null, guild)
 
-    it("Create user", async () => {
+    it("can be created", async () => {
         await assert.eventually.isTrue(users.add(guildUser))
         assert.isNotNull(guildUser.id)
+        let user = await users.get(guildUser.id!)
+        assert.equal(user!.name, name)
+        assert.equal(user!.gender, gender)
+        assert.equal((user as GuildUser).guildId, guild)
     })
 
-    it("Get by username", async () => {
-        assert.deepEqual(await users.getByUsername(guildUser.name, guildUser.guildId!, []), [guildUser])
+    it("can be fetched by username", async () => {
+        let user = await users.getByUsername(guildUser.name, guildUser.guildId!, [])
+        assert.deepEqual(user, [guildUser])
+        console.log(guildUser.name)
     })
 
     let discord = Math.random().toString(36).substring(4)
-
     let discordUser = guildUser.toDiscordUser(discord)
 
     it("Set discord id", async () => {
@@ -40,4 +49,5 @@ describe("Database User", () => {
     })
 })
 
-after(() => process.exit(0))
+afterEach(() => {
+})
