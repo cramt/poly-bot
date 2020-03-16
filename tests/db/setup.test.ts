@@ -51,7 +51,8 @@ describe('Database setup', () => {
         const thisDbConfig = JSON.parse(JSON.stringify(dbConfig)) as typeof dbConfig
         thisDbConfig.database = "_"
         client = new Client(thisDbConfig)
-        await client.connect();
+        await client.connect()
+        .catch((e) => console.error(e));
 
         await client.query("REVOKE CONNECT ON DATABASE " + SECRET.DB_NAME + " FROM public");
         await client.query("SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" + SECRET.DB_NAME + "';");
@@ -63,7 +64,7 @@ describe('Database setup', () => {
         await client.query("DROP DATABASE IF EXISTS _")
 
         return client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'").then(x => {
-            assert.equal(x.rows, [])
+            assert.deepEqual(x.rows, [])
         })
         .catch((e) => { 
             console.error(e)
@@ -75,6 +76,11 @@ describe('Database setup', () => {
 
 
         await setupSchema(client)
+        .catch((e) => {
+            console.error(e)
+            assert.fail()
+        })
+
         return client.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'").then((x) => { 
             assert.equal(x.rows[0].count, "1")
         })
