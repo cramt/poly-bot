@@ -25,7 +25,3 @@ describe('Number Arguments', () => {
         }).then(x => x.value), 4)
     })
 })
-
-after(() => {
-    process.exit(0)
-})
