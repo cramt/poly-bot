@@ -57,8 +57,6 @@ describe('Database setup', () => {
     })
 
     it("Schema setup", async () => {
-
-
         await setupSchema(client)
         assert.eventually.equal(client.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'").then(x => x.rows[0].count), "1")
     })
