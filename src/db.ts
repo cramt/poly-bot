@@ -9,7 +9,7 @@ let client: Client;
 const numberSqlRegex = /[1-9][0-9]*\.sql/.compile()
 
 export function getMaxMigrationFiles(dir: string[]) {
-    let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort().reverse();
+    let ids = dir.filter(x => numberSqlRegex.test(x)).map(x => parseInt(x.split(".")[0])).sort();
     ids.forEach((x, i) => {
         if (x !== i) {
             throw new Error("there is no " + x + ".sql migration, even thou higher numbers of migrations exists")
@@ -18,7 +18,7 @@ export function getMaxMigrationFiles(dir: string[]) {
     if (ids.length === 0) {
         return -1;
     }
-    return ids[0];
+    return ids[ids.length - 1];
 }
 
 export async function setupSchema(dbClient = client) {
@@ -28,7 +28,12 @@ export async function setupSchema(dbClient = client) {
             let result = (await dbClient.query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'info'"));
             let val = -1
             if (result.rows[0].count !== "0") {
-                val = (await dbClient.query("select schema_version from info")).rows[0].schema_version as number
+                try {
+                    val = (await dbClient.query("select schema_version from info")).rows[0].schema_version as number
+                }
+                catch (e) {
+
+                }
             }
             return val
 
@@ -42,7 +47,11 @@ export async function setupSchema(dbClient = client) {
     for (let i = currentVersion + 1; i <= maxMigrations; i++) {
         await dbClient.query((await fs.promises.readFile("migrations/" + i + ".sql")).toString())
     }
-    await dbClient.query("INSERT INTO public.info (schema_version) values ($1)", [maxMigrations])
+    //INSERT INTO public.info (schema_version) values ($1)
+    if ((await dbClient.query("UPDATE public.info SET schema_version = $1 RETURNING *", [maxMigrations])).rows.length === 0) {
+        await dbClient.query("INSERT INTO public.info (schema_version) values ($1)", [maxMigrations])
+    }
+
 }
 
 export async function openDB(config: ClientConfig = {
@@ -143,7 +152,7 @@ export const users = {
     getMembers: async (user: User) => {
         let userResults = await client.query(`
         WITH RECURSIVE members AS (
-            SELECT username, discord_id, gender, system_id, id, guild_id FROM users
+            username, discord_id, gender, system_id, id, guild_id
             WHERE system_id = $1
             UNION 
                 SELECT u.username, u.discord_id, u.gender, u.system_id, u.id, u.guild_id FROM users u

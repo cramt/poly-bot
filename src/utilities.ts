@@ -3,6 +3,7 @@ import * as fs from "fs"
 import { Relationship } from "./Relationship"
 import { User } from "./User"
 import { relationshipIntToString } from "./db"
+import AggregateError from "aggregate-error"
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ")
@@ -96,3 +97,27 @@ export function loadTestData(filename: string): { relationships: Relationship[],
     return data;
 }
 
+export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[]> {
+    return new Promise<T[]>((resolve, reject) => {
+        let res: T[] = []
+        let errors: any[] = []
+        let i = 0
+        values.forEach(async x => {
+            try {
+                res.push(await x)
+            }
+            catch (e) {
+                errors.push(e)
+            }
+            i++
+            if (i === values.length) {
+                if (errors.length !== 0) {
+                    reject(new AggregateError(errors))
+                }
+                else {
+                    resolve(res)
+                }
+            }
+        })
+    })
+}

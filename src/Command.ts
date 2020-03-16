@@ -2,7 +2,7 @@ import * as Discord from "discord.js"
 import { client } from "./index"
 import { users } from "./db";
 import { User } from "./User";
-import { getType, humanPrintArray } from "./utilities"
+import { getType, humanPrintArray, awaitAll } from "./utilities"
 import AggregateError from "aggregate-error"
 
 
@@ -295,19 +295,7 @@ export abstract class ArgumentList {
     abstract validLength(length: number): boolean
     protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
     parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
-        return Promise.all(this.internalParse(values, discord).map(async x => {
-            try {
-                return await x
-            }
-            catch (e) {
-                if (e instanceof ArgumentError) {
-                    return new Promise<any>((resolve) => resolve(e))
-                }
-                else {
-                    throw e
-                }
-            }
-        }))
+        return awaitAll(this.internalParse(values, discord))
     }
 }
 
@@ -410,11 +398,7 @@ export class Command {
     channelType: DiscordChannelType[]
 
     async call(args: string[], author: Discord.User, channel: Discord.Channel, guild: Discord.Guild): Promise<CommandReponseBase> {
-        let parsedResults = await this.arguments.parse(args, { author, channel, guild });
-        let errors = parsedResults.filter(x => x instanceof ArgumentError);
-        if (errors.length !== 0) {
-            throw new AggregateError(errors)
-        }
+        let parsedResults: ParseResult[] = await this.arguments.parse(args, { author, channel, guild });
         if (parsedResults.filter(x => x instanceof ExtraDataParseResult).length > 0) {
             return new CommandMoreData(parsedResults, x => this.func({
                 args: x,

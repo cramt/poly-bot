@@ -73,8 +73,6 @@ describe('Database setup', () => {
     })
 
     it("Schema setup", async () => {
-
-
         await setupSchema(client)
         .catch((e) => {
             console.error(e)
