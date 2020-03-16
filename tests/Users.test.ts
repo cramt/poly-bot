@@ -15,5 +15,5 @@ describe('Users', () => {
 })
 
 after(() => {
-    process.exit(0)
+    
 })
