@@ -13,7 +13,7 @@ export interface DiscordInput {
 }
 
 export interface CommandFuncInput extends DiscordInput {
-    args: any[]
+    args: ParseResult[]
 }
 
 export interface ArgumentFuncInput extends DiscordInput {
@@ -172,7 +172,7 @@ export class SpecificArgument extends Argument {
     }
     async parse(input: ArgumentFuncInput) {
         if (!this.specificStrings.includes(input.content)) {
-            throw new ArgumentError(input + " is not part of " + humanPrintArray(this.specificStrings), this)
+            throw new ArgumentError(input.content + " is not part of " + humanPrintArray(this.specificStrings), this)
         }
         return new ParseResult(input.content)
     }
@@ -349,27 +349,36 @@ export class OptionalArgumentList extends ArgumentList {
         return length >= this.arguments.filter(x => x.type === "required").length || length <= this.arguments.length
     }
 
-    protected internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[] {
-        let res: Promise<any>[] = [];
+    protected internalParse(_values: string[], discord: DiscordInput): Promise<ParseResult>[] {
+        interface Default {
+            value: any
+        }
+        let values: (string | Default)[] = _values.reverse()
         let args = this.arguments.reverse()
-        let defaultArgsIndex = 0;
-        let amount = args.length - values.length;
-        values = values.reverse();
+        let amount = values.length - args.filter(x => x.type === "required").length
         args.forEach((x, i) => {
-            if (x.type === "default" && amount < defaultArgsIndex) {
-                defaultArgsIndex++;
-                res.push(new Promise<any>((resolve) => resolve(x.default)))
+            if (x.type === "default" && amount === 0) {
+                values.splice(i, 0, {
+                    value: x.default
+                })
+                amount--
+            }
+        })
+        args = args.reverse()
+        values = values.reverse();
+        return values.map((x, i) => {
+            if (typeof x === "object") {
+                return new Promise<ParseResult>((resolve) => resolve(new ParseResult(x.value)))
             }
             else {
-                res.push(x.argument.parse({
+                return args[i].argument.parse({
                     channel: discord.channel,
                     guild: discord.guild,
                     author: discord.author,
-                    content: values[i]
-                }))
+                    content: x
+                })
             }
         })
-        return res.reverse();
     }
 }
 
@@ -404,7 +413,7 @@ export class Command {
         let parsedResults = await this.arguments.parse(args, { author, channel, guild });
         let errors = parsedResults.filter(x => x instanceof ArgumentError);
         if (errors.length !== 0) {
-            throw new AggregateError([errors])
+            throw new AggregateError(errors)
         }
         if (parsedResults.filter(x => x instanceof ExtraDataParseResult).length > 0) {
             return new CommandMoreData(parsedResults, x => this.func({

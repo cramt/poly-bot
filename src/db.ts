@@ -1,6 +1,6 @@
 import { Client, ClientConfig } from 'pg'
 import SECRET from './SECRET';
-import { Gender, User } from './User';
+import { Gender, User, constructUser, DiscordUser, GuildUser } from './User';
 import { Relationship, RelationshipType } from './Relationship';
 import * as fs from "fs"
 
@@ -63,7 +63,7 @@ export const genderStringToInt: {
 } = {
     "FEMME": 0,
     "MASC": 1,
-    "NEUTER": 2,
+    "NEUTRAL": 2,
     "SYSTEM": 3,
 }
 
@@ -104,19 +104,28 @@ function generateNullableEvaluation(field: string, number: number) {
 
 export const users = {
     get: async (id: number) => {
-        let result = await client.query("SELECT username, gender, discord_id, system_id FROM users WHERE id = $1", [id])
+        let result = await client.query("SELECT username, gender, discord_id, system_id, guild_id FROM users WHERE id = $1", [id])
         if (result.rows.length === 0) {
             return null
         }
-        return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], null, result.rows[0].discord_id, id, result.rows[0].system_id)
+        return constructUser(result.rows[0].username, genderIntToString[result.rows[0].gender], null, result.rows[0].discord_id, id, result.rows[0].system_id)
     },
     add: async (user: User) => {
+        let guildId: string | null = null
+        let discordId: string | null = null
+        if (user instanceof DiscordUser) {
+            discordId = user.discordId
+        }
+        else if (user instanceof GuildUser) {
+            guildId = user.guildId
+        }
         try {
-            let result = await client.query("INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", [user.guildId, user.name, user.discordId, genderStringToInt[user.gender], user.systemId])
+            let result = await client.query("INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", [guildId, user.name, discordId, genderStringToInt[user.gender], user.systemId])
             user.id = result.rows[0].id
             return true
         }
         catch (e) {
+            console.log(e)
             return false
         }
     },
@@ -125,11 +134,11 @@ export const users = {
         if (result.rows.length === 0) {
             return null
         }
-        return new User(result.rows[0].username, genderIntToString[result.rows[0].gender], null, id, result.rows[0].id, result.rows[0].system_id)
+        return constructUser(result.rows[0].username, genderIntToString[result.rows[0].gender], null, id, result.rows[0].id, result.rows[0].system_id)
     },
     getByUsername(username: string, guildId: string, discordIds: string[]) {
-        return client.query("SELECT id, guild_id, discord_id, gender, system_id FROM users WHERE " + generateNullableEvaluation("guild_id", 1) + " AND discord_id = ANY($2) AND username = $3", [guildId, discordIds, username])
-            .then(y => y.rows.map(x => new User(username, genderIntToString[x.gender], x.guild_id, x.discord_id, x.id, x.system_id)))
+        return client.query("SELECT id, guild_id, discord_id, gender, system_id FROM users WHERE (" + generateNullableEvaluation("guild_id", 1) + " OR discord_id = ANY($2)) AND username = $3", [guildId, discordIds, username])
+            .then(y => y.rows.map(x => constructUser(username, genderIntToString[x.gender], x.guild_id, x.discord_id, x.id, x.system_id)))
     },
     getMembers: async (user: User) => {
         let userResults = await client.query(`
@@ -141,7 +150,7 @@ export const users = {
                 INNER JOIN members m ON m.id = u.system_id
         ) SELECT username, discord_id, gender, system_id, id FROM members
     `, [user.id])
-        let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], user.guild_id, user.discord_id, user.id, user.system_id))
+        let users = userResults.rows.map(user => constructUser(user.username, genderIntToString[user.gender], user.guild_id, user.discord_id, user.id, user.system_id))
         user.members = users
         return users
     },
@@ -181,9 +190,17 @@ export const users = {
         }
     },
     update: async (user: User) => {
+        let guildId: string | null = null
+        let discordId: string | null = null
+        if (user instanceof DiscordUser) {
+            discordId = user.discordId
+        }
+        else if (user instanceof GuildUser) {
+            guildId = user.guildId
+        }
         try {
             await client.query("UPDATE users SET guild_id = $1, username = $2, discord_id = $3, gender = $4, system_id = $5 WHERE id = $6",
-                [user.guildId, user.name, user.discordId, genderStringToInt[user.gender], user.systemId, user.id])
+                [guildId, user.name, discordId, genderStringToInt[user.gender], user.systemId, user.id])
             return true
         }
         catch (e) {
@@ -227,7 +244,7 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
     let [relationshipResults, userResults] = await Promise.all([
         client.query("SELECT relationship_type, left_user_id, right_user_id FROM relationships WHERE guild_id = $1 OR (SELECT discord_id FROM users WHERE id = left_user_id) = ANY($2) OR (SELECT discord_id FROM users WHERE id = right_user_id) = ANY($2)", [guildId, discordIds]),
         client.query("SELECT username, discord_id, gender, id, system_id FROM users WHERE guild_id = $1 OR (SELECT discord_id FROM users WHERE id = left_user_id) = ANY($2) OR (SELECT discord_id FROM users WHERE id = right_user_id) = ANY($2)", [guildId, discordIds])])
-    let users = userResults.rows.map(user => new User(user.username, genderIntToString[user.gender], guildId, user.discord_id, user.id, user.system_id))
+    let users = userResults.rows.map(user => constructUser(user.username, genderIntToString[user.gender], guildId, user.discord_id, user.id, user.system_id))
     let userMap = new Map<number, User>()
     users.forEach(x => {
         userMap.set(x.id!, x)

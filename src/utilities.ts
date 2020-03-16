@@ -77,20 +77,6 @@ export function humanPrintArray(arr: string[], andOr = "or"): string {
     return arr.slice(0, arr.length - 1).join(", ") + " " + andOr + " " + arr[arr.length - 1]
 }
 
-export interface ThreadFunctionArgs {
-    name: string
-    args: any[]
-}
-
-export function runThreadFunction(args: ThreadFunctionArgs): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const worker = new Thread.Worker(__filename, {
-            workerData: args
-        })
-        worker.once("message", resolve)
-        worker.once("error", reject)
-    })
-}
 
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
     let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] }
