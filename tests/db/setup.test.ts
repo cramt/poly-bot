@@ -19,7 +19,7 @@ const dbConfig = {
 
 describe('Database setup', () => {
     let client: Client
-    it('Open connection', async () => {
+    it('can open connection', async () => {
         client = new Client(dbConfig)
         return client.connect()
         .catch((e) => {
@@ -28,7 +28,7 @@ describe('Database setup', () => {
         });
     })
 
-    it("Test connection", async () => {
+    it("can test the connection", async () => {
         const string = Math.random().toString(36).substring(4);
         return client.query("SELECT $1", [string]).then(x => x.rows[0]["?column?"])
         .then((x) => {
@@ -40,7 +40,7 @@ describe('Database setup', () => {
         })
     })
 
-    it("Reset database", async () => {
+    it("can reset the database", async () => {
         await client.query(`SELECT pid, pg_terminate_backend(pid) 
         FROM pg_stat_activity 
         WHERE datname = current_database() AND pid <> pg_backend_pid();`)
@@ -72,9 +72,7 @@ describe('Database setup', () => {
         });
     })
 
-    it("Schema setup", async () => {
-
-
+    it("can setup the schema for an empty database", async () => {
         await setupSchema(client)
         .catch((e) => {
             console.error(e)

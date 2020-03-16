@@ -8,7 +8,7 @@ chai.use(chaiAsPromised)
 const assert = chai.assert
 
 describe('Users', () => {
-    it('constructor', () => {
+    it('can create new user', () => {
         let user = new DiscordUser("Lucca", "FEMME", null, null, "<@55437543543>")
         assert.isNotNull(user)
     })

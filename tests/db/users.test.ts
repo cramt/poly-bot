@@ -34,13 +34,15 @@ describe("Database User", () => {
         assert.deepEqual(user, [guildUser])
     })
     let discordUser: DiscordUser;
-    it("Set discord id", async () => {
+    it("can update discord id", async () => {
         let discordId = Math.random().toString(36).substring(4)
         discordUser = guildUser.toDiscordUser(discordId)
         assert.isTrue(await users.update(discordUser))
+        let userResult = await users.getByDiscordId(discordId)
+        assert.equal(userResult!.name, name)
     })
 
-    it("Delete by discord id", async () => {
+    it("can delete by discord id", async () => {
         assert.isTrue(await users.deleteByDiscord(discordUser.discordId!))
         assert.isNull(await users.get(guildUser.id!))
         assert.isNull(await users.get(discordUser.id!))

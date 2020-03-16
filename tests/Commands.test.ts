@@ -8,7 +8,7 @@ chai.use(chaiAsPromised)
 const assert = chai.assert
 
 describe('Number Arguments', () => {
-    it('Invalid number', () => {
+    it('can reject invalid numbers', () => {
         assert.isRejected(new CommandParser.NumberArgument().parse({
             content: "hello there",
             channel: null as any,
@@ -16,7 +16,7 @@ describe('Number Arguments', () => {
             author: null as any
         }).then(x => x.value), CommandParser.ArgumentError)
     })
-    it('Valid number', () => {
+    it('accecpt valid numbers', () => {
         assert.eventually.equal(new CommandParser.NumberArgument().parse({
             content: "4",
             channel: null as any,
