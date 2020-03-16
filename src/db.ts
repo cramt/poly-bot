@@ -119,24 +119,60 @@ export const users = {
         if (result.rows.length === 0) {
             return null
         }
-        return constructUser(result.rows[0].username, genderIntToString[result.rows[0].gender], null, result.rows[0].discord_id, id, result.rows[0].system_id)
+        return constructUser(result.rows[0].username, genderIntToString[result.rows[0].gender], result.rows[0].guild_id, result.rows[0].discord_id, id, result.rows[0].system_id)
     },
     add: async (user: User) => {
-        let guildId: string | null = null
-        let discordId: string | null = null
-        if (user instanceof DiscordUser) {
-            discordId = user.discordId
+        let toAdd: User[] = []
+        function rec(user: User) {
+            if (user.id !== null) {
+                return;
+            }
+            toAdd.push(user)
+            if (user.system !== null) {
+                rec(user.system)
+            }
         }
-        else if (user instanceof GuildUser) {
-            guildId = user.guildId
+        rec(user)
+        if (toAdd.length === 0) {
+            return true
         }
+        toAdd = toAdd.reverse();
+        let props: any[] = []
+        let index = 1;
+        let query = toAdd.map((x, i, arr) => {
+            let q = "INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES ($" + (index++) + ", $" + (index++) + ", $" + (index++) + ", $" + (index++);
+            if (i === 0) {
+                q += ", NULL)"
+            }
+            else {
+                q += ", (SELECT id FROM u" + i + "))"
+            }
+            q += " RETURNING id"
+            i++;
+            if (i !== arr.length) {
+                q = "WITH u" + i + " as (" + q + ")"
+            }
+            let guildId: string | null = null
+            let discordId: string | null = null
+            if (x instanceof DiscordUser) {
+                discordId = x.discordId
+            }
+            else if (x instanceof GuildUser) {
+                guildId = x.guildId
+            }
+            props.push(guildId)
+            props.push(x.name)
+            props.push(discordId)
+            props.push(genderStringToInt[x.gender])
+            return q
+        }).join("\r\n\r\n")
+
         try {
-            let result = await client.query("INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", [guildId, user.name, discordId, genderStringToInt[user.gender], user.systemId])
+            let result = await client.query(query, props)
             user.id = result.rows[0].id
             return true
         }
         catch (e) {
-            console.log(e)
             return false
         }
     },

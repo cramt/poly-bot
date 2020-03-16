@@ -1,10 +1,10 @@
 export type Gender = "FEMME" | "MASC" | "NEUTRAL" | "SYSTEM"
 
 export function constructUser(name: string, gender: Gender, guildId: string | null, discordId: string | null, id: number | null, systemId: number | null): User {
-    if (discordId !== null) {
+    if (discordId) {
         return new DiscordUser(name, gender, id, systemId, discordId)
     }
-    else if (guildId !== null) {
+    else if (guildId) {
         return new GuildUser(name, gender, id, systemId, guildId)
     }
     else {
