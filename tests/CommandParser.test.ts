@@ -102,6 +102,8 @@ describe('User Arguments', () => {
         }))
     })
 
+    /*
+
     it('can accept correct results from requests for more data', async() => {
         sinon.stub(CommandParser, "ExtraDataParseResult").value(testUsers[1])
         await assert.isFulfilled(new CommandParser.UserArgument().parse({
@@ -121,6 +123,8 @@ describe('User Arguments', () => {
             author: null as any
         }))
     })
+
+    */
 
     afterEach(() => {
         sinon.restore()
