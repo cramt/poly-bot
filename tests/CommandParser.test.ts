@@ -50,20 +50,21 @@ describe('User Arguments', () => {
     let inputguild = createSinonStubInstance(Guild)
     inputguild.members = new DisordCollection()
 
+    let testUsers = [
+        new PolyUser.GuildUser("test1", "FEMME", null, null, "1111"),
+        new PolyUser.DiscordUser("test2", "NEUTRAL", null, null, "111111"),
+        new PolyUser.DiscordUser("test2", "FEMME", null, null, "111112"),
+        new PolyUser.GuildUser("test3", "MASC", null, null, "2222")
+    ]
+
     beforeEach(() => {
         sinon.stub(users, "getByUsername").callsFake(async(username: string, guildId: string, discordIds: string[]) => {
-            let users = [
-                new PolyUser.GuildUser("test1", "FEMME", null, null, "1111"),
-                new PolyUser.DiscordUser("test2", "NEUTRAL", null, null, "111111"),
-                new PolyUser.DiscordUser("test2", "FEMME", null, null, "111112"),
-                new PolyUser.GuildUser("test3", "MASC", null, null, "2222")
-            ]
-
+            
             let foundUser: PolyUser.User
             let found = false
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].name === username) {
-                    foundUser = users[i]
+            for (let i = 0; i < testUsers.length; i++) {
+                if (testUsers[i].name === username) {
+                    foundUser = testUsers[i]
                     found = true
                 }
             }
@@ -95,6 +96,26 @@ describe('User Arguments', () => {
     it('can reject non-existent users', async() => {
         await assert.isRejected(new CommandParser.UserArgument().parse({
             content: "test4",
+            channel: null as any,
+            guild: inputguild,
+            author: null as any
+        }))
+    })
+
+    it('can accept correct results from requests for more data', async() => {
+        sinon.stub(CommandParser, "ExtraDataParseResult").value(testUsers[1])
+        await assert.isFulfilled(new CommandParser.UserArgument().parse({
+            content: "test2",
+            channel: null as any,
+            guild: inputguild,
+            author: null as any
+        }).then(x => assert.deepEqual(x.value.gender, "NEUTRAL")))
+    })
+
+    it('can reject incorrect results from requests for more data', async() => {
+        sinon.stub(CommandParser, "ExtraDataParseResult").value(null)
+        await assert.isRejected(new CommandParser.UserArgument().parse({
+            content: "test2",
             channel: null as any,
             guild: inputguild,
             author: null as any
