@@ -2,12 +2,13 @@ import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as PolyUser from '../src/User'
-import { User } from 'discord.js';
+import { User, Guild, Collection as DisordCollection } from 'discord.js';
 import * as Commands from '../src/commands';
 import * as CommandParser from '../src/Command';
 import { client } from '../src/index';
 import { users } from '../src/db';
 import { ArgumentError } from '../src/Command';
+import { createSinonStubInstance } from './SinonStubbedInstance';
 
 var cmd = Commands.commands;
 chai.use(chaiAsPromised)
@@ -45,6 +46,10 @@ describe('Any Arguments', async() => {
 })
 
 describe('User Arguments', () => {
+
+    let inputguild = createSinonStubInstance(Guild)
+    inputguild.members = new DisordCollection()
+
     beforeEach(() => {
         sinon.stub(users, "getByUsername").callsFake(async(username: string, guildId: string, discordIds: string[]) => {
             let users = [
@@ -56,7 +61,7 @@ describe('User Arguments', () => {
 
             let foundUser: PolyUser.User
             let found = false
-            for (let i = 0; i++; i < users.length) {
+            for (let i = 0; i < users.length; i++) {
                 if (users[i].name === username) {
                     foundUser = users[i]
                     found = true
@@ -70,15 +75,30 @@ describe('User Arguments', () => {
             }
         })
     })
-    //TODO: make guild not null
+
     it('can retrieve a user', async() => {
         await assert.isFulfilled(new CommandParser.UserArgument().parse({
             content: "test1",
             channel: null as any,
-            guild: null as any,
+            guild: inputguild,
+            author: null as any
+        }).then(x => assert.deepEqual(x.value.name, "test1")))
+
+        await assert.isFulfilled(new CommandParser.UserArgument().parse({
+            content: "test3",
+            channel: null as any,
+            guild: inputguild,
+            author: null as any
+        }).then(x => assert.deepEqual(x.value.name, "test3")))           
+    })
+
+    it('can reject non-existent users', async() => {
+        await assert.isRejected(new CommandParser.UserArgument().parse({
+            content: "test4",
+            channel: null as any,
+            guild: inputguild,
             author: null as any
         }))
-        
     })
 
     afterEach(() => {
