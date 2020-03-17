@@ -50,12 +50,12 @@ describe('User Arguments', () => {
     let inputguild = createSinonStubInstance(Guild)
     inputguild.members = new DisordCollection()
 
-        let testUsers = [
-            new PolyUser.GuildUser("test1", "FEMME", null, null, "1111"),
-            new PolyUser.DiscordUser("test2", "NEUTRAL", null, null, "111111"),
-            new PolyUser.DiscordUser("test2", "FEMME", null, null, "111112"),
-            new PolyUser.GuildUser("test3", "MASC", null, null, "2222")
-        ]
+    let testUsers = [
+        new PolyUser.GuildUser("test1", "FEMME", null, null, "1111"),
+        new PolyUser.DiscordUser("test2", "NEUTRAL", null, null, "111111"),
+        new PolyUser.DiscordUser("test2", "FEMME", null, null, "111112"),
+        new PolyUser.GuildUser("test3", "MASC", null, null, "2222")
+    ]
 
     beforeEach(() => {
         sinon.stub(users, "getByUsername").callsFake(async(username: string, guildId: string, discordIds: string[]) => {
