@@ -101,16 +101,16 @@ export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[
     return new Promise<T[]>((resolve, reject) => {
         let res: T[] = []
         let errors: any[] = []
-        let i = 0
-        values.forEach(async x => {
+        let index = 0
+        values.forEach(async (x,i) => {
             try {
-                res.push(await x)
+                res[i] = await x
             }
             catch (e) {
-                errors.push(e)
+                errors[i] = e
             }
-            i++
-            if (i === values.length) {
+            index++
+            if (index === values.length) {
                 if (errors.length !== 0) {
                     reject(new AggregateError(errors))
                 }

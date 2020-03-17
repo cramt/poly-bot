@@ -45,11 +45,11 @@ if ((global as any).util === undefined) {
         }
         if (listeners.get(message.channel.id) !== undefined) {
             let newListeners: ((message: Discord.Message) => Promise<boolean>)[] = []
-            listeners.get(message.channel.id)!.forEach(x => {
-                if (x(message)) {
+            await Promise.all(listeners.get(message.channel.id)!.map(async x => {
+                if (await x(message)) {
                     newListeners.push(x)
                 }
-            })
+            }))
             listeners.set(message.channel.id, newListeners)
         }
         if (message.content.startsWith(prefix)) {

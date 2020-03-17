@@ -1,7 +1,7 @@
 import * as Discord from "discord.js"
 import { client } from "./index"
 import { users } from "./db";
-import { User } from "./User";
+import { User, GuildUser, DiscordUser } from "./User";
 import { getType, humanPrintArray, awaitAll } from "./utilities"
 import AggregateError from "aggregate-error"
 
@@ -136,13 +136,15 @@ export class UserArgument extends Argument {
             throw new ArgumentError("there are no users with that argument", this)
         }
         if (user.length > 1) {
-            let res: ExtraDataParseResult = new ExtraDataParseResult("", async input => {
+            console.log("hello there")
+            let res: ExtraDataParseResult = new ExtraDataParseResult("\"" + input.content + "\" is ambiguous, plz choose " + user.map((x, i) => "\r\n" + (i + 1) + ": " + (x instanceof DiscordUser ? ("<@" + x.discordId + ">") : "local user")), async input => {
                 let n = parseInt(input.content);
                 if (isNaN(n) || --n > user.length) {
                     return res;
                 }
                 return new ParseResult(user[n])
             })
+            return res;
         }
         return new ParseResult(user[0]);
     }
@@ -200,6 +202,7 @@ export class CommandMoreData extends CommandReponseBase {
         this.transformer = transformer
     }
     async respond(message: Discord.Message) {
+        console.log("hello there2")
         let res = () => {
             this.calcIndexes();
             if (this.indexes.length === 0) {
@@ -212,7 +215,9 @@ export class CommandMoreData extends CommandReponseBase {
             }
             let currIndex = this.indexes[0]
             let currResult = this.results[currIndex] as ExtraDataParseResult
+            message.channel.send(currResult.value)
             this.addListner(async message => {
+                console.log("hello there")
                 this.results[currIndex] = await currResult.setExtraData({
                     content: message.content,
                     guild: (message.channel as Discord.TextChannel).guild,
@@ -232,7 +237,9 @@ export class CommandMoreData extends CommandReponseBase {
                 this.resolver = resolve
             }
         });
-        await (await this.transformer(this.results)).respond(message);
+        let response = await this.transformer(this.results);
+        console.log(response)
+        await response.respond(message);
     }
     private calcIndexes() {
         this.results.forEach((x, i) => {
@@ -294,8 +301,10 @@ export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' 
 export abstract class ArgumentList {
     abstract validLength(length: number): boolean
     protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
-    parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
-        return awaitAll(this.internalParse(values, discord))
+    async parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
+        let a = this.internalParse(values, discord);
+        let b = await awaitAll(a)
+        return b;
     }
 }
 
@@ -400,6 +409,7 @@ export class Command {
     async call(args: string[], author: Discord.User, channel: Discord.Channel, guild: Discord.Guild): Promise<CommandReponseBase> {
         let parsedResults: ParseResult[] = await this.arguments.parse(args, { author, channel, guild });
         if (parsedResults.filter(x => x instanceof ExtraDataParseResult).length > 0) {
+            console.log("a")
             return new CommandMoreData(parsedResults, x => this.func({
                 args: x,
                 author: author,
