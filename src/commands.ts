@@ -1,7 +1,6 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandReponseNone, CommandResponseFile, AdminCommand, StringExcludedArgument, CommandReponseBase, CacheCommand, ArgumentList, StandardArgumentList, VariableArgumentList, OptionalArgumentList } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandResponseFile, AdminCommand, StringExcludedArgument, StandardArgumentList, VariableArgumentList, OptionalArgumentList } from "./Command";
 import * as Discord from "discord.js"
-import { User, Gender, genderToColor, constructUser, GuildUser, DiscordUser } from "./User";
-import { getType } from "./utilities";
+import { User, Gender, genderToColor, GuildUser, DiscordUser } from "./User";
 import * as db from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
@@ -15,7 +14,7 @@ async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User>
 }
 
 export const commands: Command[] = [
-    new Command("help", "prints all the commands the bot has available", new StandardArgumentList(), async input => {
+    new Command("help", "prints all the commands the bot has available", new StandardArgumentList(), async () => {
         let str = "```"
         str += "prefix = \"" + prefix + "\"\r\n\r\n"
         //TODO
@@ -75,7 +74,6 @@ export const commands: Command[] = [
 
 
     new Command("me", "print out information about yourself", new StandardArgumentList(), async input => {
-        let guildId = (input.channel as Discord.TextChannel).guild.id
         let user = (await db.users.getByDiscordId(input.author.id)) as User
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
@@ -154,7 +152,6 @@ export const commands: Command[] = [
             new DiscordUserArgument(),
             new UserArgument())),
         async input => {
-            let guildId = (input.channel as Discord.TextChannel).guild.id
 
             let startUsers = await Promise.all(input.args.map(x => parseDiscordUserOrUser(x.value)))
 
@@ -169,16 +166,15 @@ export const commands: Command[] = [
         }),
 
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", new StandardArgumentList(), async input => {
-        let guildId = (input.channel as Discord.TextChannel).guild.id
         await db.users.deleteByDiscord(input.author.id)
         return new CommandResponseReaction("👍")
     }),
 
-    new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async input => {
+    new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async () => {
         return new CommandReponseInSameChannel("not implemented yet")
     }),
 
-    new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async input => {
+    new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async () => {
         return new CommandReponseInSameChannel("not implemented yet")
     }),
 

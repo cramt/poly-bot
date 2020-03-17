@@ -3,7 +3,7 @@ import SECRET from "./SECRET"
 import { commandLineArgSplit } from "./utilities"
 import { openDB } from "./db"
 import { commands } from "./commands"
-import { ArgumentError, Argument } from "./Command"
+import { ArgumentError } from "./Command"
 import AggregateError from "aggregate-error"
 import * as job from "microjob"
 
@@ -37,20 +37,9 @@ if ((global as any).util === undefined) {
         client.user.setActivity("with polyamory")
     })
 
-    let listeners = new Map<string, ((message: Discord.Message) => Promise<boolean>)[]>()
-
     client.on("message", async message => {
         if (message.author.bot) {
             return;
-        }
-        if (listeners.get(message.channel.id) !== undefined) {
-            let newListeners: ((message: Discord.Message) => Promise<boolean>)[] = []
-            await Promise.all(listeners.get(message.channel.id)!.map(async x => {
-                if (await x(message)) {
-                    newListeners.push(x)
-                }
-            }))
-            listeners.set(message.channel.id, newListeners)
         }
         if (message.content.startsWith(prefix)) {
             let channel = message.channel;
@@ -62,11 +51,6 @@ if ((global as any).util === undefined) {
             }
             try {
                 let respond = await command.call(userCommand.args, message.author, channel, message.guild)
-                listeners.set(message.channel.id, [])
-                listeners.get(message.channel.id)!.push(...respond.listeners)
-                respond.addListner = func => {
-                    listeners.get(message.channel.id)!.push(func)
-                }
                 await respond.respond(message)
             }
             catch (ae) {

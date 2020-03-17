@@ -1,9 +1,9 @@
-import * as Thread from "worker_threads"
 import * as fs from "fs"
 import { Relationship } from "./Relationship"
 import { User } from "./User"
-import { relationshipIntToString } from "./db"
 import AggregateError from "aggregate-error"
+import * as Discord from "discord.js"
+import { client } from "."
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ")
@@ -102,7 +102,7 @@ export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[
         let res: T[] = []
         let errors: any[] = []
         let index = 0
-        values.forEach(async (x,i) => {
+        values.forEach(async (x, i) => {
             try {
                 res[i] = await x
             }
@@ -119,5 +119,23 @@ export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[
                 }
             }
         })
+    })
+}
+
+export function waitForReaction(message: Discord.Message, user: Discord.User, timeout = -1) {
+    return new Promise<Discord.MessageReaction>((resolve, reject) => {
+        let f = (reaction: Discord.MessageReaction, author: Discord.User) => {
+            if (reaction.message.id === message.id && author.id === user.id) {
+                client.removeListener("messageReactionAdd", f)
+                resolve(reaction)
+            }
+        }
+        client.on("messageReactionAdd", f)
+        if (timeout > 0) {
+            setTimeout(() => {
+                client.removeListener("messageReactionAdd", f)
+                reject(new Error("timed out"))
+            }, timeout);
+        }
     })
 }

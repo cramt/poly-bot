@@ -1,9 +1,8 @@
 import * as Discord from "discord.js"
 import { client } from "./index"
 import { users } from "./db";
-import { User, GuildUser, DiscordUser } from "./User";
-import { getType, humanPrintArray, awaitAll } from "./utilities"
-import AggregateError from "aggregate-error"
+import { User, DiscordUser } from "./User";
+import { getType, humanPrintArray, awaitAll, waitForReaction } from "./utilities"
 
 
 export interface DiscordInput {
@@ -27,17 +26,6 @@ export class ParseResult {
     }
     get value(): any {
         return this._value
-    }
-}
-
-export class ExtraDataParseResult extends ParseResult {
-    private evaluator: (input: ArgumentFuncInput) => Promise<ParseResult>
-    constructor(value: string, evaluator: (input: ArgumentFuncInput) => Promise<ParseResult>) {
-        super(value)
-        this.evaluator = evaluator
-    }
-    setExtraData(input: ArgumentFuncInput) {
-        return this.evaluator(input)
     }
 }
 
@@ -136,15 +124,34 @@ export class UserArgument extends Argument {
             throw new ArgumentError("there are no users with that argument", this)
         }
         if (user.length > 1) {
-            console.log("hello there")
-            let res: ExtraDataParseResult = new ExtraDataParseResult("\"" + input.content + "\" is ambiguous, plz choose " + user.map((x, i) => "\r\n" + (i + 1) + ": " + (x instanceof DiscordUser ? ("<@" + x.discordId + ">") : "local user")), async input => {
-                let n = parseInt(input.content);
-                if (isNaN(n) || --n > user.length) {
-                    return res;
+            let message = await (input.channel as Discord.TextChannel).send("\"" + input.content + "\" is ambiguous, plz choose " +
+                user.map((x, i) => "\r\n" + i.toString(16) + ": " + (x instanceof DiscordUser ? ("<@" + x.discordId + ">") : "local user"))) as Discord.Message
+            if (user.length < 17) {
+                const reactionArr = [
+                    "zero",
+                    "one",
+                    "two",
+                    "three",
+                    "four",
+                    "five",
+                    "six",
+                    "seven",
+                    "eight",
+                    "nine",
+                    "regional_indicator_a",
+                    "regional_indicator_b",
+                    "regional_indicator_c",
+                    "regional_indicator_d",
+                    "regional_indicator_e",
+                    "regional_indicator_f",
+                ]
+                let reactPromise: Promise<Discord.MessageReaction>[] = []
+                for (let i = 0; i < user.length; i++) {
+                    reactPromise.push(message.react(":" + reactionArr[i] + ":"))
                 }
-                return new ParseResult(user[n])
-            })
-            return res;
+                await awaitAll(reactPromise)
+                console.log(await waitForReaction(message, input.author))
+            }
         }
         return new ParseResult(user[0]);
     }
@@ -185,69 +192,6 @@ export class SpecificArgument extends Argument {
 
 export abstract class CommandReponseBase {
     abstract respond(message: Discord.Message): Promise<void>;
-    public listeners: ((message: Discord.Message) => Promise<boolean>)[] = []
-    public addListner: ((func: (message: Discord.Message) => Promise<boolean>) => void) = func => {
-        this.listeners.push(func)
-    }
-}
-
-export class CommandMoreData extends CommandReponseBase {
-    resolver: (() => void) | null | "done" = null
-    results: ParseResult[]
-    indexes: number[] = []
-    transformer: (results: ParseResult[]) => Promise<CommandReponseBase>
-    constructor(results: ParseResult[], transformer: (results: ParseResult[]) => Promise<CommandReponseBase>) {
-        super()
-        this.results = results
-        this.transformer = transformer
-    }
-    async respond(message: Discord.Message) {
-        console.log("hello there2")
-        let res = () => {
-            this.calcIndexes();
-            if (this.indexes.length === 0) {
-                if (this.resolver === null || this.resolver === "done") {
-                    this.resolver = "done"
-                }
-                else {
-                    this.resolver();
-                }
-            }
-            let currIndex = this.indexes[0]
-            let currResult = this.results[currIndex] as ExtraDataParseResult
-            message.channel.send(currResult.value)
-            this.addListner(async message => {
-                console.log("hello there")
-                this.results[currIndex] = await currResult.setExtraData({
-                    content: message.content,
-                    guild: (message.channel as Discord.TextChannel).guild,
-                    channel: message.channel,
-                    author: message.author
-                })
-                res();
-                return false;
-            })
-        }
-        res();
-        await new Promise<void>((resolve, reject) => {
-            if (this.resolver === "done") {
-                resolve()
-            }
-            else {
-                this.resolver = resolve
-            }
-        });
-        let response = await this.transformer(this.results);
-        console.log(response)
-        await response.respond(message);
-    }
-    private calcIndexes() {
-        this.results.forEach((x, i) => {
-            if (x instanceof ExtraDataParseResult) {
-                this.indexes.push(i)
-            }
-        })
-    }
 }
 
 export class CommandReponseNone extends CommandReponseBase {
@@ -408,23 +352,12 @@ export class Command {
 
     async call(args: string[], author: Discord.User, channel: Discord.Channel, guild: Discord.Guild): Promise<CommandReponseBase> {
         let parsedResults: ParseResult[] = await this.arguments.parse(args, { author, channel, guild });
-        if (parsedResults.filter(x => x instanceof ExtraDataParseResult).length > 0) {
-            console.log("a")
-            return new CommandMoreData(parsedResults, x => this.func({
-                args: x,
-                author: author,
-                channel: channel,
-                guild: guild
-            }))
-        }
-        else {
-            return await this.func({
-                args: parsedResults,
-                author: author,
-                channel: channel,
-                guild: guild
-            });
-        }
+        return await this.func({
+            args: parsedResults,
+            author: author,
+            channel: channel,
+            guild: guild
+        });
     }
 
     constructor(name: string, description: string, args: ArgumentList, func: (input: CommandFuncInput) => Promise<CommandReponseBase>, alias: string[] = [], channelType: DiscordChannelType | DiscordChannelType[] = "text") {
