@@ -217,10 +217,8 @@ export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' 
 export abstract class ArgumentList {
     abstract validLength(length: number): boolean
     protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
-    async parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
-        let a = this.internalParse(values, discord);
-        let b = await awaitAll(a)
-        return b;
+    parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
+        return awaitAll(this.internalParse(values, discord))
     }
 }
 

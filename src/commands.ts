@@ -4,7 +4,7 @@ import { User, Gender, genderToColor, GuildUser, DiscordUser } from "./User";
 import * as db from "./db";
 import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
 import { prefix } from "./index"
-import { polyMapGenerate } from "./polyMapGenerate";
+import { polyMapGenerate, cachedPolyMapGenerate } from "./polyMapGenerate";
 
 async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
     if ((thing as User).gender === undefined) {
@@ -135,7 +135,7 @@ export const commands: Command[] = [
     new Command("generate", "generates the polycule map", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await db.getAllInGuild(guildId, input.guild.members.map(x => x.id))
-        let buffer = await polyMapGenerate(all.users, all.relationships)
+        let buffer = await cachedPolyMapGenerate(all.users, all.relationships, input.guild)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
@@ -205,56 +205,4 @@ export const commands: Command[] = [
         let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     })
-
-    /*
-    new Command("add-system", "add your system to the polycule", [], async input => {
-        let channel = input.channel as Discord.TextChannel
-        let api = await PluralKitApi.fromDiscord(input.author.id)
-        if (api === null) {
-            return new CommandReponseInSameChannel("you dont have a pluralkit system")
-        }
-        let argProblems = (await Promise.all([(async () => {
-            if (await getUserByDiscordId(channel.guild.id, input.author.id) !== null) {
-                return new CommandReponseInSameChannel("you already have a non-plural user, please delete that one first")
-            }
-            return null
-        })(), (async () => {
-            if (!await api.valid()) {
-                return new CommandReponseInSameChannel("not a valid token")
-            }
-            return null
-        })()])).filter(x => x !== null)
-        if (argProblems.length > 0) {
-            return argProblems[0]!
-        }
-        await createNewPolySystem(new PluralSystem(input.author.id, (await api.getSystemInfo()).id))
-        return new CommandResponseReaction("👍");
-    })*/
-
-    /*new AnyArgumentCommand("im-plural", "changed your user to a plural user", async input => {
-        let guild = (input.channel as Discord.TextChannel).guild
-        if (input.args.length % 2 === 0) {
-            return new CommandReponseInSameChannel("can only take an unqual amount of arguments")
-        }
-        if (input.args.length < 4) {
-            return new CommandReponseInSameChannel("you need to add atleast on member of the system")
-        }
-        let api = new PluralKitApi(input.args[0])
-        let systemInfo = await api.getSystemInfo();
-        let memberInfo = await api.getMembersInfo();
-        input.args = input.args.slice(1)
-        let users: User[] = []
-        for (let i = 0; i < input.args.length; i += 2) {
-            let member = memberInfo.filter(x => x.id === input.args[i] || x.name?.toLocaleLowerCase() == input.args[i].toLocaleLowerCase())[0] || null
-            if (member === null) {
-                return new CommandReponseInSameChannel(input.args[i] + " could not be found")
-            }
-            if (!Object.getOwnPropertyNames(genderStringToInt).map(x => x.toLowerCase()).includes(input.args[i + 1])) {
-                return new CommandReponseInSameChannel(input.args[i + 1] + " is not a gender")
-            }
-            users.push(new User(member.name!, input.args[i + 1].toUpperCase(), guild.id, input.author.id, systemInfo.id, member.id))
-        }
-        await changeToPlural(guild.id, input.author.id, api, users)
-        return new CommandResponseReaction("👍");
-    })*/
 ]

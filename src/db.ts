@@ -286,18 +286,36 @@ export const relationships = {
     }
 }
 
-//TODO, fix plz
+export const polymapCache = {
+    get: async (guildId: string) => {
+        let result = await client.query("SELECT data FROM polymap_cache WHERE guild_id = $1", [guildId])
+        if (result.rows.length === 0) {
+            return null;
+        }
+        return result.rows[0].data as Buffer
+    },
+    set: async (data: Buffer, discordIds: string[], guildId: string) => {
+        try {
+            await client.query("INSERT INTO polymap_cache (data, discord_ids, guild_id) VALUES ($1, $2, $3)", [data, discordIds, guildId])
+            return true;
+        }
+        catch (e) {
+            return false
+        }
+    }
+}
+
 export async function getAllInGuild(guildId: string, discordIds: string[]): Promise<{ relationships: Relationship[], users: User[] }> {
     let [relationshipResults, userResults] = await Promise.all([
         client.query("SELECT relationship_type, left_user_id, right_user_id FROM relationships WHERE guild_id = $1 OR (SELECT discord_id FROM users WHERE id = left_user_id) = ANY($2) OR (SELECT discord_id FROM users WHERE id = right_user_id) = ANY($2)", [guildId, discordIds]),
-        client.query("SELECT username, discord_id, gender, id, system_id FROM users WHERE guild_id = $1 OR (SELECT discord_id FROM users WHERE id = left_user_id) = ANY($2) OR (SELECT discord_id FROM users WHERE id = right_user_id) = ANY($2)", [guildId, discordIds])])
+        client.query("SELECT username, discord_id, gender, id, system_id FROM users WHERE guild_id = $1 OR discord_id = ANY($2)", [guildId, discordIds])])
     let users = userResults.rows.map(user => constructUser(user.username, genderIntToString[user.gender], guildId, user.discord_id, user.id, user.system_id))
     let userMap = new Map<number, User>()
     users.forEach(x => {
         userMap.set(x.id!, x)
     })
     let relationships = relationshipResults.rows.map(relationship =>
-        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_username)!, guildId));
+        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_user_id)!, guildId));
     return {
         relationships: relationships,
         users: users

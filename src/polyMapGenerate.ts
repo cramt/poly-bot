@@ -1,4 +1,4 @@
-import { User, genderToColor } from "./User";
+import { User, genderToColor, DiscordUser } from "./User";
 import { Relationship, relationshipTypeToColor } from "./Relationship";
 import { graph, Node, Graph } from "graphviz";
 import SECRET from "./SECRET";
@@ -6,6 +6,8 @@ import Jimp from "jimp";
 import { exec } from "child_process";
 import * as path from "path"
 import puppeteer from "puppeteer"
+import * as Discord from "discord.js"
+import { polymapCache } from "./db";
 
 export function generateDotScript(users: User[], relationships: Relationship[]): Buffer {
     const backgroundColor = "#00000000"
@@ -117,4 +119,16 @@ export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
 
 export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
     return await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(generateDotScript(users, relationships), "svg")))
+}
+
+export async function cachedPolyMapGenerate(users: User[], relationships: Relationship[], guild: Discord.Guild | string): Promise<Buffer> {
+    if (typeof guild === "object") {
+        guild = guild.id
+    }
+    let cache = await polymapCache.get(guild)
+    if (cache = null) {
+        cache = await polyMapGenerate(users, relationships)
+        polymapCache.set(cache, users.filter(x => x instanceof DiscordUser).map(x => (x as DiscordUser).discordId), guild)
+    }
+    return await polyMapGenerate(users, relationships);
 }
