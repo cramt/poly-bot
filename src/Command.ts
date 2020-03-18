@@ -117,7 +117,6 @@ export class DiscordUserArgument extends Argument {
 }
 
 export class UserArgument extends Argument {
-    userCache: User | null | undefined
     async parse(input: ArgumentFuncInput) {
         let user = await users.getByUsername(input.content, input.guild.id, input.guild.members.map(x => x.id))
         if (user.length === 0) {

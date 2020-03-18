@@ -102,23 +102,28 @@ export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[
         let res: T[] = []
         let errors: any[] = []
         let index = 0
-        values.forEach(async (x, i) => {
-            try {
-                res[i] = await x
-            }
-            catch (e) {
-                errors[i] = e
-            }
-            index++
-            if (index === values.length) {
-                if (errors.length !== 0) {
-                    reject(new AggregateError(errors))
+        if (values.length === 0) {
+            resolve(res);
+        }
+        else {
+            values.forEach(async (x, i) => {
+                try {
+                    res[i] = await x
                 }
-                else {
-                    resolve(res)
+                catch (e) {
+                    errors[i] = e
                 }
-            }
-        })
+                index++
+                if (index === values.length) {
+                    if (errors.length !== 0) {
+                        reject(new AggregateError(errors))
+                    }
+                    else {
+                        resolve(res)
+                    }
+                }
+            })
+        }
     })
 }
 
@@ -146,13 +151,13 @@ export async function discordRequestChoice<T>(name: string, arr: T[], channel: D
         arr.map((x, i) => "\r\n" + i.toString(36) + ": " + converter(x))) as Discord.Message;
     let index = -1;
     while (index < 0 || index >= arr.length) {
+        let waitReaction = waitForReaction(message, author);
         if (arr.length <= 36) {
-
             for (let i = 0; i < arr.length; i++) {
                 await message.react(reactionArr[i]);
             }
         }
-        let reaction = await waitForReaction(message, author)
+        let reaction = await waitReaction;
         index = reactionArr.indexOf(reaction.emoji.name);
     }
     return arr[index]

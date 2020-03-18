@@ -39,6 +39,9 @@ if ((global as any).util === undefined) {
     })
 
     client.on("message", async message => {
+        while (message.guild.memberCount !== message.guild.members.size) {
+            await message.guild.fetchMembers()
+        }
         if (message.author.bot) {
             return;
         }
@@ -51,8 +54,11 @@ if ((global as any).util === undefined) {
                 return;
             }
             try {
+                console.log("a")
                 let respond = await command.call(userCommand.args, message.author, channel, message.guild)
+                console.log("b")
                 await respond.respond(message)
+                console.log("c")
             }
             catch (ae) {
                 if (ae instanceof AggregateError) {
