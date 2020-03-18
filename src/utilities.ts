@@ -139,3 +139,22 @@ export function waitForReaction(message: Discord.Message, user: Discord.User, ti
         }
     })
 }
+
+export async function discordRequestChoice<T>(name: string, arr: T[], channel: Discord.TextChannel, author: Discord.User, converter: (t: T) => string): Promise<T> {
+    const reactionArr = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹", "🇺", "🇻", "🇼", "🇾", "🇿"]
+    let message = await channel.send("\"" + name + "\" is ambiguous, plz choose " +
+        arr.map((x, i) => "\r\n" + i.toString(36) + ": " + converter(x))) as Discord.Message;
+    let index = -1;
+    while (index < 0 || index >= arr.length) {
+        if (arr.length <= 36) {
+
+            for (let i = 0; i < arr.length; i++) {
+                await message.react(reactionArr[i]);
+            }
+        }
+        let reaction = await waitForReaction(message, author)
+        index = reactionArr.indexOf(reaction.emoji.name);
+    }
+    return arr[index]
+
+}

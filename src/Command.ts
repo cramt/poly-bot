@@ -2,7 +2,7 @@ import * as Discord from "discord.js"
 import { client } from "./index"
 import { users } from "./db";
 import { User, DiscordUser } from "./User";
-import { getType, humanPrintArray, awaitAll, waitForReaction } from "./utilities"
+import { getType, humanPrintArray, awaitAll, waitForReaction, discordRequestChoice } from "./utilities"
 
 
 export interface DiscordInput {
@@ -124,34 +124,7 @@ export class UserArgument extends Argument {
             throw new ArgumentError("there are no users with that argument", this)
         }
         if (user.length > 1) {
-            let message = await (input.channel as Discord.TextChannel).send("\"" + input.content + "\" is ambiguous, plz choose " +
-                user.map((x, i) => "\r\n" + i.toString(16) + ": " + (x instanceof DiscordUser ? ("<@" + x.discordId + ">") : "local user"))) as Discord.Message
-            if (user.length < 17) {
-                const reactionArr = [
-                    "zero",
-                    "one",
-                    "two",
-                    "three",
-                    "four",
-                    "five",
-                    "six",
-                    "seven",
-                    "eight",
-                    "nine",
-                    "regional_indicator_a",
-                    "regional_indicator_b",
-                    "regional_indicator_c",
-                    "regional_indicator_d",
-                    "regional_indicator_e",
-                    "regional_indicator_f",
-                ]
-                let reactPromise: Promise<Discord.MessageReaction>[] = []
-                for (let i = 0; i < user.length; i++) {
-                    reactPromise.push(message.react(":" + reactionArr[i] + ":"))
-                }
-                await awaitAll(reactPromise)
-                console.log(await waitForReaction(message, input.author))
-            }
+            return new ParseResult(await discordRequestChoice(input.content, user, input.channel as Discord.TextChannel, input.author, x => (x instanceof DiscordUser ? ("<@" + x.discordId + ">") : "local user")))
         }
         return new ParseResult(user[0]);
     }
