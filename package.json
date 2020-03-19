@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "test": "mocha -r ts-node/register tests/**/*.test.ts",
-        "coverage": "nyc -r text -e .ts -x \"tests/*.test.ts\" npm run test"
+        "coverage": "nyc -r text -e .ts -x \"tests/*.test.ts\" npm run test",
+        "compile-rust": "compile.sh"
     },
     "keywords": [],
     "author": "",
