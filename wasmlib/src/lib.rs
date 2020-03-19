@@ -37,12 +37,3 @@ pub fn take_option_string(x: Option<String>) {}
 pub fn return_option_string() -> Option<String> {
     None
 }
-
-
-#[wasm_bindgen]
-pub fn fix_svg_emoji(s: &str) -> String {
-    lazy_static! {
-        static ref r = Regex::new(r"(?m)(?P<left><text[^>]*>[^&lt;]*)&lt;(?P<animated>a?):[^:]+:(?P<id>\d*)&gt;(?P<right></text>)").unwrap();
-    }
-    r.replace_all(s, "$left <image href=\"https://cdn.discordapp.com/emojis/$id\" height=\"20\" width=\"20\"/> $right").parse().unwrap()
-}

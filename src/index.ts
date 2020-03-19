@@ -7,7 +7,7 @@ import { ArgumentError } from "./Command"
 import AggregateError from "aggregate-error"
 import * as job from "microjob"
 import * as fs from "fs"
-import * as wasm from "../lib/wasmlib.js"
+import * as wasm from "../lib/wasmlib/wasmlib.js"
 
 
 export const prefix = SECRET.PREFIX
