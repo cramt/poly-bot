@@ -1,1 +1,1 @@
-import * as wasm from "./wasmlib_bg"; export { wasm }
+import * as __wasm from "./wasmlib_bg"; export { __wasm }
