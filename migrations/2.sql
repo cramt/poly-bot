@@ -1,10 +1,10 @@
-CREATE TABLE polymap_cache (
+CREATE TABLE public.polymap_cache (
     data bytea NOT NULL, 
     discord_ids text[] NOT NULL,
     guild_id text PRIMARY KEY
-)
+);
 
-CREATE OR REPLACE FUNCTION post_user_change_polymap_cache_invalidation()
+CREATE OR REPLACE FUNCTION public.post_user_change_polymap_cache_invalidation()
   RETURNS trigger AS
 $BODY$
 DECLARE
@@ -21,10 +21,10 @@ $BODY$
 LANGUAGE plpgsql;
 
 CREATE TRIGGER user_change_polymap_cache_invalidation
-AFTER INSERT OR UPDATE OR DELETE ON users
-FOR EACH ROW EXECUTE PROCEDURE post_user_change_polymap_cache_invalidation()
+AFTER INSERT OR UPDATE OR DELETE ON public.users
+FOR EACH ROW EXECUTE PROCEDURE public.post_user_change_polymap_cache_invalidation();
 
-CREATE OR REPLACE FUNCTION post_relationship_change_polymap_cache_invalidation()
+CREATE OR REPLACE FUNCTION public.post_relationship_change_polymap_cache_invalidation()
   RETURNS trigger AS
 $BODY$
 DECLARE
@@ -65,5 +65,5 @@ $BODY$
 LANGUAGE plpgsql;
 
 CREATE TRIGGER relationship_change_polymap_cache_invalidation
-AFTER INSERT OR UPDATE OR DELETE ON relationships
-FOR EACH ROW EXECUTE PROCEDURE post_relationship_change_polymap_cache_invalidation()
+AFTER INSERT OR UPDATE OR DELETE ON public.relationships
+FOR EACH ROW EXECUTE PROCEDURE public.post_relationship_change_polymap_cache_invalidation();
