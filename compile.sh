@@ -1,2 +1,0 @@
-#!/bin/sh
-cd wasmlib && cargo build --target wasm32-unknown-unknown --release && wasm-bindgen target/wasm32-unknown-unknown/release/deps/wasmlib.wasm --out-dir ../lib/ --nodejs --typescript && echo 'import * as __wasm from "./wasmlib_bg"; export { __wasm }' > ../lib/wasmlib.d.ts && rm -rf ../dist/lib && cp -r ../lib ../dist/lib
