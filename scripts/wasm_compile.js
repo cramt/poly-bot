@@ -21,7 +21,7 @@ const rustBuild = new Promise((resolve, reject) => {
 (async () => {
     try {
         await rustBuild
-        fs.writeFileSync(path.resolve(__dirname, "../lib/wasmlib.d.ts"), `import * as wasm from "./wasmlib_bg"; export { wasm }`)
+        fs.writeFileSync(path.resolve(__dirname, "../lib/wasmlib.d.ts"), `import * as __wasm from "./wasmlib_bg"; export { __wasm }`)
     }
     catch (e) {
         console.log("couldnt compile")
