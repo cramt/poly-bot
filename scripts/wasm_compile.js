@@ -3,7 +3,7 @@ const path = require("path")
 const fs = require("fs")
 
 const rustBuild = new Promise((resolve, reject) => {
-    cp.exec("cargo build --target wasm32-unknown-unknown --release && wasm-bindgen target/wasm32-unknown-unknown/release/deps/wasmlib.wasm --out-dir ../lib/ --nodejs --typescript", {
+    cp.exec("cargo +nightly build --target wasm32-unknown-unknown --release && wasm-bindgen target/wasm32-unknown-unknown/release/deps/wasmlib.wasm --out-dir ../lib/ --nodejs --typescript", {
         cwd: path.resolve(__dirname, "../wasmlib")
     }, (err, stdout, stderr) => {
         console.log("cargo-out: " + stdout)
@@ -21,7 +21,6 @@ const rustBuild = new Promise((resolve, reject) => {
 (async () => {
     try {
         await rustBuild
-        fs.writeFileSync(path.resolve(__dirname, "../lib/wasmlib.d.ts"), `import * as __wasm from "./wasmlib_bg"; export { __wasm }`)
     }
     catch (e) {
         console.log("couldnt compile")

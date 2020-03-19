@@ -8,6 +8,7 @@ import * as path from "path"
 import puppeteer from "puppeteer"
 import * as Discord from "discord.js"
 import { polymapCache } from "./db";
+import { writeFileSync } from "fs";
 
 export function generateDotScript(users: User[], relationships: Relationship[]): Buffer {
     const backgroundColor = "#00000000"
@@ -118,7 +119,9 @@ export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
 }
 
 export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
-    return await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(generateDotScript(users, relationships), "svg")))
+    let a = await exportDotScript(generateDotScript(users, relationships), "svg")
+    writeFileSync("output_emoji.svg", a)
+    return await addLegendAndBackground(await svgToPngViaChromium(a))
 }
 
 export async function cachedPolyMapGenerate(users: User[], relationships: Relationship[], guild: Discord.Guild | string): Promise<Buffer> {
