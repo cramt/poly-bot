@@ -26,10 +26,11 @@ describe('Relationships', () => {
         let user2 = await users.getByUsername("Alexandra", "1", ["11111111"]).then(x => x[0])
         let relationship = new Relationship("SEXUAL", user1, user2, "1")
         relationships.add(relationship)
-        await assert.eventually.deepEqual(relationships.getByUsers([user1, user2]), relationship)
+        let foundRelationship = await relationships.getByUsers([user1, user2]).then(x => x[0])
+        assert.deepEqual(foundRelationship, relationship)
     })
 
-    after(() => {
+    afterEach(() => {
         dbClient.query("DELETE FROM public.relationships")
         dbClient.query("DELETE FROM public.users")
     })

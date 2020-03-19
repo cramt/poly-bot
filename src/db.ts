@@ -282,7 +282,7 @@ export const relationships = {
             userMap.set(x.id!, x)
         })
         return relationshipResults.rows.map(relationship =>
-            new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_username)!, relationship.guild_id));
+            new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_user_id)!, relationship.guild_id));
     }
 }
 
