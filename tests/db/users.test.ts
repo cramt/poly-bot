@@ -57,5 +57,6 @@ describe("Database System User", () => {
 
 })
 
-afterEach(() => {
+after(async() => {
+    await dbclient.end()
 })
