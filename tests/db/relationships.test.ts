@@ -55,7 +55,7 @@ describe('Relationships', () => {
         assert.equal(foundRelationships.length, 1)
     })
 
-    it('can form multiple relationships between the same two users', () => {
+    it('can form multiple relationships of different types between the same two users', () => {
         //TODO
         assert.fail()
     })
