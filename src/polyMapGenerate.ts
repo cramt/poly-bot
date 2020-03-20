@@ -11,6 +11,8 @@ import { polymapCache } from "./db";
 import { writeFileSync } from "fs";
 import xml2js from "xml2js"
 
+//@alex you fuckwit, youre gonna forgot, so use this for gif stuff in the future https://www.npmjs.com/package/gifwrap
+
 export function generateDotScript(users: User[], relationships: Relationship[]): Buffer {
     const backgroundColor = "#00000000"
     let systems: User[] = []
