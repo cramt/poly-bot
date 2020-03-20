@@ -70,8 +70,8 @@ let tsc = new Promise((resolve, reject) => {
 
 let copy = new Promise((resolve, reject) => {
     try {
-        deleteFolderRecursive("dist/lib")
-        copyFolderRecursiveSync("lib", "dist")
+        deleteFolderRecursive("dist/lib/wasmlib")
+        copyFolderRecursiveSync("lib/wasmlib", "dist/lib")
         resolve()
     }
     catch (e) { reject(e) }

@@ -163,3 +163,51 @@ export async function discordRequestChoice<T>(name: string, arr: T[], channel: D
     return arr[index]
 
 }
+
+export const math = {
+    gcd2(a: number, b: number): number {
+        // Greatest common divisor of 2 integers
+        if (!b) return b === 0 ? a : NaN;
+        return math.gcd2(b, a % b);
+    },
+    gcd(array: number[]) {
+        // Greatest common divisor of a list of integers
+        var n = 0;
+        for (var i = 0; i < array.length; ++i)
+            n = math.gcd2(array[i], n);
+        return n;
+    },
+    lcm2(a: number, b: number) {
+        // Least common multiple of 2 integers
+        return a * b / math.gcd2(a, b);
+    },
+    lcm(array: number[]) {
+        // Least common multiple of a list of integers
+        var n = 1;
+        for (var i = 0; i < array.length; ++i)
+            n = math.lcm2(array[i], n);
+        return n;
+    }
+}
+
+
+function longToByteArray(long: bigint) {
+    var byteArray = [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
+
+    for (var index = 0; index < byteArray.length; index++) {
+        var byte = long & 0xffn;
+        byteArray[index] = byte;
+        long = (long - byte) / 256n;
+    }
+
+    return byteArray;
+};
+
+function byteArrayToLong(byteArray: bigint[]) {
+    var value = 0n;
+    for (var i = byteArray.length - 1; i >= 0; i--) {
+        value = (value * 256n) + byteArray[i];
+    }
+
+    return value;
+};
