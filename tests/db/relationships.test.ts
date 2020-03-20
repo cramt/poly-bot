@@ -1,7 +1,6 @@
 import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import { Client } from 'pg';
-import SECRET from '../../src/SECRET';
 import { relationships, openDB, users } from '../../src/db';
 import { GuildUser, DiscordUser, User } from '../../src/User';
 import { Relationship } from '../../src/Relationship';
@@ -11,10 +10,15 @@ const assert = chai.assert;
 
 let dbClient: Client
 
+before(async() => {
+    dbClient = await openDB()
+    //TODO: clear database of users and relationships without making it hang
+    //await dbClient.query("DELETE FROM relationships")
+    //await dbClient.query("DELETE FROM users")
+})
 
 describe('Relationships', () => {
     before(async() =>{
-        dbClient = await openDB()
         await users.add(new GuildUser("Lucca", "FEMME", null, null, "1"))
         await users.add(new GuildUser("Zoe", "FEMME", null, null, "1"))
         await users.add(new DiscordUser("Alexandra", "FEMME", null, null, "11111111"))
@@ -25,13 +29,38 @@ describe('Relationships', () => {
         let user1 = await users.getByUsername("Lucca", "1", []).then(x => x[0])
         let user2 = await users.getByUsername("Alexandra", "1", ["11111111"]).then(x => x[0])
         let relationship = new Relationship("SEXUAL", user1, user2, "1")
-        relationships.add(relationship)
+        await relationships.add(relationship)
         let foundRelationship = await relationships.getByUsers([user1, user2]).then(x => x[0])
         assert.deepEqual(foundRelationship, relationship)
     })
 
-    afterEach(() => {
-        dbClient.query("DELETE FROM public.relationships")
-        dbClient.query("DELETE FROM public.users")
+    it('can form relationships between two discord users', async() => {
+        let user1 = await users.getByDiscordId("11111111")
+        let user2 = await users.getByDiscordId("222222")
+        let relationship = new Relationship("ROMANTIC", user1!, user2!, "1")
+        await relationships.add(relationship)
+        await assert.eventually.deepEqual(relationships.getByUsers([user1!, user2!]).then(x => x[0]), relationship)
     })
+
+    it('can form relationships between a discord user and a user', async() => {
+        let user1 = await users.getByDiscordId("11111111")
+        let user2 = await users.getByUsername("Zoe", "1", ["11111111, 222222"]).then(x => x[0])
+        let relationship = new Relationship("ROMANTIC", user1!, user2, "1")
+        await relationships.add(relationship)
+        await assert.eventually.deepEqual(relationships.getByUsers([user1!, user2]).then(x => x[0]), relationship)
+    })
+
+    it('can form multiple relationships between the same two users', () => {
+        //TODO
+        assert.fail()
+    })
+
+    it('can reject relationships between users that already exist', () => {
+        //TODO
+        assert.fail()
+    })
+})
+
+after(async() => {
+    await dbClient.end()
 })

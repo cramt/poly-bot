@@ -87,4 +87,8 @@ describe('Database setup', () => {
             assert.fail()
         });
     })
-})
+
+    after(async() => {
+        await client.end()
+    })
+}) 
