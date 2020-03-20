@@ -30,8 +30,9 @@ describe('Relationships', () => {
         let user2 = await users.getByUsername("Alexandra", "1", ["11111111"]).then(x => x[0])
         let relationship = new Relationship("SEXUAL", user1, user2, "1")
         await relationships.add(relationship)
-        let foundRelationship = await relationships.getByUsers([user1, user2]).then(x => x[0])
-        assert.deepEqual(foundRelationship, relationship)
+        let foundRelationships = await relationships.getByUsers([user1])
+            .then(x => x.filter(y => y.leftUser?.id == user2.id || y.rightUser?.id == user2.id))
+        assert.equal(foundRelationships.length, 1)
     })
 
     it('can form relationships between two discord users', async() => {
@@ -39,7 +40,9 @@ describe('Relationships', () => {
         let user2 = await users.getByDiscordId("222222")
         let relationship = new Relationship("ROMANTIC", user1!, user2!, "1")
         await relationships.add(relationship)
-        await assert.eventually.deepEqual(relationships.getByUsers([user1!, user2!]).then(x => x[0]), relationship)
+        let foundRelationships = await relationships.getByUsers([user1!])
+            .then(x => x.filter(y => y.leftUser?.id == user2?.id || y.rightUserId == user2?.id))
+        assert.equal(foundRelationships.length, 1)
     })
 
     it('can form relationships between a discord user and a user', async() => {
@@ -47,7 +50,9 @@ describe('Relationships', () => {
         let user2 = await users.getByUsername("Zoe", "1", ["11111111, 222222"]).then(x => x[0])
         let relationship = new Relationship("ROMANTIC", user1!, user2, "1")
         await relationships.add(relationship)
-        await assert.eventually.deepEqual(relationships.getByUsers([user1!, user2]).then(x => x[0]), relationship)
+        let foundRelationships = await relationships.getByUsers([user1!])
+            .then(x => x.filter(y => y.leftUserId == user2.id || y.rightUserId == user2.id))
+        assert.equal(foundRelationships.length, 1)
     })
 
     it('can form multiple relationships between the same two users', () => {
