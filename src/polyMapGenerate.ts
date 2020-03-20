@@ -91,7 +91,7 @@ export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
         document.getElementsByTagName("svg")[0].style.overflow = "hidden"
         document.body.style.overflow = 'hidden'
     });
-    let result = await svgElement?.screenshot({ omitBackground: true })!
+    let result = await svgElement!.screenshot({ omitBackground: true })!
     await page.close()
     return result
 
@@ -122,7 +122,7 @@ export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
 }
 
 export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
-    return await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(generateDotScript(users, relationships), "svg")))
+    return await addLegendAndBackground(await svgToPngViaChromium(await transformSvgToAllowEmoji(await exportDotScript(generateDotScript(users, relationships), "svg"))))
 }
 
 export async function cachedPolyMapGenerate(users: User[], relationships: Relationship[], guild: Discord.Guild | string): Promise<Buffer> {

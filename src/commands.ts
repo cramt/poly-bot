@@ -170,12 +170,26 @@ export const commands: Command[] = [
         return new CommandResponseReaction("👍")
     }),
 
-    new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async () => {
-        return new CommandReponseInSameChannel("not implemented yet")
+    new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async input => {
+        let user = input.args[0].value as User;
+        if(user instanceof DiscordUser){
+            if(user.discordId === input.author.id){
+                await db.users.delete(user);
+                return new CommandResponseReaction("👍")
+            }
+        }
+        return new CommandResponseReaction("you dont have rights over that user")
     }),
 
-    new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async () => {
-        return new CommandReponseInSameChannel("not implemented yet")
+    new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async input => {
+        let user = input.args[0].value as User;
+        if(user instanceof GuildUser){
+            if(user.guildId === input.guild.id){
+                await db.users.delete(user);
+                return new CommandResponseReaction("👍")
+            }
+        }
+        return new CommandResponseReaction("you dont have rights over that user")
     }),
 
     new Command("im", "adds your @ to a user without an @", new StandardArgumentList(new UserArgument()), async input => {
@@ -189,7 +203,7 @@ export const commands: Command[] = [
                 return new CommandReponseInSameChannel("there was a database error")
             }
         }
-        else {
+        else { 
             return new CommandReponseInSameChannel("this user already have an @")
         }
     }),

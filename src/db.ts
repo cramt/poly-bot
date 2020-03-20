@@ -276,10 +276,19 @@ export const relationships = {
         }
     },
     getByUsers: async (users: User[]) => {
-        let relationshipResults = await client.query("SELECT relationship_type, left_user_id, right_user_id, guild_id FROM relationships WHERE left_user_id = ANY($1) OR right_user_id = ANY($1)", [users.map(x => x.id)])
+        let relationshipResults = await client.query(`SELECT relationships.relationship_type, relationships.left_user_id, relationships.right_user_id, relationships.guild_id as rel_guild_id,
+        users.username, users.gender, users.discord_id, users.guild_id as u_guild_id, users.id as user_id, users.system_id FROM relationships
+        LEFT JOIN users ON relationships.left_user_id = users.id OR relationships.right_user_id = users.id
+        WHERE (relationships.left_user_id = ANY($1) OR relationships.right_user_id = ANY($1)) AND users.id != ANY($1)`, [users.map(x => x.id)])
         let userMap = new Map<number, User>()
         users.forEach(x => {
             userMap.set(x.id!, x)
+        })
+        relationshipResults.rows.forEach(x => {
+            if (x.user_id !== null) {
+                let u = constructUser(x.username, genderIntToString[x.gender], x.u_guild_id, x.discord_id, x.user_id, x.system_id)
+                userMap.set(u.id!, u)
+            }
         })
         return relationshipResults.rows.map(relationship =>
             new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_user_id)!, relationship.guild_id));
