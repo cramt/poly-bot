@@ -8,14 +8,18 @@ CREATE OR REPLACE FUNCTION public.post_user_change_polymap_cache_invalidation()
   RETURNS trigger AS
 $BODY$
 DECLARE
-	discord text;
-	guild text;
+    discord text;
+    guild text;
 BEGIN
-   SELECT users.discord_id, users.guild_id INTO discord, guild FROM users WHERE id = get_topmost_system(OLD.id);
-   DELETE FROM polymap_cache WHERE 
-   polymap_cache.guild_id = guild OR
-   discord = ANY(polymap_cache.discord_ids);
-   RETURN OLD;
+    SELECT users.discord_id, users.guild_id INTO discord, guild FROM users WHERE id = get_topmost_system(OLD.id);
+    DELETE FROM polymap_cache WHERE 
+    polymap_cache.guild_id = guild OR
+    discord = ANY(polymap_cache.discord_ids);
+    );
+    IF (TG_OP = 'DELETE') THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
 END;
 $BODY$
 LANGUAGE plpgsql;
@@ -60,7 +64,10 @@ BEGIN
         AND
         right_discord = ANY(polymap_cache.discord_ids)
     );
-    RETURN OLD;
+    IF (TG_OP = 'DELETE') THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
 END;
 $BODY$
 LANGUAGE plpgsql;
