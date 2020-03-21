@@ -303,6 +303,15 @@ export const polymapCache = {
         catch (e) {
             return false
         }
+    },
+    invalidate: async (guildId: string) => {
+        try {
+            await client.query("DELETE FROM polymap_cache WHERE guild_id = $1", [guildId])
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
     }
 }
 
