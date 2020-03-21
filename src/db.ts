@@ -44,9 +44,11 @@ export async function setupSchema(dbClient = client) {
     if (currentVersion >= maxMigrations) {
         return;
     }
+    let q: Promise<string>[] = []
     for (let i = currentVersion + 1; i <= maxMigrations; i++) {
-        await dbClient.query((await fs.promises.readFile("migrations/" + i + ".sql")).toString())
+        q.push(fs.promises.readFile("migrations/" + i + ".sql").then(x => x.toString()))
     }
+    await dbClient.query((await Promise.all(q)).join("\r\n\r\n"))
     if ((await dbClient.query("UPDATE public.info SET schema_version = $1 RETURNING *", [maxMigrations])).rows.length === 0) {
         await dbClient.query("INSERT INTO public.info (schema_version) values ($1)", [maxMigrations])
     }
