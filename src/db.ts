@@ -212,12 +212,7 @@ export const users = {
             id = userOrId.id!
         }
         try {
-            await client.query(`with id_of_deleted as (
-            DELETE FROM users WHERE id = $1
-            returning id
-            )
-            DELETE FROM relationships
-            WHERE (left_user_id = (SELECT id FROM id_of_deleted) OR right_user_id = (SELECT id FROM id_of_deleted))`, [id])
+            await client.query(`DELETE FROM users WHERE id = $1`, [id])
             return true;
         }
         catch (e) {
@@ -226,12 +221,7 @@ export const users = {
     },
     deleteByDiscord: async (discordId: string) => {
         try {
-            await client.query(`with id_of_deleted as (
-            DELETE FROM users WHERE discord_id = $1
-            returning id
-            )
-            DELETE FROM relationships
-            WHERE (left_user_id = (SELECT id FROM id_of_deleted) OR right_user_id = (SELECT id FROM id_of_deleted))`, [discordId])
+            await client.query(`DELETE FROM users WHERE discord_id = $1`, [discordId])
             return true;
         }
         catch (e) {
