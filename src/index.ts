@@ -1,7 +1,7 @@
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
 import { commandLineArgSplit } from "./utilities"
-import { openDB } from "./db"
+import { openDB, polymapCache } from "./db"
 import { commands } from "./commands"
 import { ArgumentError } from "./Command"
 import AggregateError from "aggregate-error"
@@ -38,6 +38,14 @@ if ((global as any).util === undefined) {
 
     client.on("ready", async () => {
         client.user.setActivity("with polyamory")
+    });
+
+    client.on("guildMemberAdd", member => {
+        polymapCache.invalidate(member.guild.id)
+    });
+
+    client.on("guildMemberRemove", member => {
+        polymapCache.invalidate(member.guild.id)
     })
 
     client.on("message", async message => {
