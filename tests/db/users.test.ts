@@ -37,15 +37,15 @@ describe("Database User", () => {
     it("can update discord id", async () => {
         let discordId = Math.random().toString(36).substring(4)
         discordUser = guildUser.toDiscordUser(discordId)
-        assert.isTrue(await users.update(discordUser))
+        await assert.eventually.isTrue(users.update(discordUser))
         let userResult = await users.getByDiscordId(discordId)
         assert.equal(userResult!.name, name)
     })
 
     it("can delete by discord id", async () => {
-        assert.isTrue(await users.deleteByDiscord(discordUser.discordId!))
-        assert.isNull(await users.get(guildUser.id!))
-        assert.isNull(await users.get(discordUser.id!))
+        await assert.eventually.isTrue(users.deleteByDiscord(discordUser.discordId!))
+        await assert.eventually.isNull(users.get(guildUser.id!))
+        await assert.eventually.isNull(users.get(discordUser.id!))
     })
 })
 
@@ -54,7 +54,7 @@ describe("Database System User", () => {
     let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)]
     let guildId = Math.random().toString(36).substring(4)
     let guildUser = new GuildUser(name, gender, null, null, guildId)
-
+    
 })
 
 after(async() => {
