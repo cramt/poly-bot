@@ -15,7 +15,6 @@ BEGIN
     DELETE FROM polymap_cache WHERE 
     polymap_cache.guild_id = guild OR
     discord = ANY(polymap_cache.discord_ids);
-    );
     IF (TG_OP = 'DELETE') THEN
         RETURN OLD;
     END IF;
