@@ -142,9 +142,28 @@ export const users = {
         let props: any[] = []
         let index = 1;
         let query = toAdd.map((x, i, arr) => {
-            let q = "INSERT INTO users (guild_id, username, discord_id, gender, system_id) VALUES ($" + (index++) + ", $" + (index++) + ", $" + (index++) + ", $" + (index++);
+            let guildId: string | null = null
+            let discordId: string | null = null
+            if (x instanceof DiscordUser) {
+                discordId = x.discordId
+            }
+            else if (x instanceof GuildUser) {
+                guildId = x.guildId
+            }
+            if (x.systemId === null) {
+                props.push(guildId)
+                props.push(discordId)
+            }
+            else {
+                props.push(null)
+                props.push(null)
+            }
+            props.push(x.name)
+            props.push(genderStringToInt[x.gender])
+            let q = "INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($" + (index++) + ", $" + (index++) + ", $" + (index++) + ", $" + (index++);
             if (i === 0) {
-                q += ", NULL)"
+                q += ", $" + (index++) + ")"
+                props.push(x.systemId)
             }
             else {
                 q += ", (SELECT id FROM u" + i + "))"
@@ -154,18 +173,6 @@ export const users = {
             if (i !== arr.length) {
                 q = "WITH u" + i + " as (" + q + ")"
             }
-            let guildId: string | null = null
-            let discordId: string | null = null
-            if (x instanceof DiscordUser) {
-                discordId = x.discordId
-            }
-            else if (x instanceof GuildUser) {
-                guildId = x.guildId
-            }
-            props.push(guildId)
-            props.push(x.name)
-            props.push(discordId)
-            props.push(genderStringToInt[x.gender])
             return q
         }).join("\r\n\r\n")
 

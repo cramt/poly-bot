@@ -1,4 +1,4 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandResponseFile, AdminCommand, StringExcludedArgument, StandardArgumentList, VariableArgumentList, OptionalArgumentList } from "./Command";
+import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandResponseFile, AdminCommand, StringExcludedArgument, StandardArgumentList, VariableArgumentList, OptionalArgumentList, CommandReponseNone } from "./Command";
 import * as Discord from "discord.js"
 import { User, Gender, genderToColor, GuildUser, DiscordUser } from "./User";
 import * as db from "./db";
@@ -57,7 +57,7 @@ export const commands: Command[] = [
         }),
     new Command("add-local",
         "adds you to the polycule",
-        new StandardArgumentList(new StringExcludedArgument("_"),
+        new StandardArgumentList(new AnyArgument(),
             new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())))
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
@@ -172,8 +172,8 @@ export const commands: Command[] = [
 
     new Command("remove-me", "deletes member of your system and all the relationships they are in", new StandardArgumentList(new UserArgument()), async input => {
         let user = input.args[0].value as User;
-        if(user instanceof DiscordUser){
-            if(user.discordId === input.author.id){
+        if (user instanceof DiscordUser) {
+            if (user.discordId === input.author.id) {
                 await db.users.delete(user);
                 return new CommandResponseReaction("👍")
             }
@@ -183,8 +183,8 @@ export const commands: Command[] = [
 
     new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async input => {
         let user = input.args[0].value as User;
-        if(user instanceof GuildUser){
-            if(user.guildId === input.guild.id){
+        if (user instanceof GuildUser) {
+            if (user.guildId === input.guild.id) {
                 await db.users.delete(user);
                 return new CommandResponseReaction("👍")
             }
@@ -192,7 +192,7 @@ export const commands: Command[] = [
         return new CommandResponseReaction("you dont have rights over that user")
     }),
 
-    new Command("im", "adds your @ to a user without an @", new StandardArgumentList(new UserArgument()), async input => {
+    new Command("to-global", "changes your user to a global one", new StandardArgumentList(new UserArgument()), async input => {
         let user = input.args[0].value as User
         if (user instanceof GuildUser) {
             user = user.toDiscordUser(input.author.id)
@@ -203,9 +203,56 @@ export const commands: Command[] = [
                 return new CommandReponseInSameChannel("there was a database error")
             }
         }
-        else { 
-            return new CommandReponseInSameChannel("this user already have an @")
+        else {
+            return new CommandReponseInSameChannel("this user is already global")
         }
+    }),
+
+    new Command("to-local", "changes your user to a local one", new OptionalArgumentList([{
+        argument: new OrArgument(new UserArgument(), new DiscordUserArgument(), new SpecificArgument("me")),
+        type: "default",
+        default: "me"
+    }]), async input => {
+        let user = input.args[0].value as User | Discord.User | "me"
+        if (user === "me") {
+            user = input.author
+        }
+        user = await parseDiscordUserOrUser(user);
+        if (user instanceof DiscordUser) {
+            user = user.toGuildUser(input.guild.id)
+            if (await db.users.update(user)) {
+                return new CommandResponseReaction("👍");
+            }
+            else {
+                return new CommandReponseInSameChannel("there was a database error")
+            }
+        }
+        else {
+            return new CommandReponseInSameChannel("this user is already local")
+        }
+    }),
+
+    new Command("add-member", "adds a member to your system", new OptionalArgumentList([{
+        argument: new OrArgument(new UserArgument(), new DiscordUserArgument(), new SpecificArgument("me")),
+        type: "default",
+        default: "me"
+    },
+    {
+        argument: new AnyArgument(),
+        type: "required"
+    },
+    {
+        argument: new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())),
+        type: "required"
+    }
+    ]), async input => {
+        let system = input.args[0].value as User | Discord.User | "me"
+        if (system === "me") {
+            system = input.author
+        }
+        system = await parseDiscordUserOrUser(system);
+        
+        return new CommandReponseNone();
     }),
 
     new Command("bernie-time", "its bernie time 😎", new StandardArgumentList(), async input => {
