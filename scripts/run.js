@@ -7,7 +7,7 @@ const deleteFolderRecursive = function (_path) {
     if (fs.existsSync(_path)) {
         fs.readdirSync(_path).forEach((file, index) => {
             const curPath = path.join(_path, file);
-            if (fs.lstatSync(curPath).isDirectory()) { // recurse
+            if (fs.lstatSync(curPath).isDirectory()) {
                 deleteFolderRecursive(curPath);
             } else { // delete file
                 fs.unlinkSync(curPath);
@@ -19,9 +19,7 @@ const deleteFolderRecursive = function (_path) {
 
 function copyFileSync(source, target) {
 
-    var targetFile = target;
-
-    //if target is a directory a new file with the same name will be created
+    let targetFile = target;
     if (fs.existsSync(target)) {
         if (fs.lstatSync(target).isDirectory()) {
             targetFile = path.join(target, path.basename(source));
@@ -32,15 +30,13 @@ function copyFileSync(source, target) {
 }
 
 function copyFolderRecursiveSync(source, target) {
-    var files = [];
+    let files = [];
 
-    //check if folder needs to be created or integrated
-    var targetFolder = path.join(target, path.basename(source));
+    let targetFolder = path.join(target, path.basename(source));
     if (!fs.existsSync(targetFolder)) {
         fs.mkdirSync(targetFolder);
     }
 
-    //copy
     if (fs.lstatSync(source).isDirectory()) {
         files = fs.readdirSync(source);
         files.forEach(function (file) {
@@ -70,7 +66,11 @@ let tsc = new Promise((resolve, reject) => {
 
 let copy = new Promise((resolve, reject) => {
     try {
-        deleteFolderRecursive("dist/lib/wasmlib")
+        if (fs.existsSync("dist")) {
+            deleteFolderRecursive("dist");
+        }
+        fs.mkdirSync("dist")
+        fs.mkdirSync("dist/lib")
         copyFolderRecursiveSync("lib/wasmlib", "dist/lib")
         resolve()
     }
