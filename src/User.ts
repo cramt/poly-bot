@@ -34,6 +34,13 @@ export abstract class User {
     get system(): User | null {
         return this._system
     }
+    getTopMostSystem() {
+        let curr = this as User;
+        while(curr.system != null){
+            curr = curr.system;
+        }
+        return curr
+    }
 }
 
 export class GuildUser extends User {

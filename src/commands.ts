@@ -73,34 +73,62 @@ export const commands: Command[] = [
         }),
 
 
-    new Command("me", "print out information about yourself", new StandardArgumentList(), async input => {
-        let user = (await db.users.getByDiscordId(input.author.id)) as User
+    new Command("about", "print out information about someone", new OptionalArgumentList([
+        {
+            argument: new OrArgument(
+                new DiscordUserArgument(),
+                new UserArgument(),
+                new SpecificArgument("me")),
+            type: "default",
+            default: "me"
+        }
+    ]), async input => {
+        let _user = input.args[0].value as Discord.User | User | "me"
+        if (_user === "me") {
+            _user = input.author
+        }
+        let user = await parseDiscordUserOrUser(_user)
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
         let relationships = await db.relationships.getByUsers([user, ...await db.users.getMembers(user)])
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
-            let you = x.rightUser
-            let them = x.leftUser
-            if (!user.name.startsWith(you!.name)) {
+            let you = x.rightUser!
+            let them = x.leftUser!
+            if (user.getTopMostSystem().id === you.getTopMostSystem().id) {
                 [them, you] = [you, them]
             }
-            return "\n" + you!.name + " is in a " + x.type.toLowerCase() + " relationship with " + them!.name
+            return "\n" + you.name + " is in a " + x.type.toLowerCase() + " relationship with " + them.name
         }).join("") + "```")
     }),
 
-    new Command("new-relationship",
+    new Command("add-relationship",
         "creates a new relationship between 2 people",
-        new StandardArgumentList(new OrArgument(
-            new UserArgument(),
-            new DiscordUserArgument()
-        ),
-            new OrArgument(
+        new OptionalArgumentList([{
+            argument: new OrArgument(
+                new DiscordUserArgument(),
                 new UserArgument(),
-                new DiscordUserArgument()
+                new SpecificArgument("me")
             ),
-            new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())))
+            type: "default",
+            default: "me"
+        },
+        {
+            argument: new OrArgument(
+                new DiscordUserArgument(),
+                new UserArgument()),
+            type: "required"
+        },
+        {
+            argument: new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())),
+            type: "required"
+        }])
         , async input => {
+            let _user = input.args[0].value as Discord.User | User | "me"
+            if (_user === "me") {
+                _user = input.author
+            }
+            let user = await parseDiscordUserOrUser(_user);
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)])
             if (leftUser.name === rightUser.name) {
@@ -117,14 +145,21 @@ export const commands: Command[] = [
 
     new Command("remove-relationship",
         "removes all relationships between to people",
-        new StandardArgumentList(new OrArgument(
-            new UserArgument(),
-            new DiscordUserArgument()
-        ),
-            new OrArgument(
+        new OptionalArgumentList([{
+            argument: new OrArgument(
+                new DiscordUserArgument(),
                 new UserArgument(),
-                new DiscordUserArgument()
-            ))
+                new SpecificArgument("me")
+            ),
+            type: "default",
+            default: "me"
+        },
+        {
+            argument: new OrArgument(
+                new DiscordUserArgument(),
+                new UserArgument()),
+            type: "required"
+        }])
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)])
@@ -181,7 +216,7 @@ export const commands: Command[] = [
         return new CommandResponseReaction("you dont have rights over that user")
     }),
 
-    new AdminCommand("remove", "removes a person from polycule", new StandardArgumentList(new UserArgument()), async input => {
+    new AdminCommand("remove", "removes a local user", new StandardArgumentList(new UserArgument()), async input => {
         let user = input.args[0].value as User;
         if (user instanceof GuildUser) {
             if (user.guildId === input.guild.id) {
