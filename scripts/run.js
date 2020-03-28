@@ -102,7 +102,7 @@ function startProd() {
     })
 }
 
-console.log(PRODUCTION)
+console.log("running in " + (PRODUCTION ? "production" : "development") + " mode")
 
 function startDev() {
     require(indexPath)
