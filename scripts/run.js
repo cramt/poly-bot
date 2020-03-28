@@ -119,7 +119,7 @@ function startDev() {
     }
     if (PRODUCTION) {
         while (true) {
-            console.log("exited with code " + await start())
+            console.log("exited with code " + await startProd())
             console.log("restarting")
         }
     }
