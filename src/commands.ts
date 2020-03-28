@@ -170,6 +170,9 @@ export const commands: Command[] = [
     new Command("generate", "generates the polycule map", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await db.getAllInGuild(guildId, input.guild.members.map(x => x.id))
+        if(all.users.length === 0){
+            return new CommandReponseInSameChannel("cant generate empty map")
+        }
         let buffer = await cachedPolyMapGenerate(all.users, all.relationships, input.guild)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),

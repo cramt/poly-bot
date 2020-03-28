@@ -94,6 +94,37 @@ if ((global as any).util === undefined) {
 })()
 
 {
+    const consoles = {
+        message: console.log,
+        info: console.info,
+        warning: console.warn,
+        error: console.error
+    }
+    console.log = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "message"
+        })
+    }
+    console.info = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "info"
+        })
+    }
+    console.warn = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "warning"
+        })
+    }
+    console.error = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x.stack ? x.stack : x + "").join(", "),
+            type: "error"
+        })
+    }
+
     function printToRunner(arg: {
         exit?: number,
         data: string,
@@ -101,6 +132,12 @@ if ((global as any).util === undefined) {
     }) {
         if (threads.parentPort) {
             threads.parentPort.postMessage(arg)
+        }
+        else {
+            consoles[arg.type](arg.data)
+            if (arg.exit !== undefined) {
+                process.exit(arg.exit)
+            }
         }
     }
     function onError(error: any) {
@@ -115,46 +152,6 @@ if ((global as any).util === undefined) {
             data: error,
             type: "error",
         })
-    }
-
-    const oldLog = console.log
-
-    console.log = (...args: any[]) => {
-        printToRunner({
-            data: args.map(x => x + "").join(", "),
-            type: "message"
-        })
-        oldLog(...args);
-    }
-
-    const oldInfo = console.info
-
-    console.info = (...args: any[]) => {
-        printToRunner({
-            data: args.map(x => x + "").join(", "),
-            type: "info"
-        })
-        oldInfo(...args)
-    }
-
-    const oldWarn = console.warn;
-
-    console.warn = (...args: any[]) => {
-        printToRunner({
-            data: args.map(x => x + "").join(", "),
-            type: "warning"
-        })
-        oldWarn(...args)
-    }
-
-    const oldError = console.error
-
-    console.error = (...args: any[]) => {
-        printToRunner({
-            data: args.map(x => x.stack ? x.stack : x + "").join(", "),
-            type: "error"
-        })
-        oldError(...args);
     }
 
     process.on("unhandledRejection", onError)
