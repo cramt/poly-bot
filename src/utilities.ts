@@ -204,7 +204,7 @@ function longToByteArray(long: bigint) {
 };
 
 function byteArrayToLong(byteArray: bigint[]) {
-    var value = 0n;
+    var value = BigInt(0);
     for (var i = byteArray.length - 1; i >= 0; i--) {
         value = (value * BigInt(256)) + byteArray[i];
     }
