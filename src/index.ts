@@ -8,7 +8,7 @@ import AggregateError from "aggregate-error"
 import * as job from "microjob"
 import * as fs from "fs"
 import * as wasm from "../lib/wasmlib/wasmlib.js"
-
+import * as threads from "worker_threads";
 
 export const prefix = SECRET.PREFIX
 
@@ -92,3 +92,72 @@ if ((global as any).util === undefined) {
     client.login(SECRET.DISCORD_TOKEN)
 
 })()
+
+{
+    function printToRunner(arg: {
+        exit?: number,
+        data: string,
+        type: "error" | "message" | "warning" | "info"
+    }) {
+        if (threads.parentPort) {
+            threads.parentPort.postMessage(arg)
+        }
+    }
+    function onError(error: any) {
+        if (error instanceof Error) {
+            error = error.stack
+        }
+        else {
+            error = JSON.stringify(error)
+        }
+        printToRunner({
+            exit: 1,
+            data: error,
+            type: "error",
+        })
+    }
+
+    const oldLog = console.log
+
+    console.log = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "message"
+        })
+        oldLog(...args);
+    }
+
+    const oldInfo = console.info
+
+    console.info = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "info"
+        })
+        oldInfo(...args)
+    }
+
+    const oldWarn = console.warn;
+
+    console.warn = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "warning"
+        })
+        oldWarn(...args)
+    }
+
+    const oldError = console.error
+
+    console.error = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x.stack ? x.stack : x + "").join(", "),
+            type: "error"
+        })
+        oldError(...args);
+    }
+
+    process.on("unhandledRejection", onError)
+    process.on("uncaughtException", onError)
+}
+

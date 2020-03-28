@@ -1,7 +1,10 @@
 const cp = require("child_process")
+const fs = require('fs');
+const path = require('path');
+const threads = require("worker_threads")
+const dateformat = require("dateformat")
 
-var fs = require('fs');
-var path = require('path');
+const PRODUCTION = process.env.NODE_ENV === "production"
 
 const deleteFolderRecursive = function (_path) {
     if (fs.existsSync(_path)) {
@@ -9,7 +12,7 @@ const deleteFolderRecursive = function (_path) {
             const curPath = path.join(_path, file);
             if (fs.lstatSync(curPath).isDirectory()) {
                 deleteFolderRecursive(curPath);
-            } else { // delete file
+            } else {
                 fs.unlinkSync(curPath);
             }
         });
@@ -77,6 +80,34 @@ let copy = new Promise((resolve, reject) => {
     catch (e) { reject(e) }
 });
 
+const formatNow = () => dateformat(new Date(), "yyyy-mm-dd,HH-MM-ss");
+
+const indexPath = path.resolve(__dirname, "../dist/src/index.js");
+
+function startProd() {
+    return new Promise((resolve, reject) => {
+        if (!fs.existsSync("logs")) {
+            fs.mkdirSync("logs")
+        }
+        const log = fs.createWriteStream("logs/" + formatNow() + ".log")
+        const main = new threads.Worker(indexPath);
+        main.on("message", message => {
+            log.write(message.type + " at " + formatNow() + ": " + message.data + "\n")
+            if (message.exit !== undefined) {
+                log.write("exited with exit code " + message.exit)
+                main.terminate();
+                resolve(message.exit)
+            }
+        })
+    })
+}
+
+console.log(PRODUCTION)
+
+function startDev() {
+    require(indexPath)
+}
+
 (async () => {
     try {
         await Promise.all([tsc, copy])
@@ -86,5 +117,13 @@ let copy = new Promise((resolve, reject) => {
         console.log(e)
         process.exit(1)
     }
-    require(path.resolve(__dirname, "../dist/src/index.js"))
+    if (PRODUCTION) {
+        while (true) {
+            console.log("exited with code " + await start())
+            console.log("restarting")
+        }
+    }
+    else{
+        startDev();
+    }
 })()

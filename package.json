@@ -19,6 +19,7 @@
         "@types/puppeteer": "^2.0.1",
         "@types/xml2js": "^0.4.5",
         "aggregate-error": "^3.0.1",
+        "dateformat": "^3.0.3",
         "discord.js": "^11.5.1",
         "graphviz": "0.0.9",
         "jimp": "^0.9.3",
