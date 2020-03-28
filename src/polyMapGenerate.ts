@@ -80,7 +80,7 @@ export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"
     })
 }
 
-const browser = puppeteer.launch();
+const browser = puppeteer.launch(process.platform === "linux" ? { args: ['--no-sandbox', '--disable-setuid-sandbox'] } : {});
 
 export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
     let page = await (await browser).newPage()
