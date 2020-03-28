@@ -328,62 +328,73 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
     u1.username as username1, u2.username as username2,
     u1.id as id1, u2.id as id2,
     u1.gender as gender1, u2.gender as gender2,
-    u1.guild_id as guild_id1, u2.guild_id as guild_id2,
+    (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) as guild_id1,
+    (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) as guild_id2,
     u1.system_id as system_id1, u2.system_id as system_id2,
-    u1.discord_id as discord_id1, u2.discord_id as discord_id2
+    (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) as discord_id1,
+    (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) as discord_id2,
+    r.left_user_id, r.right_user_id
     
-    FROM relationships r
-    INNER JOIN users u1
+    FROM users u1
+    INNER JOIN relationships r
     ON r.left_user_id = u1.id
     INNER JOIN users u2
     ON r.right_user_id = u2.id WHERE 
     (
-        u1.discord_id = ANY($1) 
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) = ANY($1)
         AND
-        u2.discord_id = ANY($1)
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) = ANY($1)
     )
     OR
     (
-        u1.discord_id = ANY($1) 
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) = ANY($1)
         AND
-        u2.guild_id = $2
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) = $2
     )
     OR
     (
-        u1.guild_id = $2
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) = $2
         AND
-        u2.guild_id = $2
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) = $2
     )
     OR
     (
-        u1.guild_id = $2
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) = $2
         AND
-        u2.discord_id = ANY($1)
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) = ANY($1)
     );`, [discordIds, guildId]);
-    let users = new Map<number, User>();
-    let relationships = result.rows.map(x => {
+    let userMap = new Map<number, User>();
+    let relationships: Relationship[] = [];
+    result.rows.forEach(x => {
         let left: User;
-        if (users.has(x.id1)) {
-            left = users.get(x.id1)!
+        if (userMap.has(x.id1)) {
+            left = userMap.get(x.id1)!
         }
         else {
             left = constructUser(x.username1, genderIntToString[x.gender1], x.guild_id1, x.discord_id1, x.id1, x.system_id1)
-            users.set(left.id!, left);
+            userMap.set(left.id!, left);
         }
-
         let right: User;
-        if (users.has(x.id2)) {
-            right = users.get(x.id2)!
+        if (userMap.has(x.id2)) {
+            right = userMap.get(x.id2)!
         }
         else {
             right = constructUser(x.username2, genderIntToString[x.gender2], x.guild_id2, x.discord_id2, x.id2, x.system_id2)
-            users.set(right.id!, right);
+            userMap.set(right.id!, right);
         }
-
-        return new Relationship(relationshipIntToString[x.relationship_type], left, right, x.rguild_id)
+        relationships.push(new Relationship(relationshipIntToString[x.relationship_type], left, right, x.rguild_id))
+    })
+    let users = Array.from(userMap.values())
+    users.forEach(x => {
+        if (x.systemId !== null) {
+            let system = userMap.get(x.systemId);
+            if (system) {
+                x.system = system
+            }
+        }
     })
     return {
-        users: Array.from(users.values()),
+        users: users,
         relationships: relationships
     }
 }

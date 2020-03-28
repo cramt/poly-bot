@@ -155,7 +155,6 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
         } | string)[] = []
         function rec(str: string) {
             let res = regex.exec(str)
-            console.log(res)
             if (res === null) {
                 imgOrText.push(str)
                 return;

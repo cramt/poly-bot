@@ -173,7 +173,7 @@ export const commands: Command[] = [
         if(all.users.length === 0){
             return new CommandReponseInSameChannel("cant generate empty map")
         }
-        let buffer = await cachedPolyMapGenerate(all.users, all.relationships, input.guild)
+        let buffer = await polyMapGenerate(all.users, all.relationships)
         return new CommandResponseFile(buffer, "polycule_map.png")
     }),
 
