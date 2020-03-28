@@ -100,8 +100,8 @@ export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
 export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
     let [graph, transFlag, legend] = await Promise.all([
         Jimp.read(image),
-        Jimp.read("transflag.png"),
-        Jimp.read("legend.png")
+        Jimp.read("res/transflag.png"),
+        Jimp.read("res/legend.png")
     ])
 
     transFlag.resize(graph.bitmap.width + legend.bitmap.width, Math.max(graph.bitmap.height, legend.bitmap.height))
