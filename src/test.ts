@@ -1,4 +1,3 @@
-import { openDB, getAllInGuild, createNewRelationship, genderStringToInt, getUserByUsername, relationshipIntToString, genderIntToString } from "./db";
 import { polyMapGenerate, exportDotScript, svgToPngViaChromium, addLegendAndBackground, generateDotScript } from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
@@ -6,9 +5,10 @@ import { PluralKitApi } from "./PluralKitApi";
 import { Relationship } from "./Relationship";
 import { User } from "./User";
 import { spawn, exec } from "child_process";
-import { loadTestData } from "./utilities";
+import { loadTestData, awaitAll } from "./utilities";
 import { commands } from "./commands";
 import { NumberArgument, StandardArgumentList } from "./Command";
+import AggregateError from "aggregate-error";
 
 
 /*
@@ -57,15 +57,10 @@ function parseHexToObj(hex: string) {
 const id = "634515225369903114";
 const outputFile = "output.png";
 
+async function t() {
+    throw new Error(Math.random() + "")
+}
 
 (async () => {
-
-    commands.length
-    let { users, relationships } = loadTestData("testdata.json")
-    let dotScript = generateDotScript(users, relationships);
-    fs.writeFileSync("output.dot", dotScript)
-    let output = await addLegendAndBackground(await svgToPngViaChromium(await exportDotScript(dotScript, "svg")))
-    fs.writeFileSync("output.png", output)
-
-    console.log("done")
+    
 })().then(() => process.exit(0)).catch(console.log)

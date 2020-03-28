@@ -1,48 +1,57 @@
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
-import { commandLineArgSplit, ThreadFunctionArgs } from "./utilities"
-import { openDB } from "./db"
+import { commandLineArgSplit } from "./utilities"
+import { openDB, polymapCache } from "./db"
 import { commands } from "./commands"
-import * as Thread from "worker_threads"
-import * as threadFunctions from "./threadFunctions"
-import { ArgumentError, Argument } from "./Command"
+import { ArgumentError } from "./Command"
 import AggregateError from "aggregate-error"
+import * as job from "microjob"
+import * as fs from "fs"
+import * as wasm from "../lib/wasmlib/wasmlib.js"
+import * as threads from "worker_threads";
 
 export const prefix = SECRET.PREFIX
 
 export const client = new Discord.Client();
 
-if (Thread.isMainThread) {
+//hack so that graphvis doesnt fuck me
+if ((global as any).util === undefined) {
+    (global as any).util = new Proxy(() => { }, {
+        get() {
+            return (global as any).util;
+        },
+        set() {
+            return true;
+        },
+        apply() {
+            return (global as any).util;
+        },
+        construct() {
+            return (global as any).util;
+        }
+    })
+}
 
-    //hack so that graphvis doesnt fuck me
-    if ((global as any).util === undefined) {
-        (global as any).util = new Proxy(() => { }, {
-            get() {
-                return (global as any).util;
-            },
-            set() {
-                return true;
-            },
-            apply() {
-                return (global as any).util;
-            },
-            construct() {
-                return (global as any).util;
-            }
-        })
-    }
+(async () => {
+    const [db] = await Promise.all([openDB(), job.start()])
 
-    
-
-    const dbPromise = openDB()
 
     client.on("ready", async () => {
-        await dbPromise
         client.user.setActivity("with polyamory")
+    });
+
+    client.on("guildMemberAdd", member => {
+        polymapCache.invalidate(member.guild.id)
+    });
+
+    client.on("guildMemberRemove", member => {
+        polymapCache.invalidate(member.guild.id)
     })
 
     client.on("message", async message => {
-        await dbPromise
+        while (message.guild.memberCount !== message.guild.members.size) {
+            await message.guild.fetchMembers()
+        }
         if (message.author.bot) {
             return;
         }
@@ -55,17 +64,18 @@ if (Thread.isMainThread) {
                 return;
             }
             try {
-                (await command.call(userCommand.args, message.author, channel, message.guild)).respond(message)
+                let respond = await command.call(userCommand.args, message.author, channel, message.guild)
+                await respond.respond(message)
             }
             catch (ae) {
                 if (ae instanceof AggregateError) {
                     let errorMessages: string[] = []
                     for (const argError of ae) {
-                        if (!(argError instanceof ArgumentError)) {
-                            throw argError
+                        if (argError instanceof ArgumentError) {
+                            errorMessages.push(argError.message)
                         }
                         else {
-                            errorMessages.push(argError.message)
+                            throw argError
                         }
                     }
                     await message.channel.send("***ERROR***```" + errorMessages.join("\r\n") + "```")
@@ -81,17 +91,73 @@ if (Thread.isMainThread) {
 
     client.login(SECRET.DISCORD_TOKEN)
 
-}
-else {
-    let args = Thread.workerData as ThreadFunctionArgs
-    let functions = threadFunctions as any
-    let func = functions[args.name]
-    if (func === undefined) {
-        throw new Error("theadFunction doesnt exist")
+})()
+
+{
+    function printToRunner(arg: {
+        exit?: number,
+        data: string,
+        type: "error" | "message" | "warning" | "info"
+    }) {
+        if (threads.parentPort) {
+            threads.parentPort.postMessage(arg)
+        }
     }
-    else {
-        (async () => {
-            Thread.parentPort?.postMessage(await func(...args.args))
-        })()
+    function onError(error: any) {
+        if (error instanceof Error) {
+            error = error.stack
+        }
+        else {
+            error = JSON.stringify(error)
+        }
+        printToRunner({
+            exit: 1,
+            data: error,
+            type: "error",
+        })
     }
+
+    const oldLog = console.log
+
+    console.log = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "message"
+        })
+        oldLog(...args);
+    }
+
+    const oldInfo = console.info
+
+    console.info = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "info"
+        })
+        oldInfo(...args)
+    }
+
+    const oldWarn = console.warn;
+
+    console.warn = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x + "").join(", "),
+            type: "warning"
+        })
+        oldWarn(...args)
+    }
+
+    const oldError = console.error
+
+    console.error = (...args: any[]) => {
+        printToRunner({
+            data: args.map(x => x.stack ? x.stack : x + "").join(", "),
+            type: "error"
+        })
+        oldError(...args);
+    }
+
+    process.on("unhandledRejection", onError)
+    process.on("uncaughtException", onError)
 }
+

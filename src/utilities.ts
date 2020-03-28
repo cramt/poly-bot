@@ -1,8 +1,9 @@
-import * as Thread from "worker_threads"
 import * as fs from "fs"
 import { Relationship } from "./Relationship"
 import { User } from "./User"
-import { relationshipIntToString } from "./db"
+import AggregateError from "aggregate-error"
+import * as Discord from "discord.js"
+import { client } from "."
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ")
@@ -77,20 +78,6 @@ export function humanPrintArray(arr: string[], andOr = "or"): string {
     return arr.slice(0, arr.length - 1).join(", ") + " " + andOr + " " + arr[arr.length - 1]
 }
 
-export interface ThreadFunctionArgs {
-    name: string
-    args: any[]
-}
-
-export function runThreadFunction(args: ThreadFunctionArgs): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const worker = new Thread.Worker(__filename, {
-            workerData: args
-        })
-        worker.once("message", resolve)
-        worker.once("error", reject)
-    })
-}
 
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
     let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] }
@@ -110,3 +97,117 @@ export function loadTestData(filename: string): { relationships: Relationship[],
     return data;
 }
 
+export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[]> {
+    return new Promise<T[]>((resolve, reject) => {
+        let res: T[] = []
+        let errors: any[] = []
+        let index = 0
+        if (values.length === 0) {
+            resolve(res);
+        }
+        else {
+            values.forEach(async (x, i) => {
+                try {
+                    res[i] = await x
+                }
+                catch (e) {
+                    errors[i] = e
+                }
+                index++
+                if (index === values.length) {
+                    if (errors.length !== 0) {
+                        reject(new AggregateError(errors))
+                    }
+                    else {
+                        resolve(res)
+                    }
+                }
+            })
+        }
+    })
+}
+
+export function waitForReaction(message: Discord.Message, user: Discord.User, timeout = -1) {
+    return new Promise<Discord.MessageReaction>((resolve, reject) => {
+        let f = (reaction: Discord.MessageReaction, author: Discord.User) => {
+            if (reaction.message.id === message.id && author.id === user.id) {
+                client.removeListener("messageReactionAdd", f)
+                resolve(reaction)
+            }
+        }
+        client.on("messageReactionAdd", f)
+        if (timeout > 0) {
+            setTimeout(() => {
+                client.removeListener("messageReactionAdd", f)
+                reject(new Error("timed out"))
+            }, timeout);
+        }
+    })
+}
+
+export async function discordRequestChoice<T>(name: string, arr: T[], channel: Discord.TextChannel, author: Discord.User, converter: (t: T) => string): Promise<T> {
+    const reactionArr = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹", "🇺", "🇻", "🇼", "🇾", "🇿"]
+    let message = await channel.send("\"" + name + "\" is ambiguous, plz choose " +
+        arr.map((x, i) => "\r\n" + i.toString(36) + ": " + converter(x))) as Discord.Message;
+    let index = -1;
+    while (index < 0 || index >= arr.length) {
+        let waitReaction = waitForReaction(message, author);
+        if (arr.length <= 36) {
+            for (let i = 0; i < arr.length; i++) {
+                await message.react(reactionArr[i]);
+            }
+        }
+        let reaction = await waitReaction;
+        index = reactionArr.indexOf(reaction.emoji.name);
+    }
+    return arr[index]
+
+}
+
+export const math = {
+    gcd2(a: number, b: number): number {
+        // Greatest common divisor of 2 integers
+        if (!b) return b === 0 ? a : NaN;
+        return math.gcd2(b, a % b);
+    },
+    gcd(array: number[]) {
+        // Greatest common divisor of a list of integers
+        var n = 0;
+        for (var i = 0; i < array.length; ++i)
+            n = math.gcd2(array[i], n);
+        return n;
+    },
+    lcm2(a: number, b: number) {
+        // Least common multiple of 2 integers
+        return a * b / math.gcd2(a, b);
+    },
+    lcm(array: number[]) {
+        // Least common multiple of a list of integers
+        var n = 1;
+        for (var i = 0; i < array.length; ++i)
+            n = math.lcm2(array[i], n);
+        return n;
+    }
+}
+
+
+function longToByteArray(long: bigint) {
+    var byteArray = [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
+
+    for (var index = 0; index < byteArray.length; index++) {
+        var byte = long & 0xffn;
+        byteArray[index] = byte;
+        long = (long - byte) / 256n;
+    }
+
+    return byteArray;
+};
+
+function byteArrayToLong(byteArray: bigint[]) {
+    var value = 0n;
+    for (var i = byteArray.length - 1; i >= 0; i--) {
+        value = (value * 256n) + byteArray[i];
+    }
+
+    return value;
+};

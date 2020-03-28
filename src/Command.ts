@@ -1,9 +1,33 @@
 import * as Discord from "discord.js"
 import { client } from "./index"
-import { getUserByUsername } from "./db";
-import { User } from "./User";
-import { getType, humanPrintArray } from "./utilities"
-import AggregateError from "aggregate-error"
+import { users } from "./db";
+import { User, DiscordUser } from "./User";
+import { getType, humanPrintArray, awaitAll, waitForReaction, discordRequestChoice } from "./utilities"
+
+
+export interface DiscordInput {
+    author: Discord.User,
+    channel: Discord.Channel,
+    guild: Discord.Guild
+}
+
+export interface CommandFuncInput extends DiscordInput {
+    args: ParseResult[]
+}
+
+export interface ArgumentFuncInput extends DiscordInput {
+    content: string
+}
+
+export class ParseResult {
+    private _value: any
+    constructor(value: any) {
+        this._value = value
+    }
+    get value(): any {
+        return this._value
+    }
+}
 
 export class ArgumentError extends Error {
     argument: Argument
@@ -15,7 +39,7 @@ export class ArgumentError extends Error {
 
 export abstract class Argument {
     usage: string = ""
-    abstract parse(input: string, channel: Discord.Channel): Promise<any>
+    abstract parse(input: ArgumentFuncInput): Promise<ParseResult>
     abstract get description(): string;
     setUsage(usage: string): Argument {
         this.usage = usage
@@ -29,10 +53,10 @@ export class OrArgument extends Argument {
         super();
         this.args = args
     }
-    async parse(input: string, channel: Discord.Channel) {
+    async parse(input: ArgumentFuncInput) {
         let results = await Promise.all(this.args.map(x => async () => {
             try {
-                return await x.parse(input, channel)
+                return await x.parse(input)
             }
             catch (e) {
                 return e;
@@ -49,8 +73,8 @@ export class OrArgument extends Argument {
 }
 
 export class AnyArgument extends Argument {
-    async parse(input: string) {
-        return input
+    async parse(input: ArgumentFuncInput) {
+        return new ParseResult(input.content)
     }
     get description() {
         return "literally anything"
@@ -63,13 +87,13 @@ export class StringExcludedArgument extends Argument {
         super()
         this.strings = str;
     }
-    async parse(input: string) {
+    async parse(input: ArgumentFuncInput) {
         for (let i = 0; i < this.strings.length; i++) {
-            if (input.includes(this.strings[i])) {
+            if (input.content.includes(this.strings[i])) {
                 throw new ArgumentError(this.strings[i] + " is excluded from this argument and is not allowed", this)
             }
         }
-        return input
+        return new ParseResult(input.content)
     }
     get description() {
         return "literally anything except " + humanPrintArray(this.strings)
@@ -77,15 +101,15 @@ export class StringExcludedArgument extends Argument {
 }
 
 export class DiscordUserArgument extends Argument {
-    async parse(input: string) {
-        if (!(input.length > 4 && input.startsWith("<@") && input[input.length - 1] === ">")) {
+    async parse(input: ArgumentFuncInput) {
+        if (!(input.content.length > 4 && input.content.startsWith("<@") && input.content[input.content.length - 1] === ">")) {
             throw new ArgumentError("this argument has to be an @ of a discord user", this)
         }
         let start = 2;
-        if (input.startsWith("<@!")) {
+        if (input.content.startsWith("<@!")) {
             start = 3;
         }
-        return await client.fetchUser(input.substring(start, input.length - 1))
+        return new ParseResult(await client.fetchUser(input.content.substring(start, input.content.length - 1)))
     }
     get description() {
         return "@'ing someone"
@@ -93,13 +117,15 @@ export class DiscordUserArgument extends Argument {
 }
 
 export class UserArgument extends Argument {
-    userCache: User | null | undefined
-    async parse(input: string, channel: Discord.TextChannel) {
-        let user = await getUserByUsername(channel.guild.id, input)
-        if (user === null) {
-            throw new ArgumentError("there is no user with that name", this)
+    async parse(input: ArgumentFuncInput) {
+        let user = await users.getByUsername(input.content, input.guild.id, input.guild.members.map(x => x.id))
+        if (user.length === 0) {
+            throw new ArgumentError("there are no users with that argument", this)
         }
-        return user;
+        if (user.length > 1) {
+            return new ParseResult(await discordRequestChoice(input.content, user, input.channel as Discord.TextChannel, input.author, x => (x instanceof DiscordUser ? ("<@" + x.discordId + ">") : "local user")))
+        }
+        return new ParseResult(user[0]);
     }
     get description() {
         return "your username if you have added yourself"
@@ -107,12 +133,12 @@ export class UserArgument extends Argument {
 }
 
 export class NumberArgument extends Argument {
-    async parse(input: string) {
-        let n = parseFloat(input)
+    async parse(input: ArgumentFuncInput) {
+        let n = parseFloat(input.content)
         if (getType(n) === "NaN") {
             throw new ArgumentError("this argument requires a number", this)
         }
-        return n;
+        return new ParseResult(n)
     }
     get description() {
         return "any number"
@@ -125,22 +151,15 @@ export class SpecificArgument extends Argument {
         super()
         this.specificStrings = specificString
     }
-    async parse(input: string) {
-        if (!this.specificStrings.includes(input)) {
-            throw new ArgumentError(input + " is not part of " + humanPrintArray(this.specificStrings), this)
+    async parse(input: ArgumentFuncInput) {
+        if (!this.specificStrings.includes(input.content)) {
+            throw new ArgumentError(input.content + " is not part of " + humanPrintArray(this.specificStrings), this)
         }
-        return input
+        return new ParseResult(input.content)
     }
     get description() {
         return humanPrintArray(this.specificStrings)
     }
-}
-
-export interface CommandFuncInput {
-    args: any[]
-    author: Discord.User,
-    channel: Discord.Channel,
-    guild: Discord.Guild
 }
 
 export abstract class CommandReponseBase {
@@ -197,21 +216,9 @@ export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' 
 
 export abstract class ArgumentList {
     abstract validLength(length: number): boolean
-    protected abstract internalParse(values: string[], channel: Discord.Channel): Promise<any>[]
-    parse(values: string[], channel: Discord.Channel): Promise<any[]> {
-        return Promise.all(this.internalParse(values, channel).map(async x => {
-            try {
-                return await x
-            }
-            catch (e) {
-                if (e instanceof ArgumentError) {
-                    return new Promise<any>((resolve) => resolve(e))
-                }
-                else {
-                    throw e
-                }
-            }
-        }))
+    protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
+    parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
+        return awaitAll(this.internalParse(values, discord))
     }
 }
 
@@ -226,8 +233,13 @@ export class StandardArgumentList extends ArgumentList {
         return this.arguments.length === length;
     }
 
-    protected internalParse(values: string[], channel: Discord.Channel): Promise<any>[] {
-        return this.arguments.map(async (x, i) => x.parse(values[i], channel));
+    protected internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[] {
+        return this.arguments.map(async (x, i) => x.parse({
+            channel: discord.channel,
+            guild: discord.guild,
+            author: discord.author,
+            content: values[i]
+        }));
     }
 }
 
@@ -248,22 +260,36 @@ export class OptionalArgumentList extends ArgumentList {
         return length >= this.arguments.filter(x => x.type === "required").length || length <= this.arguments.length
     }
 
-    protected internalParse(values: string[], channel: Discord.Channel): Promise<any>[] {
-        let res: Promise<any>[] = [];
+    protected internalParse(_values: string[], discord: DiscordInput): Promise<ParseResult>[] {
+        interface Default {
+            value: any
+        }
+        let values: (string | Default)[] = _values.reverse()
         let args = this.arguments.reverse()
-        let defaultArgsIndex = 0;
-        let amount = args.length - values.length;
-        values = values.reverse();
+        let amount = values.length - args.filter(x => x.type === "required").length
         args.forEach((x, i) => {
-            if (x.type === "default" && amount < defaultArgsIndex) {
-                defaultArgsIndex++;
-                res.push(new Promise<any>((resolve) => resolve(x.default)))
-            }
-            else {
-                res.push(x.argument.parse(values[i], channel))
+            if (x.type === "default" && amount === 0) {
+                values.splice(i, 0, {
+                    value: x.default
+                })
+                amount--
             }
         })
-        return res.reverse();
+        args = args.reverse()
+        values = values.reverse();
+        return values.map((x, i) => {
+            if (typeof x === "object") {
+                return new Promise<ParseResult>((resolve) => resolve(new ParseResult(x.value)))
+            }
+            else {
+                return args[i].argument.parse({
+                    channel: discord.channel,
+                    guild: discord.guild,
+                    author: discord.author,
+                    content: x
+                })
+            }
+        })
     }
 }
 
@@ -276,8 +302,13 @@ export class VariableArgumentList extends ArgumentList {
     validLength(length: number): boolean {
         return true
     }
-    protected internalParse(values: string[], channel: Discord.Channel): Promise<any>[] {
-        return values.map(x => this.argument.parse(x, channel));
+    protected internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[] {
+        return values.map(x => this.argument.parse({
+            channel: discord.channel,
+            guild: discord.guild,
+            author: discord.author,
+            content: x
+        }));
     }
 }
 
@@ -290,19 +321,13 @@ export class Command {
     channelType: DiscordChannelType[]
 
     async call(args: string[], author: Discord.User, channel: Discord.Channel, guild: Discord.Guild): Promise<CommandReponseBase> {
-        let parsedResults = await this.arguments.parse(args, channel);
-        let errors = parsedResults.filter(x => x instanceof ArgumentError);
-        if (errors.length !== 0) {
-            throw new AggregateError([errors])
-        }
-        else {
-            return await this.func({
-                args: parsedResults,
-                author: author,
-                channel: channel,
-                guild: guild
-            });
-        }
+        let parsedResults: ParseResult[] = await this.arguments.parse(args, { author, channel, guild });
+        return await this.func({
+            args: parsedResults,
+            author: author,
+            channel: channel,
+            guild: guild
+        });
     }
 
     constructor(name: string, description: string, args: ArgumentList, func: (input: CommandFuncInput) => Promise<CommandReponseBase>, alias: string[] = [], channelType: DiscordChannelType | DiscordChannelType[] = "text") {
