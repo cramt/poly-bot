@@ -313,7 +313,7 @@ export const commands: Command[] = [
         }
         let member = new GuildUser(input.args[1].value, (input.args[2].value + "").toUpperCase() as Gender, null, system.id, "");
         db.users.add(member)
-        return new CommandReponseNone();
+        return new CommandResponseReaction("👍");
     }),
 
     new Command("bernie-time", "its bernie time 😎", new StandardArgumentList(), async input => {
