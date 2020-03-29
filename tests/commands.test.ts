@@ -126,8 +126,8 @@ after(async() => {
 
 function stubDiscordDependencies () {
     guild = createSinonStubInstance(Guild)
-        guild.id = "1"
-        user = createSinonStubInstance(User)
-        channel = createSinonStubInstance(TextChannel)
-        channel.guild = guild
+    guild.id = "1"
+    user = createSinonStubInstance(User)
+    channel = createSinonStubInstance(TextChannel)
+    channel.guild = guild
 }
