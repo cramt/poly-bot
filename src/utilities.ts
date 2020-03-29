@@ -191,7 +191,7 @@ export const math = {
 }
 
 
-function longToByteArray(long: bigint) {
+/*function longToByteArray(long: bigint) {
     var byteArray = [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
 
     for (var index = 0; index < byteArray.length; index++) {
@@ -210,4 +210,4 @@ function byteArrayToLong(byteArray: bigint[]) {
     }
 
     return value;
-};
+};*/
