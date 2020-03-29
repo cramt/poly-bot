@@ -80,7 +80,7 @@ export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"
     })
 }
 
-const browser = puppeteer.launch();
+const browser = puppeteer.launch(process.platform === "linux" ? { args: ['--no-sandbox', '--disable-setuid-sandbox'] } : {});
 
 export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
     let page = await (await browser).newPage()
@@ -100,8 +100,8 @@ export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
 export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
     let [graph, transFlag, legend] = await Promise.all([
         Jimp.read(image),
-        Jimp.read("transflag.png"),
-        Jimp.read("legend.png")
+        Jimp.read("res/transflag.png"),
+        Jimp.read("res/legend.png")
     ])
 
     transFlag.resize(graph.bitmap.width + legend.bitmap.width, Math.max(graph.bitmap.height, legend.bitmap.height))
@@ -155,7 +155,6 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
         } | string)[] = []
         function rec(str: string) {
             let res = regex.exec(str)
-            console.log(res)
             if (res === null) {
                 imgOrText.push(str)
                 return;

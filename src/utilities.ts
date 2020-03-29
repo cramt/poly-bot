@@ -191,23 +191,23 @@ export const math = {
 }
 
 
-/*function longToByteArray(long: bigint) {
-    var byteArray = [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
+function longToByteArray(long: bigint) {
+    var byteArray = [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)];
 
     for (var index = 0; index < byteArray.length; index++) {
-        var byte = long & 0xffn;
+        var byte = long & BigInt(0xff);
         byteArray[index] = byte;
-        long = (long - byte) / 256n;
+        long = (long - byte) / BigInt(256);
     }
 
     return byteArray;
 };
 
 function byteArrayToLong(byteArray: bigint[]) {
-    var value = 0n;
+    var value = BigInt(0);
     for (var i = byteArray.length - 1; i >= 0; i--) {
-        value = (value * 256n) + byteArray[i];
+        value = (value * BigInt(256)) + byteArray[i];
     }
 
     return value;
-};*/
+};

@@ -323,18 +323,78 @@ export const polymapCache = {
 }
 
 export async function getAllInGuild(guildId: string, discordIds: string[]): Promise<{ relationships: Relationship[], users: User[] }> {
-    let [relationshipResults, userResults] = await Promise.all([
-        client.query("SELECT relationship_type, left_user_id, right_user_id FROM relationships WHERE guild_id = $1 OR (SELECT discord_id FROM users WHERE id = left_user_id) = ANY($2) OR (SELECT discord_id FROM users WHERE id = right_user_id) = ANY($2)", [guildId, discordIds]),
-        client.query("SELECT username, discord_id, gender, id, system_id FROM users WHERE guild_id = $1 OR discord_id = ANY($2)", [guildId, discordIds])])
-    let users = userResults.rows.map(user => constructUser(user.username, genderIntToString[user.gender], guildId, user.discord_id, user.id, user.system_id))
-    let userMap = new Map<number, User>()
-    users.forEach(x => {
-        userMap.set(x.id!, x)
+    const result = await client.query(`SELECT 
+    r.relationship_type, r.guild_id as rguild_id, 
+    u1.username as username1, u2.username as username2,
+    u1.id as id1, u2.id as id2,
+    u1.gender as gender1, u2.gender as gender2,
+    (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) as guild_id1,
+    (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) as guild_id2,
+    u1.system_id as system_id1, u2.system_id as system_id2,
+    (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) as discord_id1,
+    (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) as discord_id2,
+    r.left_user_id, r.right_user_id
+    
+    FROM users u1
+    INNER JOIN relationships r
+    ON r.left_user_id = u1.id
+    INNER JOIN users u2
+    ON r.right_user_id = u2.id WHERE 
+    (
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) = ANY($1)
+        AND
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) = ANY($1)
+    )
+    OR
+    (
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) = ANY($1)
+        AND
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) = $2
+    )
+    OR
+    (
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) = $2
+        AND
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) = $2
+    )
+    OR
+    (
+        (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) = $2
+        AND
+        (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) = ANY($1)
+    );`, [discordIds, guildId]);
+    let userMap = new Map<number, User>();
+    let relationships: Relationship[] = [];
+    result.rows.forEach(x => {
+        let left: User;
+        if (userMap.has(x.id1)) {
+            left = userMap.get(x.id1)!
+        }
+        else {
+            left = constructUser(x.username1, genderIntToString[x.gender1], x.guild_id1, x.discord_id1, x.id1, x.system_id1)
+            userMap.set(left.id!, left);
+        }
+        let right: User;
+        if (userMap.has(x.id2)) {
+            right = userMap.get(x.id2)!
+        }
+        else {
+            right = constructUser(x.username2, genderIntToString[x.gender2], x.guild_id2, x.discord_id2, x.id2, x.system_id2)
+            userMap.set(right.id!, right);
+        }
+        relationships.push(new Relationship(relationshipIntToString[x.relationship_type], left, right, x.rguild_id))
     })
-    let relationships = relationshipResults.rows.map(relationship =>
-        new Relationship(relationshipIntToString[relationship.relationship_type], userMap.get(relationship.left_user_id)!, userMap.get(relationship.right_user_id)!, guildId));
+    let users = Array.from(userMap.values())
+    users.forEach(x => {
+        if (x.systemId !== null) {
+            let system = userMap.get(x.systemId);
+            if (system) {
+                x.system = system
+            }
+        }
+    })
     return {
-        relationships: relationships,
-        users: users
+        users: users,
+        relationships: relationships
     }
 }

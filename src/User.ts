@@ -8,7 +8,7 @@ export function constructUser(name: string, gender: Gender, guildId: string | nu
         return new GuildUser(name, gender, id, systemId, guildId)
     }
     else {
-        throw new Error("a user needs to be either a discord user or a guild user")
+        throw new Error(name + " with id " + id + " is not a discord user or discord user")
     }
 }
 
@@ -33,6 +33,13 @@ export abstract class User {
     }
     get system(): User | null {
         return this._system
+    }
+    getTopMostSystem() {
+        let curr = this as User;
+        while (curr.system != null) {
+            curr = curr.system;
+        }
+        return curr
     }
 }
 
