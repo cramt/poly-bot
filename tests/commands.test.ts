@@ -3,27 +3,25 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { createSinonStubInstance } from './SinonStubbedInstance';
 import * as commands from '../src/commands';
-import { users } from '../src/db'
+import { users, relationships } from '../src/db'
 import { User, Guild, TextChannel } from 'discord.js';
-import { UserArgument, ParseResult, ArgumentList, StandardArgumentList } from '../src/Command';
+import { StandardArgumentList, UserArgument, ParseResult } from '../src/Command';
 import { GuildUser } from '../src/User';
 
 chai.use(chaisAsPromiseod)
 const assert = chai.assert
 
+let command = commands.commands.find(x => x.name === "add-local")
+let guild: Guild
+let user: User
+let channel: TextChannel
+
 describe("add-local", async() => {
     
-    let command = commands.commands.find(x => x.name === "add-local")
-    let guild: Guild
-    let user: User
-    let channel: TextChannel
+
 
     beforeEach(() => {
-        guild = createSinonStubInstance(Guild)
-        guild.id = "1"
-        user = createSinonStubInstance(User)
-        channel = createSinonStubInstance(TextChannel)
-        channel.guild = guild
+        stubDiscordDependencies()
     })
 
     it('can add add a user locally', async() => {
@@ -53,6 +51,43 @@ describe("add-local", async() => {
     })
 })
 
+describe('add-relationship', () => {
+    let command = commands.commands.find(x => x.name === "add-relationship")
+
+    beforeEach(() => {
+        stubDiscordDependencies()
+    })
+
+    it('can create a new relationshps between two existing users', async() => {
+        sinon.stub(commands, "parseDiscordUserOrUser")
+        let userParse = sinon.stub(UserArgument.prototype, "parse")
+            .onFirstCall().resolves(new ParseResult(
+                new GuildUser("Lucca", "FEMME", 1, null, "1")
+            ))
+            .onSecondCall().resolves(new ParseResult(
+                new GuildUser("Zoe", "FEMME", 2, null, "1")
+            ))
+        let relationshipAdd = sinon.stub(relationships, "add")
+        await assert.isFulfilled(command!.call(["lucca", "zoe", "romantic"], user, channel, guild))
+        sinon.assert.calledWith(userParse.firstCall, sinon.match.has("content", "lucca"))
+        sinon.assert.calledWith(userParse.secondCall, sinon.match.has("content", "zoe"))
+        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("leftUser.name", "Zoe"))
+        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("rightUser.name", "Lucca"))        
+    })
+
+    afterEach(() => {
+        sinon.restore()
+    })
+})
+
 after(async() => {
     sinon.restore()
 })
+
+function stubDiscordDependencies () {
+    guild = createSinonStubInstance(Guild)
+        guild.id = "1"
+        user = createSinonStubInstance(User)
+        channel = createSinonStubInstance(TextChannel)
+        channel.guild = guild
+}

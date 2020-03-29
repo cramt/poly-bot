@@ -6,7 +6,7 @@ import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relat
 import { prefix } from "./index"
 import { polyMapGenerate, cachedPolyMapGenerate } from "./polyMapGenerate";
 
-async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
+export async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
     if ((thing as User).gender === undefined) {
         return await db.users.getByDiscordId((thing as Discord.User).id) as User
     }
@@ -202,6 +202,24 @@ export const commands: Command[] = [
             let buffer = await polyMapGenerate(users, relationships)
             return new CommandResponseFile(buffer, "polycule_map.png")
         }),
+
+    new Command("rename-me", "changes your name", new StandardArgumentList( new AnyArgument()), async input => {
+        let user = await db.users.getByDiscordId(input.author.id)
+        user!.name = input.args[0].value
+        if (db.users.update(user!)) {
+            return new CommandResponseReaction("👍")
+        }
+        else {
+            return new CommandReponseInSameChannel("could not find your Discord ID in the database. use 'rename <username>' to rename local users")
+        }
+    }), 
+
+    new Command("rename", "changes the name of a user", new StandardArgumentList( new UserArgument(), new AnyArgument()), async input => {
+        let user = await parseDiscordUserOrUser(input.args[0].value)
+        user.name = input.args[1].value
+        db.users.update(user)
+        return new CommandResponseReaction("👍")
+    }),
 
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", new StandardArgumentList(), async input => {
         await db.users.deleteByDiscord(input.author.id)
