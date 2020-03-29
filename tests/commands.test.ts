@@ -5,8 +5,8 @@ import { createSinonStubInstance } from './SinonStubbedInstance';
 import * as commands from '../src/commands';
 import { users, relationships } from '../src/db'
 import { User, Guild, TextChannel } from 'discord.js';
-import { StandardArgumentList, UserArgument, ParseResult } from '../src/Command';
-import { GuildUser } from '../src/User';
+import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList } from '../src/Command';
+import { GuildUser, DiscordUser } from '../src/User';
 
 chai.use(chaisAsPromiseod)
 const assert = chai.assert
@@ -79,6 +79,46 @@ describe('add-relationship', () => {
         sinon.restore()
     })
 })
+
+describe('add-member', () => {
+    let command = commands.commands.find(x => x.name === "add-member")
+
+    beforeEach(() => {
+        stubDiscordDependencies()
+    })
+
+    it('can add a member to an existing system', async() => {
+        let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
+            .resolves([
+                new ParseResult(new GuildUser("table", "SYSTEM", 1, null, "1")),
+                new ParseResult("juniper"),
+                new ParseResult("femme")
+            ])
+        let dbAdd = sinon.stub(users, "add").resolves(true)
+
+        await assert.isFulfilled(command!.call(["table", "juniper", "femme"], user, channel, guild))
+        sinon.assert.calledWith(parse, sinon.match.array.deepEquals(["table", "juniper", "femme"]), sinon.match.any)
+        sinon.assert.calledWith(dbAdd, sinon.match(new GuildUser("juniper", "FEMME", null, 1, "")))
+    })
+
+    it('can turn a singlet user into a system', async() => {
+        let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
+            .resolves([
+                new ParseResult(new GuildUser("table", "FEMME", 1, null, "1")),
+                new ParseResult("juniper"),
+                new ParseResult("femme")
+            ])
+        let dbAdd = sinon.stub(users, "add").resolves(true)
+        let dbUpdate = sinon.stub(users, "update").resolves(true)
+
+        await assert.isFulfilled(command!.call(["table", "juniper", "femme"], user, channel, guild))
+        sinon.assert.calledWith(parse, sinon.match.array.deepEquals(["table", "juniper", "femme"]), sinon.match.any)
+        sinon.assert.calledWith(dbUpdate, sinon.match(new GuildUser("table", "SYSTEM", 1, null, "1")))
+        sinon.assert.calledWith(dbAdd, sinon.match(new GuildUser("juniper", "FEMME", null, 1, "")))
+    })
+
+    afterEach(() => sinon.restore())
+}) 
 
 after(async() => {
     sinon.restore()

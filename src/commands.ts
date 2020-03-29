@@ -307,7 +307,11 @@ export const commands: Command[] = [
             system = input.author
         }
         system = await parseDiscordUserOrUser(system);
-        let member = new GuildUser(input.args[0].value, input.args[0].value.toUpperCase(), null, system.id, "");
+        if (system.gender != "SYSTEM") {
+            system.gender = "SYSTEM"
+            db.users.update(system)
+        }
+        let member = new GuildUser(input.args[1].value, (input.args[2].value + "").toUpperCase() as Gender, null, system.id, "");
         db.users.add(member)
         return new CommandReponseNone();
     }),
