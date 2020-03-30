@@ -16,7 +16,7 @@ chai.use(chaiAsPromised)
 const assert = chai.assert
 
 describe('Number Arguments', () => {
-    it('can reject invalid numbers', async() => {
+    it('can reject invalid numbers', async () => {
         await assert.isRejected(new CommandParser.NumberArgument().parse({
             content: "hello there",
             channel: null as any,
@@ -24,7 +24,7 @@ describe('Number Arguments', () => {
             author: null as any
         }).then(x => x.value), CommandParser.ArgumentError)
     })
-    it('accept valid numbers', async() => {
+    it('accept valid numbers', async () => {
         await assert.eventually.equal(new CommandParser.NumberArgument().parse({
             content: "4",
             channel: null as any,
@@ -34,9 +34,9 @@ describe('Number Arguments', () => {
     })
 })
 
-describe('Any Arguments', async() => {
+describe('Any Arguments', async () => {
 
-    it('can return the contents of an argument', async() => {
+    it('can return the contents of an argument', async () => {
         await assert.eventually.equal(new CommandParser.AnyArgument().parse({
             content: "argument",
             channel: null as any,
@@ -59,16 +59,16 @@ describe('User Arguments', () => {
     ]
 
     beforeEach(() => {
-        sinon.stub(users, "getByUsername").callsFake(async(username: string, guildId: string, discordIds: string[]) => {
-            
+        sinon.stub(users, "getByUsername").callsFake(async (username: string, guildId: string, discordIds: string[]) => {
+
             let foundUsers = []
             for (let i = 0; i < testUsers.length; i++) {
                 if (testUsers[i].name === username) {
                     foundUsers.push(testUsers[i])
                 }
             }
-            
-            
+
+
             if (foundUsers.length > 0) {
                 return foundUsers
             }
@@ -78,7 +78,7 @@ describe('User Arguments', () => {
         })
     })
 
-    it('can retrieve a user', async() => {
+    it('can retrieve a user', async () => {
         await assert.isFulfilled(new CommandParser.UserArgument().parse({
             content: "test1",
             channel: null as any,
@@ -91,10 +91,10 @@ describe('User Arguments', () => {
             channel: null as any,
             guild: inputguild,
             author: null as any
-        }).then(x => assert.deepEqual(x.value.name, "test3")))           
+        }).then(x => assert.deepEqual(x.value.name, "test3")))
     })
 
-    it('can reject non-existent users', async() => {
+    it('can reject non-existent users', async () => {
         await assert.isRejected(new CommandParser.UserArgument().parse({
             content: "test4",
             channel: null as any,
@@ -103,9 +103,9 @@ describe('User Arguments', () => {
         }))
     })
 
-    
 
-    it('can accept correct results from requests for more data', async() => {
+
+    it('can accept correct results from requests for more data', async () => {
         sinon.stub(util, "discordRequestChoice").returns(new Promise((resolve => resolve(testUsers[1]))))
         await assert.isFulfilled(new CommandParser.UserArgument().parse({
             content: "test2",
@@ -115,8 +115,8 @@ describe('User Arguments', () => {
         }).then(x => assert.deepEqual(x.value.gender, "NEUTRAL")))
     })
 
-    it('can handle rejection of requests for more data', async() => {
-        sinon.stub(util, "discordRequestChoice").returns(new Promise((reject => reject())))
+    it('can handle rejection of requests for more data', async () => {
+        sinon.stub(util, "discordRequestChoice").returns(new Promise((resolve, reject) => reject(new Error())))
         await assert.isRejected(new CommandParser.UserArgument().parse({
             content: "test2",
             channel: null as any,
@@ -125,7 +125,7 @@ describe('User Arguments', () => {
         }))
     })
 
-    
+
 
     afterEach(() => {
         sinon.restore()
@@ -138,13 +138,13 @@ describe('Discord User Arguments', () => {
         username: "test user",
         discriminator: "#0000"
     })
-    
+
 
     beforeEach(() => {
         sinon.stub(client, "fetchUser").returns(new Promise((resolve) => resolve(user)))
     })
 
-    it('can accept discord users', async() => {
+    it('can accept discord users', async () => {
         let userArgument = {
             content: "<@138790334896275456>",
             channel: null as any,
@@ -154,7 +154,7 @@ describe('Discord User Arguments', () => {
         await assert.isFulfilled(new CommandParser.DiscordUserArgument().parse(userArgument))
     })
 
-    it('can reject invalid discord users', async() => {
+    it('can reject invalid discord users', async () => {
         let userArgument = {
             content: "invalid argument",
             channel: null as any,
@@ -213,7 +213,7 @@ describe('Or Arguments', () => {
 
 
 
-    it('can accept either of defined type of argument', async() => {
+    it('can accept either of defined type of argument', async () => {
         sinon.stub(CommandParser, "UserArgument")
         sinon.stub(CommandParser, "DiscordUserArgument")
         let arg = new CommandParser.OrArgument(new CommandParser.UserArgument(), new CommandParser.DiscordUserArgument())
@@ -225,9 +225,9 @@ describe('Or Arguments', () => {
         }))
     })
 
-    it('can reject both argument types are rejected', async() => {
-        
-        
+    it('can reject both argument types are rejected', async () => {
+
+
 
         let arg = new CommandParser.OrArgument(new CommandParser.SpecificArgument("a"), new CommandParser.SpecificArgument("b"))
         await assert.isRejected(arg.parse({
