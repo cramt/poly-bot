@@ -214,7 +214,7 @@ export const commands: Command[] = [
         }
     }),
 
-    new Command("rename", "changes the name of a user", new StandardArgumentList( new UserArgument(), new AnyArgument()), async input => {
+    new Command("rename", "changes the name of a user", new StandardArgumentList(new UserArgument(), new AnyArgument()), async input => {
         let user = input.args[0].value
         user.name = input.args[1].value
         db.users.update(user)

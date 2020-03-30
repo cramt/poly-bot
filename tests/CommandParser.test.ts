@@ -14,7 +14,7 @@ chai.use(chaiAsPromised)
 const assert = chai.assert
 
 describe('Number Arguments', () => {
-    it('can reject invalid numbers', async() => {
+    it('can reject invalid numbers', async () => {
         await assert.isRejected(new NumberArgument().parse({
             content: "hello there",
             channel: null as any,
@@ -22,7 +22,7 @@ describe('Number Arguments', () => {
             author: null as any
         }).then(x => x.value), ArgumentError)
     })
-    it('accept valid numbers', async() => {
+    it('accept valid numbers', async () => {
         await assert.eventually.equal(new NumberArgument().parse({
             content: "4",
             channel: null as any,
@@ -34,7 +34,7 @@ describe('Number Arguments', () => {
 
 describe('Any Arguments', async () => {
 
-    it('can return the contents of an argument', async() => {
+    it('can return the contents of an argument', async () => {
         await assert.eventually.equal(new AnyArgument().parse({
             content: "argument",
             channel: null as any,
@@ -76,7 +76,7 @@ describe('User Arguments', () => {
         })
     })
 
-    it('can retrieve a user', async() => {
+    it('can retrieve a user', async () => {
         await assert.isFulfilled(new UserArgument().parse({
             content: "test1",
             channel: null as any,
@@ -92,7 +92,7 @@ describe('User Arguments', () => {
         }).then(x => assert.deepEqual(x.value.name, "test3")))
     })
 
-    it('can reject non-existent users', async() => {
+    it('can reject non-existent users', async () => {
         await assert.isRejected(new UserArgument().parse({
             content: "test4",
             channel: null as any,
@@ -111,7 +111,7 @@ describe('User Arguments', () => {
         }).then(x => assert.deepEqual(x.value.gender, "NEUTRAL")))
     })
 
-    it('can handle rejection of requests for more data', async() => {
+    it('can handle rejection of requests for more data', async () => {
         sinon.stub(util, "discordRequestChoice").returns(new Promise((reject => reject())))
         await assert.isRejected(new UserArgument().parse({
             content: "test2",
@@ -204,7 +204,7 @@ describe('String Excluded Arguments', () => {
 
 describe('Or Arguments', () => {
 
-    it('can accept either of defined type of argument', async() => {
+    it('can accept either of defined type of argument', async () => {
         sinon.stub(UserArgument.prototype, "parse").rejects(ArgumentError)
         sinon.stub(DiscordUserArgument.prototype, "parse").resolves(new ParseResult(new PolyUser.DiscordUser("test1", "FEMME", 1, null, "123456")))
         let arg = new OrArgument(new UserArgument(), new DiscordUserArgument())
@@ -216,10 +216,10 @@ describe('Or Arguments', () => {
         }))
     })
 
-    it('can reject when both argument types are rejected', async() => {
+    it('can reject when both argument types are rejected', async () => {
         sinon.stub(UserArgument.prototype, "parse").rejects(ArgumentError)
         sinon.stub(DiscordUserArgument.prototype, "parse").rejects(ArgumentError)
-        
+
         let arg = new OrArgument(new UserArgument, new DiscordUserArgument)
         await assert.isRejected(arg.parse({
             content: "1",

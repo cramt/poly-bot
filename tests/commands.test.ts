@@ -5,7 +5,7 @@ import { createSinonStubInstance } from './SinonStubbedInstance';
 import * as commands from '../src/commands';
 import { users, relationships } from '../src/db'
 import { User, Guild, TextChannel } from 'discord.js';
-import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel, ArgumentError } from '../src/Command';
+import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel, ArgumentError, DiscordUserArgument, OrArgument } from '../src/Command';
 import { GuildUser, DiscordUser } from '../src/User';
 
 chai.use(chaisAsPromiseod)
@@ -16,15 +16,15 @@ let guild: Guild
 let user: User
 let channel: TextChannel
 
-describe("add-local", async() => {
-    
+describe("add-local", async () => {
+
 
 
     beforeEach(() => {
         stubDiscordDependencies()
     })
 
-    it('can add add a user locally', async() => {
+    it('can add add a user locally', async () => {
         let userAdd = sinon.stub(users, "add")
         let parse = sinon.spy(StandardArgumentList.prototype, "parse")
 
@@ -35,7 +35,7 @@ describe("add-local", async() => {
         sinon.assert.calledWith(userAdd, sinon.match.has("guildId", "1"))
     })
 
-    it('can reject invalid gender options', async() => {
+    it('can reject invalid gender options', async () => {
         let parse = sinon.spy(StandardArgumentList.prototype, "parse")
         let userAdd = sinon.stub(users, "add")
         let input = sinon.spy(command!, "func")
@@ -58,7 +58,7 @@ describe('add-relationship', () => {
         stubDiscordDependencies()
     })
 
-    it('can create a new relationshps between two local users', async() => {
+    it('can create a new relationshps between two local users', async () => {
         sinon.stub(commands, "parseDiscordUserOrUser")
         let userParse = sinon.stub(UserArgument.prototype, "parse")
             .onFirstCall().resolves(new ParseResult(
@@ -72,27 +72,27 @@ describe('add-relationship', () => {
         sinon.assert.calledWith(userParse.firstCall, sinon.match.has("content", "lucca"))
         sinon.assert.calledWith(userParse.secondCall, sinon.match.has("content", "zoe"))
         sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("leftUser.name", "Zoe"))
-        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("rightUser.name", "Lucca"))        
+        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("rightUser.name", "Lucca"))
     })
 
-    it('can create a relationship between a local and a discord user', async() => {
+    it('can create a relationship between a local and a discord user', async () => {
         let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
             .resolves([
                 new ParseResult(new GuildUser("Lucca", "FEMME", 1, null, "1")),
                 new ParseResult(new DiscordUser("Zoe", "FEMME", 2, null, "123456789")),
                 new ParseResult("romantic")
             ])
-            let relationshipAdd = sinon.stub(relationships, "add")
-        
-            await assert.isFulfilled(command!.call(["lucca", "<@123456789>", "romantic"], user, channel, guild))
-            sinon.assert.calledWith(parse, sinon.match.array.deepEquals(["lucca", "<@123456789>", "romantic"]), sinon.match.any)
-            sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("leftUser.name", "Zoe"))
-            sinon.assert.calledWith(relationshipAdd, sinon.match.has("leftUser", sinon.match.instanceOf(DiscordUser)))
-            sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("leftUser.discordId", "123456789"))
-            sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("rightUser.name", "Lucca"))
-            sinon.assert.calledWith(relationshipAdd, sinon.match.has("rightUser", sinon.match.instanceOf(GuildUser)))
+        let relationshipAdd = sinon.stub(relationships, "add")
+
+        await assert.isFulfilled(command!.call(["lucca", "<@123456789>", "romantic"], user, channel, guild))
+        sinon.assert.calledWith(parse, sinon.match.array.deepEquals(["lucca", "<@123456789>", "romantic"]), sinon.match.any)
+        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("leftUser.name", "Zoe"))
+        sinon.assert.calledWith(relationshipAdd, sinon.match.has("leftUser", sinon.match.instanceOf(DiscordUser)))
+        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("leftUser.discordId", "123456789"))
+        sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("rightUser.name", "Lucca"))
+        sinon.assert.calledWith(relationshipAdd, sinon.match.has("rightUser", sinon.match.instanceOf(GuildUser)))
     })
-    it('can create a relationship between two discord users', async() => {
+    it('can create a relationship between two discord users', async () => {
         let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
             .resolves([
                 new ParseResult(new DiscordUser("Lucca", "FEMME", 1, null, "111111")),
@@ -110,7 +110,7 @@ describe('add-relationship', () => {
         sinon.assert.calledWith(relationshipAdd, sinon.match.has("rightUser", sinon.match.instanceOf(DiscordUser)))
         sinon.assert.calledWith(relationshipAdd, sinon.match.hasNested("rightUser.discordId", "111111"))
     })
-    it('can reject a relationship when both users are the same local user', async() => {
+    it('can reject a relationship when both users are the same local user', async () => {
         let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
             .resolves([
                 new ParseResult(new GuildUser("Lucca", "FEMME", 1, null, "1")),
@@ -125,9 +125,17 @@ describe('add-relationship', () => {
     })
 
     it('can accept "me" as its first argument')
-    it('can reject relationships, when a user does not exist', async() => {
-        let userParse = sinon.stub(UserArgument.prototype, "parse").rejects(new ArgumentError("there are no users with that argument", new UserArgument()))
-        let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
+
+    it('can reject relationships, when a user does not exist', async () => {
+        let parse = sinon.stub(OrArgument.prototype, "parse")
+            .onFirstCall().rejects(ArgumentError)
+            .onSecondCall().resolves(new ParseResult(new GuildUser("Lucca", "FEMME", 1, null, "1")))
+        let relationshipAdd = sinon.stub(relationships, "add")
+
+        await assert.isRejected(command!.call(["zoe", "lucca", "romantic"], user, channel, guild))
+        sinon.assert.calledWith(parse, sinon.match.has("content", "zoe"))
+        sinon.assert.calledWith(parse, sinon.match.has("content", "lucca"))
+        sinon.assert.notCalled(relationshipAdd)
     })
 
     afterEach(() => {
@@ -142,7 +150,7 @@ describe('add-member', () => {
         stubDiscordDependencies()
     })
 
-    it('can add a member to an existing system', async() => {
+    it('can add a member to an existing system', async () => {
         let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
             .resolves([
                 new ParseResult(new GuildUser("table", "SYSTEM", 1, null, "1")),
@@ -156,7 +164,7 @@ describe('add-member', () => {
         sinon.assert.calledWith(dbAdd, sinon.match(new GuildUser("juniper", "FEMME", null, 1, "")))
     })
 
-    it('can turn a singlet user into a system', async() => {
+    it('can turn a singlet user into a system', async () => {
         let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
             .resolves([
                 new ParseResult(new GuildUser("table", "FEMME", 1, null, "1")),
@@ -173,13 +181,13 @@ describe('add-member', () => {
     })
 
     afterEach(() => sinon.restore())
-}) 
+})
 
-after(async() => {
+after(async () => {
     sinon.restore()
 })
 
-function stubDiscordDependencies () {
+function stubDiscordDependencies() {
     guild = createSinonStubInstance(Guild)
     guild.id = "1"
     user = createSinonStubInstance(User)
