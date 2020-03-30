@@ -33,7 +33,7 @@ describe('Number Arguments', () => {
     })
 })
 
-describe('Any Arguments', async() => {
+describe('Any Arguments', async () => {
 
     it('can return the contents of an argument', async() => {
         await assert.eventually.equal(new AnyArgument().parse({
@@ -58,16 +58,16 @@ describe('User Arguments', () => {
     ]
 
     beforeEach(() => {
-        sinon.stub(users, "getByUsername").callsFake(async(username: string, guildId: string, discordIds: string[]) => {
-            
+        sinon.stub(users, "getByUsername").callsFake(async (username: string, guildId: string, discordIds: string[]) => {
+
             let foundUsers = []
             for (let i = 0; i < testUsers.length; i++) {
                 if (testUsers[i].name === username) {
                     foundUsers.push(testUsers[i])
                 }
             }
-            
-            
+
+
             if (foundUsers.length > 0) {
                 return foundUsers
             }
@@ -90,7 +90,7 @@ describe('User Arguments', () => {
             channel: null as any,
             guild: inputguild,
             author: null as any
-        }).then(x => assert.deepEqual(x.value.name, "test3")))           
+        }).then(x => assert.deepEqual(x.value.name, "test3")))
     })
 
     it('can reject non-existent users', async() => {
@@ -102,9 +102,9 @@ describe('User Arguments', () => {
         }))
     })
 
-    
 
-    it('can accept correct results from requests for more data', async() => {
+
+    it('can accept correct results from requests for more data', async () => {
         sinon.stub(util, "discordRequestChoice").returns(new Promise((resolve => resolve(testUsers[1]))))
         await assert.isFulfilled(new UserArgument().parse({
             content: "test2",
@@ -124,7 +124,7 @@ describe('User Arguments', () => {
         }))
     })
 
-    
+
 
     afterEach(() => {
         sinon.restore()
@@ -137,13 +137,13 @@ describe('Discord User Arguments', () => {
         username: "test user",
         discriminator: "#0000"
     })
-    
+
 
     beforeEach(() => {
         sinon.stub(client, "fetchUser").returns(new Promise((resolve) => resolve(user)))
     })
 
-    it('can accept discord users', async() => {
+    it('can accept discord users', async () => {
         let userArgument = {
             content: "<@138790334896275456>",
             channel: null as any,
@@ -153,7 +153,7 @@ describe('Discord User Arguments', () => {
         await assert.isFulfilled(new DiscordUserArgument().parse(userArgument))
     })
 
-    it('can reject invalid discord users', async() => {
+    it('can reject invalid discord users', async () => {
         let userArgument = {
             content: "invalid argument",
             channel: null as any,
