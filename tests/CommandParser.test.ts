@@ -227,13 +227,9 @@ describe('Or Arguments', () => {
 
     it('can reject both argument types are rejected', async() => {
         
-        let userArg = createSinonStubInstance(CommandParser.UserArgument)
-        userArg.parse.throws(new ArgumentError("", userArg))
+        
 
-        let discordUserArg = createSinonStubInstance(CommandParser.UserArgument)
-        discordUserArg.parse.throws(new ArgumentError("", discordUserArg))
-
-        let arg = new CommandParser.OrArgument(userArg, discordUserArg)
+        let arg = new CommandParser.OrArgument(new CommandParser.SpecificArgument("a"), new CommandParser.SpecificArgument("b"))
         await assert.isRejected(arg.parse({
             content: "1",
             channel: null as any,
