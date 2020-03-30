@@ -128,9 +128,8 @@ export const commands: Command[] = [
             if (_user === "me") {
                 _user = input.author
             }
-            let user = await parseDiscordUserOrUser(_user);
+            let [leftUser, rightUser] = await Promise.all([await parseDiscordUserOrUser(_user), input.args[1].value])
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)])
             if (leftUser.name === rightUser.name) {
                 return new CommandReponseInSameChannel("you cant make a relationship with yourself")
             }
