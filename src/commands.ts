@@ -157,7 +157,8 @@ export const commands: Command[] = [
         {
             argument: new OrArgument(
                 new DiscordUserArgument(),
-                new UserArgument()),
+                new UserArgument(),
+                new SpecificArgument("me")),
             type: "required"
         }])
         , async input => {
@@ -203,23 +204,29 @@ export const commands: Command[] = [
             return new CommandResponseFile(buffer, "polycule_map.png")
         }),
 
-    new Command("rename-me", "changes your name", new StandardArgumentList(new AnyArgument()), async input => {
-        let user = await db.users.getByDiscordId(input.author.id)
-        user!.name = input.args[0].value
-        if (db.users.update(user!)) {
+    new Command("rename", "changes the name of a user", new OptionalArgumentList([{
+        argument: new OrArgument(
+            new UserArgument(),
+            new DiscordUserArgument(),
+            new SpecificArgument("me")),
+        type: "default",
+        default: "me"
+    },
+    {
+        argument: new AnyArgument(),
+        type: "required",
+    }
+    ]),
+        async input => {
+            let user = input.args[0].value
+            if (user === "me") {
+                user = db.users.getByDiscordId(input.author.id)
+                if (user === null) return new CommandReponseInSameChannel("your discord id is not registered in the database")
+            }
+            user.name = input.args[1].value
+            db.users.update(user)
             return new CommandResponseReaction("👍")
-        }
-        else {
-            return new CommandReponseInSameChannel("could not find your Discord ID in the database. use 'rename <username>' to rename local users")
-        }
-    }),
-
-    new Command("rename", "changes the name of a user", new StandardArgumentList(new UserArgument(), new AnyArgument()), async input => {
-        let user = input.args[0].value
-        user.name = input.args[1].value
-        db.users.update(user)
-        return new CommandResponseReaction("👍")
-    }),
+        }),
 
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", new StandardArgumentList(), async input => {
         await db.users.deleteByDiscord(input.author.id)
