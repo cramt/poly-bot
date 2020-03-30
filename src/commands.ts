@@ -170,7 +170,7 @@ export const commands: Command[] = [
     new Command("generate", "generates the polycule map", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await db.getAllInGuild(guildId, input.guild.members.map(x => x.id))
-        if(all.users.length === 0){
+        if (all.users.length === 0) {
             return new CommandReponseInSameChannel("cant generate empty map")
         }
         let buffer = await polyMapGenerate(all.users, all.relationships)
@@ -203,7 +203,7 @@ export const commands: Command[] = [
             return new CommandResponseFile(buffer, "polycule_map.png")
         }),
 
-    new Command("rename-me", "changes your name", new StandardArgumentList( new AnyArgument()), async input => {
+    new Command("rename-me", "changes your name", new StandardArgumentList(new AnyArgument()), async input => {
         let user = await db.users.getByDiscordId(input.author.id)
         user!.name = input.args[0].value
         if (db.users.update(user!)) {
@@ -212,7 +212,7 @@ export const commands: Command[] = [
         else {
             return new CommandReponseInSameChannel("could not find your Discord ID in the database. use 'rename <username>' to rename local users")
         }
-    }), 
+    }),
 
     new Command("rename", "changes the name of a user", new StandardArgumentList( new UserArgument(), new AnyArgument()), async input => {
         let user = input.args[0].value

@@ -199,15 +199,23 @@ export const users = {
     getMembers: async (user: User) => {
         let userResults = await client.query(`
         WITH RECURSIVE members AS (
-            username, discord_id, gender, system_id, id, guild_id
+            SELECT username, gender, system_id, id FROM users
             WHERE system_id = $1
             UNION 
-                SELECT u.username, u.discord_id, u.gender, u.system_id, u.id, u.guild_id FROM users u
+                SELECT u.username, u.gender, u.system_id, u.id FROM users u
                 INNER JOIN members m ON m.id = u.system_id
-        ) SELECT username, discord_id, gender, system_id, id FROM members
+        ) SELECT username, gender, system_id, id FROM members 
     `, [user.id])
-        let users = userResults.rows.map(user => constructUser(user.username, genderIntToString[user.gender], user.guild_id, user.discord_id, user.id, user.system_id))
-        user.members = users
+        let guildId: string | null = null;
+        let discordId: string | null = null;
+        if (user instanceof GuildUser) {
+            guildId = user.guildId;
+        }
+        else if (user instanceof DiscordUser) {
+            discordId = user.discordId;
+        }
+        let users = userResults.rows.map(x => constructUser(x.username, genderIntToString[x.gender], guildId, discordId, x.id, x.system_id))
+        users.forEach(x => x.system = user);
         return users
     },
     delete: async (userOrId: User | number) => {
