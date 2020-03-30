@@ -66,6 +66,10 @@ export class OrArgument extends Argument {
         if (notError) {
             return notError;
         }
+        else {
+            throw results.find(x => x instanceof Error)
+        }
+
     }
     get description() {
         return humanPrintArray(this.args.map(x => x.description))
