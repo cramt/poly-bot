@@ -232,22 +232,10 @@ export const users = {
         else {
             id = userOrId.id!
         }
-        try {
-            await client.query(`DELETE FROM users WHERE id = $1`, [id])
-            return true;
-        }
-        catch (e) {
-            return false
-        }
+        return (await client.query(`WITH deleted AS(DELETE FROM users WHERE id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [id])).rows[0].count == '1'
     },
     deleteByDiscord: async (discordId: string) => {
-        try {
-            await client.query(`DELETE FROM users WHERE discord_id = $1`, [discordId])
-            return true;
-        }
-        catch (e) {
-            return false
-        }
+        return (await client.query(`WITH deleted AS(DELETE FROM users WHERE discord_id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [discordId])).rows[0].count == '1'
     },
     update: async (user: User) => {
         let guildId: string | null = null
