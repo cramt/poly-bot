@@ -10,7 +10,6 @@ import { ArgumentError, UserArgument, NumberArgument, AnyArgument, DiscordUserAr
 import { createSinonStubInstance } from './SinonStubbedInstance';
 import * as util from '../src/utilities'
 
-var cmd = Commands.commands;
 chai.use(chaiAsPromised)
 const assert = chai.assert
 
@@ -102,8 +101,6 @@ describe('User Arguments', () => {
         }))
     })
 
-
-
     it('can accept correct results from requests for more data', async () => {
         sinon.stub(util, "discordRequestChoice").returns(new Promise((resolve => resolve(testUsers[1]))))
         await assert.isFulfilled(new UserArgument().parse({
@@ -124,8 +121,6 @@ describe('User Arguments', () => {
         }))
     })
 
-
-
     afterEach(() => {
         sinon.restore()
     })
@@ -138,9 +133,8 @@ describe('Discord User Arguments', () => {
         discriminator: "#0000"
     })
 
-
     beforeEach(() => {
-        sinon.stub(client, "fetchUser").returns(new Promise((resolve) => resolve(user)))
+        sinon.stub(client, "fetchUser").resolves(user)
     })
 
     it('can accept discord users', async () => {
@@ -211,7 +205,7 @@ describe('String Excluded Arguments', () => {
 describe('Or Arguments', () => {
 
     it('can accept either of defined type of argument', async() => {
-        sinon.stub(UserArgument.prototype, "parse").rejects(new ArgumentError("there is no user with that username", new UserArgument()))
+        sinon.stub(UserArgument.prototype, "parse").rejects(ArgumentError)
         sinon.stub(DiscordUserArgument.prototype, "parse").resolves(new ParseResult(new PolyUser.DiscordUser("test1", "FEMME", 1, null, "123456")))
         let arg = new OrArgument(new UserArgument(), new DiscordUserArgument())
         await assert.isFulfilled(arg.parse({
@@ -222,15 +216,11 @@ describe('Or Arguments', () => {
         }))
     })
 
-    it('can reject both argument types are rejected', async() => {
+    it('can reject when both argument types are rejected', async() => {
+        sinon.stub(UserArgument.prototype, "parse").rejects(ArgumentError)
+        sinon.stub(DiscordUserArgument.prototype, "parse").rejects(ArgumentError)
         
-        let userArg = createSinonStubInstance(UserArgument)
-        userArg.parse.throws(new ArgumentError("", userArg))
-
-        let discordUserArg = createSinonStubInstance(UserArgument)
-        discordUserArg.parse.throws(new ArgumentError("", discordUserArg))
-
-        let arg = new OrArgument(userArg, discordUserArg)
+        let arg = new OrArgument(new UserArgument, new DiscordUserArgument)
         await assert.isRejected(arg.parse({
             content: "1",
             channel: null as any,
