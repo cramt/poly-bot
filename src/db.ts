@@ -211,11 +211,11 @@ export const users = {
         if (user instanceof GuildUser) {
             guildId = user.guildId;
         }
-        else if(user instanceof DiscordUser){
+        else if (user instanceof DiscordUser) {
             discordId = user.discordId;
         }
         let users = userResults.rows.map(x => constructUser(x.username, genderIntToString[x.gender], guildId, discordId, x.id, x.system_id))
-        user.members = users
+        users.forEach(x => x.system = user);
         return users
     },
     delete: async (userOrId: User | number) => {
