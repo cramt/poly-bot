@@ -331,46 +331,45 @@ export const polymapCache = {
 }
 
 export async function getAllInGuild(guildId: string, discordIds: string[]): Promise<{ relationships: Relationship[], users: User[] }> {
-    const result = await client.query(`SELECT 
+    const result = await client.query(`WITH left_user AS (
+        SELECT 
+        bottom.username, bottom.id, top.id as topmost_system_id, bottom.gender, bottom.system_id, top.discord_id, top.guild_id
+        FROM users bottom
+        INNER JOIN users top
+        ON top.id = get_topmost_system(bottom.id)
+        WHERE
+        top.discord_id = ANY($1)
+        OR
+        top.guild_id = $2
+    )
+    , right_user AS (
+        SELECT 
+        bottom.username, bottom.id, top.id as topmost_system_id, bottom.gender, bottom.system_id, top.discord_id, top.guild_id
+        FROM users bottom
+        INNER JOIN users top
+        ON top.id = get_topmost_system(bottom.id)
+        WHERE
+        top.discord_id = ANY($1)
+        OR
+        top.guild_id = $2
+    )
+    SELECT 
     r.relationship_type, r.guild_id as rguild_id, 
     u1.username as username1, u2.username as username2,
     u1.id as id1, u2.id as id2,
     u1.gender as gender1, u2.gender as gender2,
-    (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) as guild_id1,
-    (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) as guild_id2,
+    u1.guild_id as guild_id1,
+    u2.guild_id as guild_id2,
     u1.system_id as system_id1, u2.system_id as system_id2,
-    (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) as discord_id1,
-    (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) as discord_id2,
+    u1.discord_id as discord_id1,
+    u2.discord_id as discord_id2,
     r.left_user_id, r.right_user_id
     
-    FROM users u1
-    INNER JOIN relationships r
+    FROM relationships r
+    INNER JOIN left_user u1
     ON r.left_user_id = u1.id
-    INNER JOIN users u2
-    ON r.right_user_id = u2.id WHERE 
-    (
-        (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) = ANY($1)
-        AND
-        (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) = ANY($1)
-    )
-    OR
-    (
-        (SELECT discord_id FROM users WHERE id = get_topmost_system(u1.id)) = ANY($1)
-        AND
-        (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) = $2
-    )
-    OR
-    (
-        (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) = $2
-        AND
-        (SELECT guild_id FROM users WHERE id = get_topmost_system(u2.id)) = $2
-    )
-    OR
-    (
-        (SELECT guild_id FROM users WHERE id = get_topmost_system(u1.id)) = $2
-        AND
-        (SELECT discord_id FROM users WHERE id = get_topmost_system(u2.id)) = ANY($1)
-    );`, [discordIds, guildId]);
+    INNER JOIN right_user u2
+    ON r.right_user_id = u2.id;`, [discordIds, guildId]);
     let userMap = new Map<number, User>();
     let relationships: Relationship[] = [];
     result.rows.forEach(x => {
