@@ -193,7 +193,13 @@ export const users = {
         return constructUser(result.rows[0].username, genderIntToString[result.rows[0].gender], null, id, result.rows[0].id, result.rows[0].system_id)
     },
     getByUsername(username: string, guildId: string, discordIds: string[]) {
-        return client.query("SELECT id, guild_id, discord_id, gender, system_id FROM users WHERE (" + generateNullableEvaluation("guild_id", 1) + " OR discord_id = ANY($2)) AND username = $3", [guildId, discordIds, username])
+        return client.query(`
+        SELECT 
+        bottom.username, bottom.id, top.id as topmost_system_id, bottom.gender, bottom.system_id, top.discord_id, top.guild_id
+        FROM users bottom
+        INNER JOIN users top
+        ON top.id = get_topmost_system(bottom.id)
+        WHERE (` + generateNullableEvaluation("top.guild_id", 1) + ` OR top.discord_id = ANY($2)) AND bottom.username = $3`, [guildId, discordIds, username])
             .then(y => y.rows.map(x => constructUser(username, genderIntToString[x.gender], x.guild_id, x.discord_id, x.id, x.system_id)))
     },
     getMembers: async (user: User) => {
