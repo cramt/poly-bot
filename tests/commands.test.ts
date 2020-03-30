@@ -5,7 +5,7 @@ import { createSinonStubInstance } from './SinonStubbedInstance';
 import * as commands from '../src/commands';
 import { users, relationships } from '../src/db'
 import { User, Guild, TextChannel } from 'discord.js';
-import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel } from '../src/Command';
+import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel, ArgumentError } from '../src/Command';
 import { GuildUser, DiscordUser } from '../src/User';
 
 chai.use(chaisAsPromiseod)
@@ -125,7 +125,10 @@ describe('add-relationship', () => {
     })
 
     it('can accept "me" as its first argument')
-    it('can reject relationships, when a user does not exist')
+    it('can reject relationships, when a user does not exist', async() => {
+        let userParse = sinon.stub(UserArgument.prototype, "parse").rejects(new ArgumentError("there are no users with that argument", new UserArgument()))
+        let parse = sinon.stub(OptionalArgumentList.prototype, "parse")
+    })
 
     afterEach(() => {
         sinon.restore()
