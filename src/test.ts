@@ -63,4 +63,4 @@ async function t() {
 
 (async () => {
     
-})().then(() => process.exit(0)).catch(console.log)
+})().then(() => process.exit(0)).catch(console.log);

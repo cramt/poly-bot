@@ -5,58 +5,58 @@ import { Client } from 'pg';
 import { User, GuildUser, DiscordUser } from '../../src/User';
 import { client } from '../../src';
 
-chai.use(chaiAsPromised)
-const assert = chai.assert
-let dbclient: Client
+chai.use(chaiAsPromised);
+const assert = chai.assert;
+let dbclient: Client;
 
 before(async () => {
-    dbclient = await openDB()
+    dbclient = await openDB();
     dbclient.query("DELETE FROM public.users")
-})
+});
 
 describe("Database User", () => {
-    let name = Math.random().toString(36).substring(4)
-    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)]
-    let guildId = Math.random().toString(36).substring(4)
-    let guildUser = new GuildUser(name, gender, null, null, guildId)
+    let name = Math.random().toString(36).substring(4);
+    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)];
+    let guildId = Math.random().toString(36).substring(4);
+    let guildUser = new GuildUser(name, gender, null, null, guildId);
 
     it("can be created", async () => {
-        await assert.eventually.isTrue(users.add(guildUser))
-        assert.isNotNull(guildUser.id)
-        let user = await users.get(guildUser.id!)
-        assert.equal(user!.name, name)
-        assert.equal(user!.gender, gender)
+        await assert.eventually.isTrue(users.add(guildUser));
+        assert.isNotNull(guildUser.id);
+        let user = await users.get(guildUser.id!);
+        assert.equal(user!.name, name);
+        assert.equal(user!.gender, gender);
         assert.equal((user as GuildUser).guildId, guildId)
-    })
+    });
 
     it("can be fetched by username", async () => {
-        let user = await users.getByUsername(guildUser.name, guildUser.guildId!, [])
+        let user = await users.getByUsername(guildUser.name, guildUser.guildId!, []);
         assert.deepEqual(user, [guildUser])
-    })
+    });
     let discordUser: DiscordUser;
     it("can update discord id", async () => {
-        let discordId = Math.random().toString(36).substring(4)
-        discordUser = guildUser.toDiscordUser(discordId)
-        await assert.eventually.isTrue(users.update(discordUser))
-        let userResult = await users.getByDiscordId(discordId)
+        let discordId = Math.random().toString(36).substring(4);
+        discordUser = guildUser.toDiscordUser(discordId);
+        await assert.eventually.isTrue(users.update(discordUser));
+        let userResult = await users.getByDiscordId(discordId);
         assert.equal(userResult!.name, name)
-    })
+    });
 
     it("can delete by discord id", async () => {
-        await assert.eventually.isTrue(users.deleteByDiscord(discordUser.discordId!))
-        await assert.eventually.isNull(users.get(guildUser.id!))
+        await assert.eventually.isTrue(users.deleteByDiscord(discordUser.discordId!));
+        await assert.eventually.isNull(users.get(guildUser.id!));
         await assert.eventually.isNull(users.get(discordUser.id!))
     })
-})
+});
 
 describe("Database System User", () => {
-    let name = Math.random().toString(36).substring(4)
-    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)]
-    let guildId = Math.random().toString(36).substring(4)
+    let name = Math.random().toString(36).substring(4);
+    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)];
+    let guildId = Math.random().toString(36).substring(4);
     let guildUser = new GuildUser(name, gender, null, null, guildId)
     
-})
+});
 
 after(async() => {
     await dbclient.end()
-})
+});

@@ -6,24 +6,24 @@ import * as Discord from "discord.js"
 import { client } from "."
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
-    let commandNameIndex = str.indexOf(" ")
+    let commandNameIndex = str.indexOf(" ");
     if (commandNameIndex === -1) {
         return {
             commandName: str,
             args: []
         }
     }
-    let commandName = str.substring(0, commandNameIndex)
-    let argsStr = str.substring(commandNameIndex + 1)
-    let prevChar = ""
-    let strBuilder = ""
-    let ignoreSpace = false
-    let args: string[] = []
+    let commandName = str.substring(0, commandNameIndex);
+    let argsStr = str.substring(commandNameIndex + 1);
+    let prevChar = "";
+    let strBuilder = "";
+    let ignoreSpace = false;
+    let args: string[] = [];
     for (let i = 0; i < argsStr.length; i++) {
-        let char = argsStr[i]
+        let char = argsStr[i];
         if (prevChar === "\\") {
-            strBuilder += char
-            prevChar = char
+            strBuilder += char;
+            prevChar = char;
             continue;
         }
         if (char === "\\") {
@@ -31,22 +31,22 @@ export function commandLineArgSplit(str: string): { commandName: string, args: s
             continue;
         }
         if (char === "\"") {
-            ignoreSpace = !ignoreSpace
+            ignoreSpace = !ignoreSpace;
             prevChar = char;
             continue;
         }
         if (char === " " && !ignoreSpace) {
             if (prevChar != " ") {
-                args[args.length] = strBuilder
+                args[args.length] = strBuilder;
                 strBuilder = "";
             }
-            prevChar = char
+            prevChar = char;
             continue;
         }
-        strBuilder += char
+        strBuilder += char;
         prevChar = char
     }
-    args[args.length] = strBuilder
+    args[args.length] = strBuilder;
     strBuilder = "";
     return {
         commandName: commandName,
@@ -80,28 +80,28 @@ export function humanPrintArray(arr: string[], andOr = "or"): string {
 
 
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
-    let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] }
-    let userMap = new Map<number, User>()
-    data.users.forEach(x => Object.setPrototypeOf(x, User.prototype))
-    data.relationships.forEach(x => Object.setPrototypeOf(x, Relationship.prototype))
-    data.users.forEach(x => userMap.set(x.id!, x))
+    let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] };
+    let userMap = new Map<number, User>();
+    data.users.forEach(x => Object.setPrototypeOf(x, User.prototype));
+    data.relationships.forEach(x => Object.setPrototypeOf(x, Relationship.prototype));
+    data.users.forEach(x => userMap.set(x.id!, x));
     data.users.forEach(x => {
         if (x.systemId !== null) {
             x.system = userMap.get(x.systemId)!
         }
-    })
+    });
     data.relationships.forEach(x => {
-        x.leftUser = userMap.get(x.leftUserId)!
+        x.leftUser = userMap.get(x.leftUserId)!;
         x.rightUser = userMap.get(x.rightUserId)!
-    })
+    });
     return data;
 }
 
 export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[]> {
     return new Promise<T[]>((resolve, reject) => {
-        let res: T[] = []
-        let errors: any[] = []
-        let index = 0
+        let res: T[] = [];
+        let errors: any[] = [];
+        let index = 0;
         if (values.length === 0) {
             resolve(res);
         }
@@ -113,7 +113,7 @@ export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[
                 catch (e) {
                     errors[i] = e
                 }
-                index++
+                index++;
                 if (index === values.length) {
                     if (errors.length !== 0) {
                         reject(new AggregateError(errors))
@@ -131,14 +131,14 @@ export function waitForReaction(message: Discord.Message, user: Discord.User, ti
     return new Promise<Discord.MessageReaction>((resolve, reject) => {
         let f = (reaction: Discord.MessageReaction, author: Discord.User) => {
             if (reaction.message.id === message.id && author.id === user.id) {
-                client.removeListener("messageReactionAdd", f)
+                client.removeListener("messageReactionAdd", f);
                 resolve(reaction)
             }
-        }
-        client.on("messageReactionAdd", f)
+        };
+        client.on("messageReactionAdd", f);
         if (timeout > 0) {
             setTimeout(() => {
-                client.removeListener("messageReactionAdd", f)
+                client.removeListener("messageReactionAdd", f);
                 reject(new Error("timed out"))
             }, timeout);
         }
@@ -146,7 +146,7 @@ export function waitForReaction(message: Discord.Message, user: Discord.User, ti
 }
 
 export async function discordRequestChoice<T>(name: string, arr: T[], channel: Discord.TextChannel, author: Discord.User, converter: (t: T) => string): Promise<T> {
-    const reactionArr = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹", "🇺", "🇻", "🇼", "🇾", "🇿"]
+    const reactionArr = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹", "🇺", "🇻", "🇼", "🇾", "🇿"];
     let message = await channel.send("\"" + name + "\" is ambiguous, plz choose " +
         arr.map((x, i) => "\r\n" + i.toString(36) + ": " + converter(x))) as Discord.Message;
     let index = -1;
@@ -188,7 +188,7 @@ export const math = {
             n = math.lcm2(array[i], n);
         return n;
     }
-}
+};
 
 
 function longToByteArray(long: bigint) {
@@ -201,7 +201,7 @@ function longToByteArray(long: bigint) {
     }
 
     return byteArray;
-};
+}
 
 function byteArrayToLong(byteArray: bigint[]) {
     var value = BigInt(0);
@@ -210,4 +210,4 @@ function byteArrayToLong(byteArray: bigint[]) {
     }
 
     return value;
-};
+}

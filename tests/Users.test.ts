@@ -4,16 +4,16 @@ import * as Commands from '../src/commands';
 import { User, DiscordUser } from '../src/User';
 
 var cmd = Commands.commands;
-chai.use(chaiAsPromised)
-const assert = chai.assert
+chai.use(chaiAsPromised);
+const assert = chai.assert;
 
 describe('Users', () => {
     it('can create new user', () => {
-        let user = new DiscordUser("Lucca", "FEMME", null, null, "<@55437543543>")
+        let user = new DiscordUser("Lucca", "FEMME", null, null, "<@55437543543>");
         assert.isNotNull(user)
     })
-})
+});
 
 after(() => {
     
-})
+});

@@ -29,27 +29,27 @@ export interface MemberModel {
 }
 
 export class PluralKitApi {
-    token: string | null = null
-    systemInfo: SystemModel | null = null
-    memberInfo: MemberModel[] | null = null
-    systemId: string | null = null
-    discordId: string | null = null
+    token: string | null = null;
+    systemInfo: SystemModel | null = null;
+    memberInfo: MemberModel[] | null = null;
+    systemId: string | null = null;
+    discordId: string | null = null;
     private constructor() {
 
     }
     public static fromSystemId(systemId: string): Promise<PluralKitApi | null> {
         let api = new PluralKitApi();
-        api.systemId = systemId
+        api.systemId = systemId;
         return api.init()
     }
     public static fromToken(token: string): Promise<PluralKitApi | null> {
         let api = new PluralKitApi();
-        api.token = token
+        api.token = token;
         return api.init()
     }
     public static fromDiscord(discordId: string): Promise<PluralKitApi | null> {
         let api = new PluralKitApi();
-        api.discordId = discordId
+        api.discordId = discordId;
         return api.init()
     }
 
@@ -72,7 +72,7 @@ export class PluralKitApi {
         if (this.systemInfo !== null) {
             return this.systemInfo
         }
-        let url = "https://api.pluralkit.me/v1"
+        let url = "https://api.pluralkit.me/v1";
         if (this.systemId !== null) {
             url += "/s/" + this.systemId
         }
@@ -82,13 +82,13 @@ export class PluralKitApi {
         else{
             url += "/s"
         }
-        this.systemInfo = await this.request<SystemModel>(url)
+        this.systemInfo = await this.request<SystemModel>(url);
         return this.systemInfo
     }
 
     async valid() {
         try {
-            await this.getSystemInfo()
+            await this.getSystemInfo();
             return true;
         }
         catch (e) {
@@ -100,7 +100,7 @@ export class PluralKitApi {
         if (this.memberInfo !== null) {
             return this.memberInfo
         }
-        this.memberInfo = await this.request<MemberModel[]>("https://api.pluralkit.me/v1/s/" + this.systemInfo?.id + "/members")
+        this.memberInfo = await this.request<MemberModel[]>("https://api.pluralkit.me/v1/s/" + this.systemInfo?.id + "/members");
         return this.memberInfo
     }
 }
