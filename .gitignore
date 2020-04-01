@@ -4,3 +4,4 @@ dist/
 output.png
 wasmlib/target
 logs/
+integration_test/SECRET.json
