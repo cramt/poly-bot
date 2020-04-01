@@ -54,17 +54,19 @@ export class OrArgument extends Argument {
         this.args = args
     }
     async parse(input: ArgumentFuncInput) {
-        let results = await Promise.all(this.args.map(x => async () => {
-            try {
-                return await x.parse(input)
-            }
-            catch (e) {
-                return e;
-            }
-        }).map(x => x()))
-        let notError = results.find(x => !(x instanceof Error))
-        if (notError) {
-            return notError;
+        let errors: any[] = []
+        let finished: ParseResult[] = []
+        await Promise.all(this.args.map(x => x.parse(input).then(x => finished.push(x)).catch(x => errors.push(x))));
+        if (this.args[0] instanceof SpecificArgument && this.args[1] instanceof SpecificArgument) {
+            console.log(JSON.stringify(errors))
+            console.log(finished)
+            console.log(finished.length)
+        }
+        if (finished.length === 0) {
+            throw errors[0];
+        }
+        else {
+            return finished[0];
         }
     }
     get description() {

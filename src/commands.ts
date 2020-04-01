@@ -6,7 +6,7 @@ import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relat
 import { prefix } from "./index"
 import { polyMapGenerate, cachedPolyMapGenerate } from "./polyMapGenerate";
 
-async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
+export async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
     if ((thing as User).gender === undefined) {
         return await db.users.getByDiscordId((thing as Discord.User).id) as User
     }
@@ -128,9 +128,8 @@ export const commands: Command[] = [
             if (_user === "me") {
                 _user = input.author
             }
-            let user = await parseDiscordUserOrUser(_user);
+            let [leftUser, rightUser] = await Promise.all([await parseDiscordUserOrUser(_user), input.args[1].value])
             let guildId = (input.channel as Discord.TextChannel).guild.id
-            let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)])
             if (leftUser.name === rightUser.name) {
                 return new CommandReponseInSameChannel("you cant make a relationship with yourself")
             }
@@ -157,7 +156,8 @@ export const commands: Command[] = [
         {
             argument: new OrArgument(
                 new DiscordUserArgument(),
-                new UserArgument()),
+                new UserArgument(),
+                new SpecificArgument("me")),
             type: "required"
         }])
         , async input => {
@@ -170,7 +170,7 @@ export const commands: Command[] = [
     new Command("generate", "generates the polycule map", new StandardArgumentList(), async input => {
         let guildId = (input.channel as Discord.TextChannel).guild.id
         let all = await db.getAllInGuild(guildId, input.guild.members.map(x => x.id))
-        if(all.users.length === 0){
+        if (all.users.length === 0) {
             return new CommandReponseInSameChannel("cant generate empty map")
         }
         let buffer = await polyMapGenerate(all.users, all.relationships)
@@ -201,6 +201,30 @@ export const commands: Command[] = [
             })
             let buffer = await polyMapGenerate(users, relationships)
             return new CommandResponseFile(buffer, "polycule_map.png")
+        }),
+
+    new Command("rename", "changes the name of a user", new OptionalArgumentList([{
+        argument: new OrArgument(
+            new UserArgument(),
+            new DiscordUserArgument(),
+            new SpecificArgument("me")),
+        type: "default",
+        default: "me"
+    },
+    {
+        argument: new AnyArgument(),
+        type: "required",
+    }
+    ]),
+        async input => {
+            let user = input.args[0].value
+            if (user === "me") {
+                user = db.users.getByDiscordId(input.author.id)
+                if (user === null) return new CommandReponseInSameChannel("your discord id is not registered in the database")
+            }
+            user.name = input.args[1].value
+            db.users.update(user)
+            return new CommandResponseReaction("👍")
         }),
 
     new Command("remove-me", "deletes you from the polycule and all relationships youre in", new StandardArgumentList(), async input => {
@@ -289,9 +313,13 @@ export const commands: Command[] = [
             system = input.author
         }
         system = await parseDiscordUserOrUser(system);
-        let member = new GuildUser(input.args[0].value, input.args[0].value.toUpperCase(), null, system.id, "");
+        if (system.gender != "SYSTEM") {
+            system.gender = "SYSTEM"
+            db.users.update(system)
+        }
+        let member = new GuildUser(input.args[1].value, (input.args[2].value + "").toUpperCase() as Gender, null, system.id, "");
         db.users.add(member)
-        return new CommandReponseNone();
+        return new CommandResponseReaction("👍");
     }),
 
     new Command("bernie-time", "its bernie time 😎", new StandardArgumentList(), async input => {

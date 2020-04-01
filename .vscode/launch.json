@@ -12,11 +12,7 @@
         "${workspaceRoot}/node_modules/**/*.js",
         "<node_internals>/**/*.js"
       ],
-      "program": "${workspaceFolder}/dist/src/index.js",
-      "preLaunchTask": "tsc: build - tsconfig.json",
-      "outFiles": [
-        "${workspaceFolder}/dist/**/*.js"
-      ],
+      "program": "${workspaceFolder}/scripts/run.js",
       "sourceMaps": true
     },
     {
