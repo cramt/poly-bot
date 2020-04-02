@@ -26,10 +26,12 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
     });
     const userNodeMap = new Map<User, Node>();
     const systemClusterMap = new Map<User, Graph>();
-    const sytemUserMap = new Map<string, User>();
-    systems.forEach(x => sytemUserMap.set(x.name, x));
+    const systemUserMap = new Map<string, User>();
+    systems.forEach(x => systemUserMap.set(x.name, x));
     const g = graph("G");
-    g.set("splines", "polyline");
+    g.set("splines", "compound");
+    g.set("K", "0.8");
+    g.set("overlap", "10000:prism");
     g.set("bgcolor", backgroundColor);
     g.set("compound", true);
 
@@ -64,7 +66,7 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
         if (n1 && n2) {
             let edge = g.addEdge(n1, n2);
             edge.set("color", relationshipTypeToColor[x.type]);
-            edge.set("arrowhead", "none")
+            edge.set("arrowhead", "none");
         }
     });
     return Buffer.from(g.to_dot());
@@ -73,7 +75,7 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
 export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
         //" + path.resolve(SECRET.GRAPHVIZ_LOCATION, "unflatten") + " -l 100 |
-        const pwshCommand = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -Goverlap=prism -Goverlap_scaling=2 -Gsep=+20 -Gsplines -T" + output;
+        const pwshCommand = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -T" + output;
         exec(pwshCommand, process.platform === "win32" ? {
             shell: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         } : {}, (error, stdout) => {
@@ -126,21 +128,6 @@ export async function addLegendAndBackground(image: Buffer): Promise<Buffer> {
     return await transFlag.getBufferAsync("image/png");
 }
 
-export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
-    return await addLegendAndBackground(await svgToPngViaChromium(await transformSvgToAllowEmoji(await exportDotScript(generateDotScript(users, relationships), "svg"))))
-}
-
-export async function cachedPolyMapGenerate(users: User[], relationships: Relationship[], guild: Discord.Guild | string): Promise<Buffer> {
-    if (typeof guild === "object") {
-        guild = guild.id
-    }
-    let cache = await polymapCache.get(guild);
-    if (cache = null) {
-        cache = await polyMapGenerate(users, relationships);
-        polymapCache.set(cache, users.filter(x => x instanceof DiscordUser).map(x => (x as DiscordUser).discordId), guild)
-    }
-    return await polyMapGenerate(users, relationships);
-}
 
 export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
     let result = await xml2js.parseStringPromise(svg.toString());
@@ -226,4 +213,20 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
         }]
     });
     return Buffer.from(new xml2js.Builder().buildObject(result))
+}
+
+export async function polyMapGenerate(users: User[], relationships: Relationship[]): Promise<Buffer> {
+    return await addLegendAndBackground(await svgToPngViaChromium(await transformSvgToAllowEmoji(await exportDotScript(generateDotScript(users, relationships), "svg"))))
+}
+
+export async function cachedPolyMapGenerate(users: User[], relationships: Relationship[], guild: Discord.Guild | string): Promise<Buffer> {
+    if (typeof guild === "object") {
+        guild = guild.id
+    }
+    let cache = await polymapCache.get(guild);
+    if (cache = null) {
+        cache = await polyMapGenerate(users, relationships);
+        polymapCache.set(cache, users.filter(x => x instanceof DiscordUser).map(x => (x as DiscordUser).discordId), guild)
+    }
+    return await polyMapGenerate(users, relationships);
 }
