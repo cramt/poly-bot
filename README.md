@@ -22,10 +22,6 @@ the bot uses a postgresql database
 
 ## TODO
 - add alias' to commands
-- add caching for polymap generation
-- fix the database stuff
-- less wide 2 electric boogaloo
-- better way to do variable number of arguments
 - move generation of maps off main thread
 
 ## TODO but kinda irrelevant
