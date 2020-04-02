@@ -29,13 +29,18 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
     const systemUserMap = new Map<string, User>();
     systems.forEach(x => systemUserMap.set(x.name, x));
     const g = graph("G");
+    //makes the lines go around nodes and not hit them
     g.set("splines", "compound");
+    //yeets nodes further away from eachother, default is 0.3
     g.set("K", "0.8");
+    //does 10000 iterations of prism to make sure no overlap
     g.set("overlap", "10000:prism");
     g.set("bgcolor", backgroundColor);
+    //not sure what this does but change with care
     g.set("compound", true);
 
     systems.forEach(x => {
+        //cluster ids have to start with cluster_ for some reason
         let cluster = g.addCluster("cluster_" + x.id);
         cluster.set("label", x.name);
         cluster.set("fontname", "arial");
