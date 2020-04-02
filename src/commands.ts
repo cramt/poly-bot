@@ -1,10 +1,24 @@
-import { Command, AnyArgument, OrArgument, SpecificArgument, DiscordUserArgument, CommandResponseReaction, CommandReponseInSameChannel, UserArgument, CommandResponseFile, AdminCommand, StandardArgumentList, VariableArgumentList, OptionalArgumentList} from "./Command";
+import {
+    Command,
+    AnyArgument,
+    OrArgument,
+    SpecificArgument,
+    DiscordUserArgument,
+    CommandResponseReaction,
+    CommandReponseInSameChannel,
+    UserArgument,
+    CommandResponseFile,
+    AdminCommand,
+    StandardArgumentList,
+    VariableArgumentList,
+    OptionalArgumentList
+} from "./Command";
 import * as Discord from "discord.js"
-import { User, Gender, genderToColor, GuildUser, DiscordUser } from "./User";
+import {User, Gender, genderToColor, GuildUser, DiscordUser} from "./User";
 import * as db from "./db";
-import { Relationship, RelationshipType, relationshipTypeToColor } from "./Relationship";
-import { prefix } from "./index"
-import { polyMapGenerate} from "./polyMapGenerate";
+import {Relationship, RelationshipType, relationshipTypeToColor} from "./Relationship";
+import {prefix} from "./index"
+import {polyMapGenerate} from "./polyMapGenerate";
 
 export async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
     if ((thing as User).gender === undefined) {
@@ -50,8 +64,7 @@ export const commands: Command[] = [
             let user = new DiscordUser(name, gender, null, null, discordUser.id);
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
-            }
-            else {
+            } else {
                 return new CommandReponseInSameChannel("there is already a person with that name on this discord server")
             }
         }),
@@ -66,8 +79,7 @@ export const commands: Command[] = [
             let user = new GuildUser(name, gender, null, null, guildId);
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
-            }
-            else {
+            } else {
                 return new CommandReponseInSameChannel("there is already a person with that name on this discord server")
             }
         }),
@@ -113,16 +125,16 @@ export const commands: Command[] = [
             type: "default",
             default: "me"
         },
-        {
-            argument: new OrArgument(
-                new DiscordUserArgument(),
-                new UserArgument()),
-            type: "required"
-        },
-        {
-            argument: new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())),
-            type: "required"
-        }])
+            {
+                argument: new OrArgument(
+                    new DiscordUserArgument(),
+                    new UserArgument()),
+                type: "required"
+            },
+            {
+                argument: new SpecificArgument(...Object.getOwnPropertyNames(relationshipTypeToColor).map(x => x.toLowerCase())),
+                type: "required"
+            }])
         , async input => {
             let _user = input.args[0].value as Discord.User | User | "me";
             if (_user === "me") {
@@ -136,8 +148,7 @@ export const commands: Command[] = [
             let relationship = new Relationship(input.args[2].value.toUpperCase() as RelationshipType, leftUser, rightUser, guildId);
             if (await db.relationships.add(relationship)) {
                 return new CommandReponseInSameChannel("a " + relationship.type.toLowerCase() + " relationship between " + leftUser.name + " and " + rightUser.name + " has been created")
-            }
-            else {
+            } else {
                 return new CommandReponseInSameChannel("a relationship like that already exists")
             }
         }),
@@ -153,13 +164,13 @@ export const commands: Command[] = [
             type: "default",
             default: "me"
         },
-        {
-            argument: new OrArgument(
-                new DiscordUserArgument(),
-                new UserArgument(),
-                new SpecificArgument("me")),
-            type: "required"
-        }])
+            {
+                argument: new OrArgument(
+                    new DiscordUserArgument(),
+                    new UserArgument(),
+                    new SpecificArgument("me")),
+                type: "required"
+            }])
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id;
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)]);
@@ -204,18 +215,18 @@ export const commands: Command[] = [
         }),
 
     new Command("rename", "changes the name of a user", new OptionalArgumentList([{
-        argument: new OrArgument(
-            new UserArgument(),
-            new DiscordUserArgument(),
-            new SpecificArgument("me")),
-        type: "default",
-        default: "me"
-    },
-    {
-        argument: new AnyArgument(),
-        type: "required",
-    }
-    ]),
+            argument: new OrArgument(
+                new UserArgument(),
+                new DiscordUserArgument(),
+                new SpecificArgument("me")),
+            type: "default",
+            default: "me"
+        },
+            {
+                argument: new AnyArgument(),
+                type: "required",
+            }
+        ]),
         async input => {
             let user = input.args[0].value;
             if (user === "me") {
@@ -260,12 +271,10 @@ export const commands: Command[] = [
             user = user.toDiscordUser(input.author.id);
             if (await db.users.update(user)) {
                 return new CommandResponseReaction("👍");
-            }
-            else {
+            } else {
                 return new CommandReponseInSameChannel("there was a database error")
             }
-        }
-        else {
+        } else {
             return new CommandReponseInSameChannel("this user is already global")
         }
     }),
@@ -284,12 +293,10 @@ export const commands: Command[] = [
             user = user.toGuildUser(input.guild.id);
             if (await db.users.update(user)) {
                 return new CommandResponseReaction("👍");
-            }
-            else {
+            } else {
                 return new CommandReponseInSameChannel("there was a database error")
             }
-        }
-        else {
+        } else {
             return new CommandReponseInSameChannel("this user is already local")
         }
     }),
@@ -299,14 +306,14 @@ export const commands: Command[] = [
         type: "default",
         default: "me"
     },
-    {
-        argument: new AnyArgument(),
-        type: "required"
-    },
-    {
-        argument: new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())),
-        type: "required"
-    }
+        {
+            argument: new AnyArgument(),
+            type: "required"
+        },
+        {
+            argument: new SpecificArgument(...Object.getOwnPropertyNames(genderToColor).map(x => x.toLowerCase())),
+            type: "required"
+        }
     ]), async input => {
         let system = input.args[0].value as User | Discord.User | "me";
         if (system === "me") {

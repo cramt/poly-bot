@@ -1,9 +1,9 @@
 import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
-import { users, openDB, genderIntToString } from '../../src/db';
-import { Client } from 'pg';
-import { User, GuildUser, DiscordUser } from '../../src/User';
-import { client } from '../../src';
+import {users, openDB, genderIntToString} from '../../src/db';
+import {Client} from 'pg';
+import {User, GuildUser, DiscordUser} from '../../src/User';
+import {client} from '../../src';
 
 chai.use(chaiAsPromised);
 const assert = chai.assert;
@@ -54,9 +54,9 @@ describe("Database System User", () => {
     let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)];
     let guildId = Math.random().toString(36).substring(4);
     let guildUser = new GuildUser(name, gender, null, null, guildId)
-    
+
 });
 
-after(async() => {
+after(async () => {
     await dbclient.end()
 });

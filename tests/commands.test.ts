@@ -1,12 +1,21 @@
 import chaisAsPromiseod from 'chai-as-promised';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { createSinonStubInstance } from './SinonStubbedInstance';
+import {createSinonStubInstance} from './SinonStubbedInstance';
 import * as commands from '../src/commands';
-import { users, relationships } from '../src/db'
-import { User, Guild, TextChannel } from 'discord.js';
-import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel, ArgumentError, DiscordUserArgument, OrArgument } from '../src/Command';
-import { GuildUser, DiscordUser } from '../src/User';
+import {users, relationships} from '../src/db'
+import {User, Guild, TextChannel} from 'discord.js';
+import {
+    StandardArgumentList,
+    UserArgument,
+    ParseResult,
+    OptionalArgumentList,
+    CommandReponseInSameChannel,
+    ArgumentError,
+    DiscordUserArgument,
+    OrArgument
+} from '../src/Command';
+import {GuildUser, DiscordUser} from '../src/User';
 
 chai.use(chaisAsPromiseod);
 const assert = chai.assert;
@@ -17,7 +26,6 @@ let user: User;
 let channel: TextChannel;
 
 describe("add-local", async () => {
-
 
 
     beforeEach(() => {

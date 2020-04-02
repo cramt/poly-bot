@@ -1,9 +1,9 @@
 import * as Discord from "discord.js"
 import SECRET from "./SECRET"
-import { commandLineArgSplit } from "./utilities"
-import { openDB, polymapCache } from "./db"
-import { commands } from "./commands"
-import { ArgumentError } from "./Command"
+import {commandLineArgSplit} from "./utilities"
+import {openDB, polymapCache} from "./db"
+import {commands} from "./commands"
+import {ArgumentError} from "./Command"
 import AggregateError from "aggregate-error"
 import * as job from "microjob"
 import * as fs from "fs"
@@ -16,7 +16,8 @@ export const client = new Discord.Client();
 
 //hack so that graphvis doesnt fuck me
 if ((global as any).util === undefined) {
-    (global as any).util = new Proxy(() => { }, {
+    (global as any).util = new Proxy(() => {
+    }, {
         get() {
             return (global as any).util;
         },
@@ -67,21 +68,18 @@ if ((global as any).util === undefined) {
             try {
                 let respond = await command.call(userCommand.args, message.author, channel, message.guild);
                 await respond.respond(message)
-            }
-            catch (ae) {
+            } catch (ae) {
                 if (ae instanceof AggregateError) {
                     let errorMessages: string[] = [];
                     for (const argError of ae) {
                         if (argError instanceof ArgumentError) {
                             errorMessages.push(argError.message)
-                        }
-                        else {
+                        } else {
                             throw argError
                         }
                     }
                     await message.channel.send("***ERROR***```" + errorMessages.join("\r\n") + "```")
-                }
-                else {
+                } else {
                     throw ae;
                 }
             }
@@ -133,19 +131,18 @@ if ((global as any).util === undefined) {
     }) {
         if (threads.parentPort) {
             threads.parentPort.postMessage(arg)
-        }
-        else {
+        } else {
             consoles[arg.type](arg.data);
             if (arg.exit !== undefined) {
                 process.exit(arg.exit)
             }
         }
     }
+
     function onError(error: any) {
         if (error instanceof Error) {
             error = error.stack
-        }
-        else {
+        } else {
             error = JSON.stringify(error)
         }
         printToRunner({

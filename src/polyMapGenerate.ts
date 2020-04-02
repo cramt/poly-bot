@@ -1,14 +1,14 @@
-import { User, genderToColor, DiscordUser } from "./User";
-import { Relationship, relationshipTypeToColor } from "./Relationship";
-import { graph, Node, Graph } from "graphviz";
+import {User, genderToColor, DiscordUser} from "./User";
+import {Relationship, relationshipTypeToColor} from "./Relationship";
+import {graph, Node, Graph} from "graphviz";
 import SECRET from "./SECRET";
 import Jimp from "jimp";
-import { exec } from "child_process";
+import {exec} from "child_process";
 import * as path from "path"
 import puppeteer from "puppeteer"
 import * as Discord from "discord.js"
-import { polymapCache } from "./db";
-import { writeFileSync } from "fs";
+import {polymapCache} from "./db";
+import {writeFileSync} from "fs";
 import xml2js from "xml2js"
 
 //@alex you fuckwit, youre gonna forgot, so use this for gif stuff in the future https://www.npmjs.com/package/gifwrap
@@ -20,8 +20,7 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
     users.forEach(x => {
         if (x.members.length === 0) {
             singlets.push(x)
-        }
-        else {
+        } else {
             systems.push(x)
         }
     });
@@ -47,7 +46,13 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
         if (graph === undefined) {
             graph = g
         }
-        let node = graph.addNode(x.id + "", { color: "black", fillcolor: color, style: "filled", shape: "ellipse", fontname: "arial" });
+        let node = graph.addNode(x.id + "", {
+            color: "black",
+            fillcolor: color,
+            style: "filled",
+            shape: "ellipse",
+            fontname: "arial"
+        });
         node.set("label", x.name);
         node.set("fillcolor", color);
         userNodeMap.set(x, node)
@@ -80,7 +85,7 @@ export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"
     })
 }
 
-const browser = puppeteer.launch(process.platform === "linux" ? { args: ['--no-sandbox', '--disable-setuid-sandbox'] } : {});
+const browser = puppeteer.launch(process.platform === "linux" ? {args: ['--no-sandbox', '--disable-setuid-sandbox']} : {});
 
 export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
     let page = await (await browser).newPage();
@@ -91,7 +96,7 @@ export async function svgToPngViaChromium(svg: Buffer): Promise<Buffer> {
         document.getElementsByTagName("svg")[0].style.overflow = "hidden";
         document.body.style.overflow = 'hidden'
     });
-    let result = await svgElement!.screenshot({ omitBackground: true })!;
+    let result = await svgElement!.screenshot({omitBackground: true})!;
     await page.close();
     return result
 
@@ -143,7 +148,7 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
         let text = x.text[0];
         delete x.text;
         let ellipse = x.ellipse[0];
-        let { cx, cy, rx, ry } = ellipse.$;
+        let {cx, cy, rx, ry} = ellipse.$;
         cx = parseFloat(cx);
         cy = parseFloat(cy);
         rx = parseFloat(rx);
@@ -153,6 +158,7 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
             id: string,
             animated: boolean
         } | string)[] = [];
+
         function rec(str: string) {
             let res = regex.exec(str);
             if (res === null) {
@@ -168,6 +174,7 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
             });
             rec(res[4])
         }
+
         rec(text._);
         x.foreignObject = [{
             _: "",
@@ -205,8 +212,7 @@ export async function transformSvgToAllowEmoji(svg: Buffer): Promise<Buffer> {
                                     }
                                 }]
                             }
-                        }
-                        else {
+                        } else {
                             return {
                                 _: x,
                                 $: {

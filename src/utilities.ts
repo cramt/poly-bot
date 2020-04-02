@@ -1,9 +1,9 @@
 import * as fs from "fs"
-import { Relationship } from "./Relationship"
-import { User } from "./User"
+import {Relationship} from "./Relationship"
+import {User} from "./User"
 import AggregateError from "aggregate-error"
 import * as Discord from "discord.js"
-import { client } from "."
+import {client} from "."
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ");
@@ -71,8 +71,7 @@ export function getType(thing: any) {
 export function humanPrintArray(arr: string[], andOr = "or"): string {
     if (arr.length === 0) {
         return "";
-    }
-    else if (arr.length === 1) {
+    } else if (arr.length === 1) {
         return arr[0]
     }
     return arr.slice(0, arr.length - 1).join(", ") + " " + andOr + " " + arr[arr.length - 1]
@@ -104,21 +103,18 @@ export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[
         let index = 0;
         if (values.length === 0) {
             resolve(res);
-        }
-        else {
+        } else {
             values.forEach(async (x, i) => {
                 try {
                     res[i] = await x
-                }
-                catch (e) {
+                } catch (e) {
                     errors[i] = e
                 }
                 index++;
                 if (index === values.length) {
                     if (errors.length !== 0) {
                         reject(new AggregateError(errors))
-                    }
-                    else {
+                    } else {
                         resolve(res)
                     }
                 }

@@ -1,6 +1,13 @@
-import { User } from "./User"
+import {User} from "./User"
 
-export type RelationshipType = "ROMANTIC" | "SEXUAL" | "FRIEND" | "LIVES WITH" | "IN SYSTEM WITH" | "CUDDLES WITH" | "QUEERPLATONIC"
+export type RelationshipType =
+    "ROMANTIC"
+    | "SEXUAL"
+    | "FRIEND"
+    | "LIVES WITH"
+    | "IN SYSTEM WITH"
+    | "CUDDLES WITH"
+    | "QUEERPLATONIC"
 
 export class Relationship {
     guildId: string;
@@ -9,19 +16,18 @@ export class Relationship {
     rightUserId: number;
     leftUser: User | null = null;
     rightUser: User | null = null;
+
     constructor(type: RelationshipType, leftUserId: number | User, rightUserId: number | User, guildId: string) {
         this.type = type;
         if (typeof leftUserId === "number") {
             this.leftUserId = leftUserId
-        }
-        else {
+        } else {
             this.leftUserId = leftUserId.id!;
             this.leftUser = leftUserId
         }
         if (typeof rightUserId === "number") {
             this.rightUserId = rightUserId
-        }
-        else {
+        } else {
             this.rightUserId = rightUserId.id!;
             this.rightUser = rightUserId
         }

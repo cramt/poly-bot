@@ -2,12 +2,22 @@ import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as PolyUser from '../src/User'
-import { User, Guild, Collection as DiscordCollection } from 'discord.js';
+import {User, Guild, Collection as DiscordCollection} from 'discord.js';
 import * as Commands from '../src/commands';
-import { client } from '../src/index';
-import { users } from '../src/db';
-import { ArgumentError, UserArgument, NumberArgument, AnyArgument, DiscordUserArgument, SpecificArgument, StringExcludedArgument, OrArgument, ParseResult } from '../src/Command';
-import { createSinonStubInstance } from './SinonStubbedInstance';
+import {client} from "../src/index";
+import {users} from '../src/db';
+import {
+    ArgumentError,
+    UserArgument,
+    NumberArgument,
+    AnyArgument,
+    DiscordUserArgument,
+    SpecificArgument,
+    StringExcludedArgument,
+    OrArgument,
+    ParseResult
+} from '../src/Command';
+import {createSinonStubInstance} from './SinonStubbedInstance';
 import * as util from '../src/utilities'
 
 chai.use(chaiAsPromised);
@@ -69,8 +79,7 @@ describe('User Arguments', () => {
 
             if (foundUsers.length > 0) {
                 return foundUsers
-            }
-            else {
+            } else {
                 throw new ArgumentError("there are no users with that argument", new UserArgument())
             }
         })

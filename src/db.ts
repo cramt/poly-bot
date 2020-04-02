@@ -1,7 +1,7 @@
-import { Client, ClientConfig } from 'pg'
+import {Client, ClientConfig} from 'pg'
 import SECRET from './SECRET';
-import { Gender, User, constructUser, DiscordUser, GuildUser } from './User';
-import { Relationship, RelationshipType } from './Relationship';
+import {Gender, User, constructUser, DiscordUser, GuildUser} from './User';
+import {Relationship, RelationshipType} from './Relationship';
 import * as fs from "fs"
 
 let client: Client;
@@ -30,8 +30,7 @@ export async function setupSchema(dbClient = client) {
             if (result.rows[0].count !== "0") {
                 try {
                     val = (await dbClient.query("select schema_version from info")).rows[0].schema_version as number
-                }
-                catch (e) {
+                } catch (e) {
 
                 }
             }
@@ -115,9 +114,10 @@ function generateNullableEvaluation(field: string, number: number) {
 export const users = {
     get: async (id: number) => {
         let result = await client.query(`
-        SELECT * FROM ((SELECT discord_id, guild_id FROM users WHERE id = get_topmost_system($1)) s
-        CROSS JOIN
-        (SELECT username, gender, system_id FROM users WHERE id = $1) m)`, [id]);
+            SELECT *
+            FROM ((SELECT discord_id, guild_id FROM users WHERE id = get_topmost_system($1)) s
+                     CROSS JOIN
+                     (SELECT username, gender, system_id FROM users WHERE id = $1) m)`, [id]);
         if (result.rows.length === 0) {
             return null
         }
@@ -125,6 +125,7 @@ export const users = {
     },
     add: async (user: User) => {
         let toAdd: User[] = [];
+
         function rec(user: User) {
             if (user.id !== null) {
                 return;
@@ -134,6 +135,7 @@ export const users = {
                 rec(user.system)
             }
         }
+
         rec(user);
         if (toAdd.length === 0) {
             return true
@@ -146,26 +148,23 @@ export const users = {
             let discordId: string | null = null;
             if (x instanceof DiscordUser) {
                 discordId = x.discordId
-            }
-            else if (x instanceof GuildUser) {
+            } else if (x instanceof GuildUser) {
                 guildId = x.guildId
             }
             if (x.systemId === null) {
                 props.push(guildId);
                 props.push(discordId)
-            }
-            else {
+            } else {
                 props.push(null);
                 props.push(null)
             }
             props.push(x.name);
             props.push(genderStringToInt[x.gender]);
-            let q = "INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($" + (index++) + ", $" + (index++) + ", $" + (index++) + ", $" + (index++);
+            let q = `INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($${index++}, $${index++}, $${index++}, $${index++}`;
             if (i === 0) {
                 q += ", $" + (index++) + ")";
                 props.push(x.systemId)
-            }
-            else {
+            } else {
                 q += ", (SELECT id FROM u" + i + "))"
             }
             q += " RETURNING id";
@@ -180,8 +179,7 @@ export const users = {
             let result = await client.query(query, props);
             user.id = result.rows[0].id;
             return true
-        }
-        catch (e) {
+        } catch (e) {
             return false
         }
     },
@@ -199,7 +197,7 @@ export const users = {
         FROM users bottom
         INNER JOIN users top
         ON top.id = get_topmost_system(bottom.id)
-        WHERE (` + generateNullableEvaluation("top.guild_id", 1) + ` OR top.discord_id = ANY($2)) AND bottom.username = $3`, [guildId, discordIds, username])
+        WHERE (${generateNullableEvaluation("top.guild_id", 1)} OR top.discord_id = ANY($2)) AND bottom.username = $3`, [guildId, discordIds, username])
             .then(y => y.rows.map(x => constructUser(username, genderIntToString[x.gender], x.guild_id, x.discord_id, x.id, x.system_id)))
     },
     getMembers: async (user: User) => {
@@ -216,8 +214,7 @@ export const users = {
         let discordId: string | null = null;
         if (user instanceof GuildUser) {
             guildId = user.guildId;
-        }
-        else if (user instanceof DiscordUser) {
+        } else if (user instanceof DiscordUser) {
             discordId = user.discordId;
         }
         let users = userResults.rows.map(x => constructUser(x.username, genderIntToString[x.gender], guildId, discordId, x.id, x.system_id));
@@ -228,8 +225,7 @@ export const users = {
         let id: number;
         if (typeof userOrId === "number") {
             id = userOrId
-        }
-        else {
+        } else {
             id = userOrId.id!
         }
         return (await client.query(`WITH deleted AS(DELETE FROM users WHERE id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [id])).rows[0].count == '1'
@@ -242,16 +238,14 @@ export const users = {
         let discordId: string | null = null;
         if (user instanceof DiscordUser) {
             discordId = user.discordId
-        }
-        else if (user instanceof GuildUser) {
+        } else if (user instanceof GuildUser) {
             guildId = user.guildId
         }
         try {
             await client.query("UPDATE users SET guild_id = $1, username = $2, discord_id = $3, gender = $4, system_id = $5 WHERE id = $6",
                 [guildId, user.name, discordId, genderStringToInt[user.gender], user.systemId, user.id]);
             return true
-        }
-        catch (e) {
+        } catch (e) {
             return false;
         }
     }
@@ -262,25 +256,36 @@ export const relationships = {
         try {
             await client.query("INSERT INTO relationships (relationship_type, left_user_id, right_user_id, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUserId, relationship.rightUserId, relationship.guildId]);
             return true
-        }
-        catch (e) {
+        } catch (e) {
             return false
         }
     },
     delete: async (relationship: Relationship) => {
         try {
-            await client.query("DELETE FROM relationships WHERE " + generateNullableEvaluation("guild_id", 1) + " AND (left_user_id = $2 AND right_user_id = $3) OR (right_user_id = $2 AND left_user_id = $3)", [relationship.guildId, relationship.rightUserId, relationship.leftUserId]);
+            await client.query(`DELETE FROM relationships WHERE ${generateNullableEvaluation("guild_id", 1)} AND (left_user_id = $2 AND right_user_id = $3) OR (right_user_id = $2 AND left_user_id = $3)`, [relationship.guildId, relationship.rightUserId, relationship.leftUserId]);
             return true;
-        }
-        catch (e) {
+        } catch (e) {
             return false;
         }
     },
     getByUsers: async (users: User[]) => {
-        let relationshipResults = await client.query(`SELECT relationships.relationship_type, relationships.left_user_id, relationships.right_user_id, relationships.guild_id as rel_guild_id,
-        users.username, users.gender, users.discord_id, users.guild_id as u_guild_id, users.id as user_id, users.system_id FROM relationships
-        LEFT JOIN users ON relationships.left_user_id = users.id OR relationships.right_user_id = users.id
-        WHERE (relationships.left_user_id = ANY($1) OR relationships.right_user_id = ANY($1)) AND users.id != ANY($1)`, [users.map(x => x.id)]);
+        let relationshipResults = await client.query(`SELECT relationships.relationship_type,
+                                                             relationships.left_user_id,
+                                                             relationships.right_user_id,
+                                                             relationships.guild_id as rel_guild_id,
+                                                             users.username,
+                                                             users.gender,
+                                                             users.discord_id,
+                                                             users.guild_id         as u_guild_id,
+                                                             users.id               as user_id,
+                                                             users.system_id
+                                                      FROM relationships
+                                                               LEFT JOIN users
+                                                                         ON relationships.left_user_id = users.id OR
+                                                                            relationships.right_user_id = users.id
+                                                      WHERE (relationships.left_user_id = ANY ($1) OR
+                                                             relationships.right_user_id = ANY ($1))
+                                                        AND users.id != ANY ($1)`, [users.map(x => x.id)]);
         let userMap = new Map<number, User>();
         users.forEach(x => {
             userMap.set(x.id!, x)
@@ -308,8 +313,7 @@ export const polymapCache = {
         try {
             await client.query("INSERT INTO polymap_cache (data, discord_ids, guild_id) VALUES ($1, $2, $3)", [data, discordIds, guildId]);
             return true;
-        }
-        catch (e) {
+        } catch (e) {
             return false
         }
     },
@@ -317,8 +321,7 @@ export const polymapCache = {
         try {
             await client.query("DELETE FROM polymap_cache WHERE guild_id = $1", [guildId]);
             return true;
-        }
-        catch (e) {
+        } catch (e) {
             return false;
         }
     }
@@ -370,16 +373,14 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
         let left: User;
         if (userMap.has(x.id1)) {
             left = userMap.get(x.id1)!
-        }
-        else {
+        } else {
             left = constructUser(x.username1, genderIntToString[x.gender1], x.guild_id1, x.discord_id1, x.id1, x.system_id1);
             userMap.set(left.id!, left);
         }
         let right: User;
         if (userMap.has(x.id2)) {
             right = userMap.get(x.id2)!
-        }
-        else {
+        } else {
             right = constructUser(x.username2, genderIntToString[x.gender2], x.guild_id2, x.discord_id2, x.id2, x.system_id2);
             userMap.set(right.id!, right);
         }

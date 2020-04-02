@@ -34,19 +34,23 @@ export class PluralKitApi {
     memberInfo: MemberModel[] | null = null;
     systemId: string | null = null;
     discordId: string | null = null;
+
     private constructor() {
 
     }
+
     public static fromSystemId(systemId: string): Promise<PluralKitApi | null> {
         let api = new PluralKitApi();
         api.systemId = systemId;
         return api.init()
     }
+
     public static fromToken(token: string): Promise<PluralKitApi | null> {
         let api = new PluralKitApi();
         api.token = token;
         return api.init()
     }
+
     public static fromDiscord(discordId: string): Promise<PluralKitApi | null> {
         let api = new PluralKitApi();
         api.discordId = discordId;
@@ -75,11 +79,9 @@ export class PluralKitApi {
         let url = "https://api.pluralkit.me/v1";
         if (this.systemId !== null) {
             url += "/s/" + this.systemId
-        }
-        else if (this.discordId !== null) {
+        } else if (this.discordId !== null) {
             url += "/a/" + this.discordId
-        }
-        else{
+        } else {
             url += "/s"
         }
         this.systemInfo = await this.request<SystemModel>(url);
@@ -90,8 +92,7 @@ export class PluralKitApi {
         try {
             await this.getSystemInfo();
             return true;
-        }
-        catch (e) {
+        } catch (e) {
             return false;
         }
     }
