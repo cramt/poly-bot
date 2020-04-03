@@ -5,13 +5,12 @@ import * as PolyUser from '../src/User'
 import {
     User,
     Guild,
-    Collection as DiscordCollection,
     TextChannel,
     Collection,
     Snowflake,
     GuildMember
 } from 'discord.js';
-import {client} from "../src/index";
+import {client} from "../src";
 import {users} from '../src/db';
 import {
     ArgumentError,
@@ -32,8 +31,8 @@ chai.use(chaiAsPromised);
 const assert = chai.assert;
 
 let guild: Guild;
-let user: User
-let channel: TextChannel
+let user: User;
+let channel: TextChannel;
 
 describe('Number Arguments', () => {
     it('can reject invalid numbers', async () => {
@@ -77,50 +76,50 @@ describe('User Arguments', () => {
 
     beforeEach(() => {
         stubDiscordDependencies()
-    })
+    });
 
     it('can retrieve a user', async () => {
-        let getUser = sinon.stub(users, "getByUsername").resolves([new GuildUser("test1", "FEMME", 1, null, "1")])
+        let getUser = sinon.stub(users, "getByUsername").resolves([new GuildUser("test1", "FEMME", 1, null, "1")]);
         await assert.isFulfilled(new UserArgument().parse({
             content: "test1",
             channel: channel,
             guild: guild,
             author: user
-        }).then(x => assert.deepEqual(x.value.name, "test1")))
+        }).then(x => assert.deepEqual(x.value.name, "test1")));
         sinon.assert.calledWith(getUser, sinon.match("test1"), "1", sinon.match.any)
-    })
+    });
 
     it('can reject non-existent users', async () => {
-        let getUser = sinon.stub(users, "getByUsername").rejects()
+        let getUser = sinon.stub(users, "getByUsername").rejects();
         await assert.isRejected(new UserArgument().parse({
             content: "test4",
             channel: channel,
             guild: guild,
             author: user
-        }))
+        }));
         sinon.assert.calledWith(getUser, sinon.match("test4"), "1", sinon.match.any)
-    })
+    });
 
     it('can accept correct results from requests for more data', async () => {
-        let user1 = testUsers[1]
-        user1.id = 1
-        let user2 = testUsers[2]
-        user2.id = 2
-        let getUser = sinon.stub(users, "getByUsername").resolves([user1, user2])
-        let requestChoice = sinon.stub(util, "discordRequestChoice").resolves(user1)
+        let user1 = testUsers[1];
+        user1.id = 1;
+        let user2 = testUsers[2];
+        user2.id = 2;
+        let getUser = sinon.stub(users, "getByUsername").resolves([user1, user2]);
+        let requestChoice = sinon.stub(util, "discordRequestChoice").resolves(user1);
         await assert.isFulfilled(new UserArgument().parse({
             content: "test2",
             channel: channel,
             guild: guild,
             author: user
-        }).then(x => assert.deepEqual(x.value.gender, "NEUTRAL")))
-        sinon.assert.calledWith(getUser, sinon.match("test2"), "1", sinon.match.any)
+        }).then(x => assert.deepEqual(x.value.gender, "NEUTRAL")));
+        sinon.assert.calledWith(getUser, sinon.match("test2"), "1", sinon.match.any);
         sinon.assert.calledWith(requestChoice, sinon.match("test2"), sinon.match.array.deepEquals([user1, user2]),
             sinon.match.any, sinon.match.any, sinon.match.any)
-    })
+    });
 
     it('can handle rejection of requests for more data', async () => {
-        sinon.stub(util, "discordRequestChoice").rejects()
+        sinon.stub(util, "discordRequestChoice").rejects();
         await assert.isRejected(new UserArgument().parse({
             content: "test2",
             channel: channel,
@@ -241,10 +240,10 @@ describe('Or Arguments', () => {
 });
 
 function stubDiscordDependencies() {
-    guild = createSinonStubInstance(Guild)
-    guild.id = "1"
-    guild.members = new Collection<Snowflake, GuildMember>()
-    user = createSinonStubInstance(User)
-    channel = createSinonStubInstance(TextChannel)
+    guild = createSinonStubInstance(Guild);
+    guild.id = "1";
+    guild.members = new Collection<Snowflake, GuildMember>();
+    user = createSinonStubInstance(User);
+    channel = createSinonStubInstance(TextChannel);
     channel.guild = guild
 }
