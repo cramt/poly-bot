@@ -5,20 +5,18 @@ import { createSinonStubInstance } from './SinonStubbedInstance';
 import * as commands from '../src/commands';
 import { users, relationships } from '../src/db'
 import { User, Guild, TextChannel } from 'discord.js';
-import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel, ArgumentError, DiscordUserArgument, OrArgument } from '../src/Command';
+import { StandardArgumentList, UserArgument, ParseResult, OptionalArgumentList, CommandReponseInSameChannel, ArgumentError, OrArgument } from '../src/Command';
 import { GuildUser, DiscordUser } from '../src/User';
 
 chai.use(chaisAsPromiseod)
 const assert = chai.assert
 
-let command = commands.commands.find(x => x.name === "add-local")
 let guild: Guild
 let user: User
 let channel: TextChannel
 
 describe("add-local", async () => {
-
-
+    let command = commands.commands.find(x => x.name === "add-local")
 
     beforeEach(() => {
         stubDiscordDependencies()
@@ -35,6 +33,16 @@ describe("add-local", async () => {
         sinon.assert.calledWith(userAdd, sinon.match.has("guildId", "1"))
     })
 
+    it('it can reject when a local user already exists', async () => {
+        let userAdd = sinon.stub(users, "add").resolves(false)
+        let parse = sinon.spy(StandardArgumentList.prototype, "parse")
+
+        await assert.eventually.deepEqual(command!.call(["Lucca", "femme"], user, channel, guild), new CommandReponseInSameChannel("there is already a person with that name on this discord server"))
+        sinon.assert.calledWith(parse, sinon.match.array.deepEquals(["Lucca", "femme"]), sinon.match.any)
+        sinon.assert.calledWith(userAdd, sinon.match.has("name", "Lucca"))
+        
+    })
+
     it('can reject invalid gender options', async () => {
         let parse = sinon.spy(StandardArgumentList.prototype, "parse")
         let userAdd = sinon.stub(users, "add")
@@ -49,6 +57,19 @@ describe("add-local", async () => {
     afterEach(() => {
         sinon.restore()
     })
+})
+
+describe('add-global', () => {
+    let command = commands.commands.find(x => x.name === "add-global")
+
+    beforeEach(() => stubDiscordDependencies())
+    
+    it('can add a discord user globally', async () => {
+        let parse = sinon.spy(OptionalArgumentList.prototype, "parse")
+        let userAdd = sinon.stub(users, "add").resolves(true)
+    })
+    it('can reject invalid gender options')
+    it('can reject when that user is already in the database')
 })
 
 describe('add-relationship', () => {
