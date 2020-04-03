@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const threads = require("worker_threads");
 const dateformat = require("dateformat");
+const http = require("http");
 
 const PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -53,77 +54,120 @@ function copyFolderRecursiveSync(source, target) {
     }
 }
 
-let tsc = new Promise((resolve, reject) => {
-    cp.exec("tsc", (err, stdout, stderr) => {
-        console.log("tsc-out: " + stdout);
-        console.log("tsc-err: " + stderr);
-        if (err) {
-            console.log("ERROR: " + err);
-            reject(err)
-        }
-        else {
-            resolve();
-        }
-    })
-});
-
-let copy = new Promise((resolve, reject) => {
-    try {
-        if (fs.existsSync("dist")) {
-            deleteFolderRecursive("dist");
-        }
-        fs.mkdirSync("dist");
-        fs.mkdirSync("dist/lib");
-        copyFolderRecursiveSync("lib/wasmlib", "dist/lib");
-        resolve()
-    }
-    catch (e) { reject(e) }
-});
-
-const formatNow = () => dateformat(new Date(), "yyyy-mm-dd,HH-MM-ss");
+function gitPullAndRestart() {
+    cp.spawn("got pull && node " + process.argv[0], process.argv.slice(1), {
+        stdio: "ignore"
+    }).unref();
+    process.exit(0);
+}
 
 const indexPath = path.resolve(__dirname, "../dist/src/index.js");
 
-function startProd() {
-    return new Promise((resolve, reject) => {
-        if (!fs.existsSync("logs")) {
-            fs.mkdirSync("logs")
-        }
-        const log = fs.createWriteStream("logs/" + formatNow() + ".log");
-        const main = new threads.Worker(indexPath);
-        main.on("message", message => {
-            log.write(message.type + " at " + formatNow() + ": " + message.data + "\n");
-            if (message.exit !== undefined) {
-                log.write("exited with exit code " + message.exit);
-                main.terminate();
-                resolve(message.exit)
+const formatNow = () => dateformat(new Date(), "yyyy-mm-dd,HH-MM-ss");
+
+class StartDev {
+    constructor() {
+        require(indexPath)
+    }
+}
+
+class StartProd {
+    constructor() {
+
+    }
+
+    async kill() {
+        await this.thread.terminate()
+    }
+
+    init() {
+        return new Promise(async (resolve1, reject) => {
+            while (true) {
+                let code = await new Promise((resolve2, reject2) => {
+                    if (!fs.existsSync("logs")) {
+                        fs.mkdirSync("logs")
+                    }
+                    const log = fs.createWriteStream("logs/" + formatNow() + ".log");
+                    const main = new threads.Worker(indexPath);
+                    this.thread = main;
+                    main.on("message", message => {
+                        log.write(message.type + " at " + formatNow() + ": " + message.data + "\n");
+                        if (message.exit !== undefined) {
+                            log.write("exited with exit code " + message.exit);
+                            main.terminate();
+                            resolve2(message.exit)
+                        }
+                    });
+                    main.on("online", () => {
+                        resolve1()
+                    })
+                });
+                console.log("exited with code " + code);
+                console.log("restarting")
             }
         })
-    })
+    }
 }
 
-console.log("running in " + (PRODUCTION ? "production" : "development") + " mode");
+async function compile() {
+    let tsc = new Promise((resolve, reject) => {
+        cp.exec("tsc", (err, stdout, stderr) => {
+            console.log("tsc-out: " + stdout);
+            console.log("tsc-err: " + stderr);
+            if (err) {
+                console.log("ERROR: " + err);
+                reject(err)
+            } else {
+                resolve();
+            }
+        })
+    });
 
-function startDev() {
-    require(indexPath)
-}
+    let copy = new Promise((resolve, reject) => {
+        try {
+            if (fs.existsSync("dist")) {
+                deleteFolderRecursive("dist");
+            }
+            fs.mkdirSync("dist");
+            fs.mkdirSync("dist/lib");
+            copyFolderRecursiveSync("lib/wasmlib", "dist/lib");
+            resolve()
+        } catch (e) {
+            reject(e)
+        }
+    });
 
-(async () => {
+    console.log("running in " + (PRODUCTION ? "production" : "development") + " mode");
+
     try {
         await Promise.all([tsc, copy])
-    }
-    catch (e) {
-        console.log("could not start");
+    } catch (e) {
+        console.log("could not compile");
         console.log(e);
         process.exit(1)
     }
+}
+
+(async () => {
+    await compile();
     if (PRODUCTION) {
-        while (true) {
-            console.log("exited with code " + await startProd());
-            console.log("restarting")
-        }
-    }
-    else{
-        startDev();
+        let main = new StartProd();
+        let initPromise = main.init();
+        const secret = require(path.resolve(__dirname, "../dist/src/SECRET.js")).default;
+        const port = secret.HTTP_PORT;
+        const githubSecret = secret.GITHUB_SECRET;
+        const handler = require('github-webhook-handler')({path: "/github_webhook", secret: githubSecret});
+        await initPromise;
+        http.createServer((req, res) => {
+            handler(req, res, err => {
+                res.statusCode = 404;
+                res.end("no such location")
+            })
+        }).listen(port);
+        handler.on("push", async event => {
+            gitPullAndRestart();
+        })
+    } else {
+        new StartDev();
     }
 })();
