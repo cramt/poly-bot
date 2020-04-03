@@ -31,8 +31,7 @@ export const commands: Command[] = [
     new Command("help", "prints all the commands the bot has available", new StandardArgumentList(), async () => {
         let str = "```";
         str += "prefix = \"" + prefix + "\"\r\n\r\n";
-        //TODO
-        //str += commands.map(x => x.name + ": " + x.description + x.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.usage !== "" ? x.usage + ", can be" : "") + x.description).join("")).join("\r\n\r\n\r\n")
+        str += commands.map(x => x.name + ": " + x.description + x.arguments.description).join("\r\n\r\n\r\n")
         str += "```";
         return new CommandReponseInSameChannel(str)
     }),

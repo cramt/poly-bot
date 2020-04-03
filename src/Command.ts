@@ -2,7 +2,7 @@ import * as Discord from "discord.js"
 import {client} from "./index"
 import {users} from "./db";
 import {DiscordUser} from "./User";
-import {getType, humanPrintArray, awaitAll, discordRequestChoice} from "./utilities"
+import {getType, humanPrintArray, awaitAll, discordRequestChoice, splitMessageForDiscord} from "./utilities"
 
 
 export interface DiscordInput {
@@ -193,15 +193,22 @@ export class CommandReponseNone extends CommandReponseBase {
 }
 
 export class CommandReponseInSameChannel extends CommandReponseBase {
-    text: string;
+    text: string[];
 
     constructor(text: string) {
         super();
-        this.text = text
+        let block = false;
+        if (text.startsWith("```") && text.endsWith("```")) {
+            text = text.substring(3, text.length - 3)
+            block = true;
+        }
+        this.text = splitMessageForDiscord(text, block);
     }
 
     async respond(message: Discord.Message) {
-        await message.channel.send(this.text)
+        for (let t of this.text) {
+            await message.channel.send(t);
+        }
     }
 }
 
@@ -241,6 +248,8 @@ export class CommandResponseFile extends CommandReponseBase {
 export type DiscordChannelType = 'dm' | 'group' | 'text' | 'voice' | 'category' | 'news' | 'store'
 
 export abstract class ArgumentList {
+    abstract get description(): string
+
     abstract validLength(length: number): boolean
 
     protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
@@ -269,6 +278,10 @@ export class StandardArgumentList extends ArgumentList {
             author: discord.author,
             content: values[i]
         }));
+    }
+
+    get description(): string {
+        return this.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.usage !== "" ? x.usage + ", can be" : "") + x.description).join("")
     }
 }
 
@@ -321,9 +334,17 @@ export class OptionalArgumentList extends ArgumentList {
             }
         })
     }
+
+    get description(): string {
+        return this.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.argument.usage !== "" ? x.argument.usage + ", can be" : "") + x.argument.description + (x.type === "default" ? "default value is " + x.default : "")).join("")
+    }
 }
 
 export class VariableArgumentList extends ArgumentList {
+    get description(): string {
+        return "any amount of argument: " + (this.argument.usage !== "" ? this.argument.usage + ", can be" : "") + this.argument.description;
+    }
+
     argument: Argument;
 
     constructor(arg: Argument) {

@@ -4,6 +4,7 @@ import {User} from "./User"
 import AggregateError from "aggregate-error"
 import * as Discord from "discord.js"
 import {client} from "."
+import beginningOfLine = Mocha.reporters.Base.cursor.beginningOfLine;
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ");
@@ -168,8 +169,8 @@ export const math = {
     },
     gcd(array: number[]) {
         // Greatest common divisor of a list of integers
-        var n = 0;
-        for (var i = 0; i < array.length; ++i)
+        let n = 0;
+        for (let i = 0; i < array.length; ++i)
             n = math.gcd2(array[i], n);
         return n;
     },
@@ -179,8 +180,8 @@ export const math = {
     },
     lcm(array: number[]) {
         // Least common multiple of a list of integers
-        var n = 1;
-        for (var i = 0; i < array.length; ++i)
+        let n = 1;
+        for (let i = 0; i < array.length; ++i)
             n = math.lcm2(array[i], n);
         return n;
     }
@@ -188,10 +189,10 @@ export const math = {
 
 
 function longToByteArray(long: bigint) {
-    var byteArray = [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)];
+    const byteArray = [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)];
 
-    for (var index = 0; index < byteArray.length; index++) {
-        var byte = long & BigInt(0xff);
+    for (let index = 0; index < byteArray.length; index++) {
+        const byte = long & BigInt(0xff);
         byteArray[index] = byte;
         long = (long - byte) / BigInt(256);
     }
@@ -200,10 +201,32 @@ function longToByteArray(long: bigint) {
 }
 
 function byteArrayToLong(byteArray: bigint[]) {
-    var value = BigInt(0);
-    for (var i = byteArray.length - 1; i >= 0; i--) {
+    let value = BigInt(0);
+    for (let i = byteArray.length - 1; i >= 0; i--) {
         value = (value * BigInt(256)) + byteArray[i];
     }
 
     return value;
+}
+
+export function splitMessageForDiscord(str: string, block: boolean = true): string[] {
+    let maxSize = 1998;
+    let blockStr = "";
+    if (block) {
+        blockStr = "```";
+        maxSize -= (blockStr.length * 2);
+    }
+    if (str.length < maxSize) {
+        return [blockStr + str + blockStr]
+    }
+    let res: string[] = [""];
+    let split = str.split(/\r?\n/);
+    split.forEach(x => {
+        if (res[res.length - 1].length + x.length > maxSize) {
+            res.push("");
+        }
+        res[res.length - 1] += x + "\r\n";
+    });
+    res = res.map(x => blockStr + x + blockStr);
+    return res;
 }
