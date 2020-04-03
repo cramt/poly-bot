@@ -96,8 +96,6 @@ if ((global as any).util === undefined) {
 
 })();
 
-console.log("test");
-
 {
     const consoles = {
         message: console.log,
