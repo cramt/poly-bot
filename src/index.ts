@@ -10,6 +10,10 @@ import * as fs from "fs"
 import * as wasm from "../lib/wasmlib/wasmlib.js"
 import * as threads from "worker_threads";
 
+if (process.platform !== "win32" && process.platform !== "linux") {
+    console.warn("youre currently running this program on " + process.platform + " which is currently not actively supported")
+}
+
 export const prefix = SECRET.PREFIX;
 
 export const client = new Discord.Client();
@@ -38,7 +42,7 @@ if ((global as any).util === undefined) {
 
 
     client.on("ready", async () => {
-        client.user.setActivity("with polyamory")
+        await client.user.setActivity("with polyamory")
     });
 
     client.on("guildMemberAdd", member => {
@@ -88,7 +92,7 @@ if ((global as any).util === undefined) {
     });
 
 
-    client.login(SECRET.DISCORD_TOKEN)
+    await client.login(SECRET.DISCORD_TOKEN)
 
 })();
 

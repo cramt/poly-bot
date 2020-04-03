@@ -79,9 +79,8 @@ export function generateDotScript(users: User[], relationships: Relationship[]):
 
 export function exportDotScript(dotScript: Buffer, output: "svg" | "png" = "svg"): Promise<Buffer> {
     return new Promise<Buffer>((resolve, reject) => {
-        //" + path.resolve(SECRET.GRAPHVIZ_LOCATION, "unflatten") + " -l 100 |
-        const pwshCommand = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -T" + output;
-        exec(pwshCommand, process.platform === "win32" ? {
+        const cmd = "echo '" + dotScript.toString() + "' | " + path.resolve(SECRET.GRAPHVIZ_LOCATION, "fdp") + " -T" + output;
+        exec(cmd, process.platform === "win32" ? {
             shell: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
         } : {}, (error, stdout) => {
             if (error) {

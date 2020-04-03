@@ -228,7 +228,7 @@ export const users = {
         } else {
             id = userOrId.id!
         }
-        return (await client.query(`WITH deleted AS(DELETE FROM users WHERE id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [id])).rows[0].count == '1'
+        return (await client.query(`WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [id])).rows[0].count == '1'
     },
     deleteByDiscord: async (discordId: string) => {
         return (await client.query(`WITH deleted AS(DELETE FROM users WHERE discord_id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [discordId])).rows[0].count == '1'
