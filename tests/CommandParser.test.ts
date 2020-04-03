@@ -2,8 +2,15 @@ import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as PolyUser from '../src/User'
-import {User, Guild, Collection as DiscordCollection} from 'discord.js';
-import * as Commands from '../src/commands';
+import {
+    User,
+    Guild,
+    Collection as DiscordCollection,
+    TextChannel,
+    Collection,
+    Snowflake,
+    GuildMember
+} from 'discord.js';
 import {client} from "../src/index";
 import {users} from '../src/db';
 import {
@@ -24,7 +31,7 @@ import {GuildUser} from "../src/User";
 chai.use(chaiAsPromised);
 const assert = chai.assert;
 
-let guild: Guild
+let guild: Guild;
 let user: User
 let channel: TextChannel
 
