@@ -13,7 +13,9 @@ export default {
     DB_PASSWORD: "a super secure password",
     DB_USER: "a super cool username",
     GRAPHVIZ_LOCATION: "D:\\path\\to\\graphvis\\bin",
-    PREFIX: "/poly "
+    PREFIX: "/poly ",
+    HTTP_PORT: 80,
+    GITHUB_SECRET: "1234567543gdffjkjgfevxchjtegdgnfye5rgd"
 }
 ```
 
@@ -22,10 +24,6 @@ the bot uses a postgresql database
 
 ## TODO
 - add alias' to commands
-- add caching for polymap generation
-- fix the database stuff
-- less wide 2 electric boogaloo
-- better way to do variable number of arguments
 - move generation of maps off main thread
 
 ## TODO but kinda irrelevant

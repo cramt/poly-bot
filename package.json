@@ -21,6 +21,7 @@
         "aggregate-error": "^3.0.1",
         "dateformat": "^3.0.3",
         "discord.js": "^11.5.1",
+        "github-webhook-handler": "^1.0.0",
         "graphviz": "0.0.9",
         "jimp": "^0.9.3",
         "microjob": "^0.7.0",

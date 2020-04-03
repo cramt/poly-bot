@@ -1,13 +1,19 @@
-import { polyMapGenerate, exportDotScript, svgToPngViaChromium, addLegendAndBackground, generateDotScript } from "./polyMapGenerate";
+import {
+    polyMapGenerate,
+    exportDotScript,
+    svgToPngViaChromium,
+    addLegendAndBackground,
+    generateDotScript
+} from "./polyMapGenerate";
 import Jimp from "jimp"
 import * as fs from "fs"
-import { PluralKitApi } from "./PluralKitApi";
-import { Relationship } from "./Relationship";
-import { User } from "./User";
-import { spawn, exec } from "child_process";
-import { loadTestData, awaitAll } from "./utilities";
-import { commands } from "./commands";
-import { NumberArgument, StandardArgumentList } from "./Command";
+import {PluralKitApi} from "./PluralKitApi";
+import {Relationship} from "./Relationship";
+import {User} from "./User";
+import {spawn, exec} from "child_process";
+import {loadTestData, awaitAll} from "./utilities";
+import {commands} from "./commands";
+import {NumberArgument, StandardArgumentList} from "./Command";
 import AggregateError from "aggregate-error";
 
 
@@ -62,5 +68,5 @@ async function t() {
 }
 
 (async () => {
-    
-})().then(() => process.exit(0)).catch(console.log)
+
+})().then(() => process.exit(0)).catch(console.log);
