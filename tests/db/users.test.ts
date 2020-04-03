@@ -8,7 +8,7 @@ import {client} from '../../src';
 chai.use(chaiAsPromised)
 const assert = chai.assert
 let dbclient: Client
-const DELETE = "DELETE FROM public.users"
+const DELETE = "DELETE FROM users"
 
 before(async () => {
     dbclient = await openDB()
@@ -91,6 +91,7 @@ describe("Database System User", () => {
         await users.add(guildUser)
         let headMate = new GuildUser("headmate", "FEMME", null, guildUser.id, "")
         await users.add(headMate)
+        headMate.guildId = guildUser.guildId
         await assert.eventually.deepEqual(users.getByUsername(headMate.name, guildUser.guildId, []), [headMate])
     })
     it('can retrieve a system member by discord id')
