@@ -1,10 +1,9 @@
 import chaiAsPromised from 'chai-as-promised';
 import * as chai from 'chai';
-import { users, openDB, genderIntToString } from '../../src/db';
-import { Client } from 'pg';
-import { User, GuildUser, DiscordUser } from '../../src/User';
-import { client } from '../../src';
-import {awaitAll} from "../../src/utilities";
+import {users, openDB, genderIntToString} from '../../src/db';
+import {Client} from 'pg';
+import {User, GuildUser, DiscordUser} from '../../src/User';
+import {client} from '../../src';
 
 chai.use(chaiAsPromised)
 const assert = chai.assert
@@ -37,7 +36,7 @@ describe("Database Singlet User", () => {
         assert.equal(user!.name, name)
         assert.equal(user!.gender, gender)
         assert.equal((user as GuildUser).guildId, guildId)
-    })
+    });
 
     it("can add global user", async () => {
         await assert.eventually.isTrue(users.add(discordUser))
@@ -60,7 +59,7 @@ describe("Database Singlet User", () => {
         await assert.eventually.isTrue(users.update(discordUser))
         let userResult = await users.getByDiscordId(discordId)
         assert.equal(userResult!.name, name)
-    })
+    });
 
     it("can delete by discord id", async () => {
         await users.add(discordUser)
@@ -68,12 +67,12 @@ describe("Database Singlet User", () => {
         await assert.eventually.isNull(users.get(guildUser.id!))
         await assert.eventually.isNull(users.get(discordUser.id!))
     })
-})
+});
 
 describe("Database System User", () => {
-    let name = Math.random().toString(36).substring(4)
-    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)]
-    let guildId = Math.random().toString(36).substring(4)
+    let name = Math.random().toString(36).substring(4);
+    let gender = genderIntToString[Math.floor(Math.random() * Object.getOwnPropertyNames(genderIntToString).length)];
+    let guildId = Math.random().toString(36).substring(4);
     let guildUser = new GuildUser(name, gender, null, null, guildId)
 
     afterEach(async () => {
@@ -95,9 +94,9 @@ describe("Database System User", () => {
         await assert.eventually.deepEqual(users.getByUsername(headMate.name, guildUser.guildId, []), [headMate])
     })
     it('can retrieve a system member by discord id')
-    
+
 })
 
-after(async() => {
+after(async () => {
     await dbclient.end()
-})
+});

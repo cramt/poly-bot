@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="polybot@localhost" uuid="48a68ad2-a999-426b-9847-17cafc1755b7">
+    <data-source source="LOCAL" name="polybot@78.156.114.85" uuid="61adadba-d6c9-47b1-bc23-7f77624e2b9c">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/polybot</jdbc-url>
+      <jdbc-url>jdbc:postgresql://78.156.114.85:15432/polybot</jdbc-url>
     </data-source>
   </component>
 </project>

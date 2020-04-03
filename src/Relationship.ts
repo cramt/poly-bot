@@ -1,28 +1,34 @@
-import { User } from "./User"
+import {User} from "./User"
 
-export type RelationshipType = "ROMANTIC" | "SEXUAL" | "FRIEND" | "LIVES WITH" | "IN SYSTEM WITH" | "CUDDLES WITH" | "QUEERPLATONIC"
+export type RelationshipType =
+    "ROMANTIC"
+    | "SEXUAL"
+    | "FRIEND"
+    | "LIVES WITH"
+    | "IN SYSTEM WITH"
+    | "CUDDLES WITH"
+    | "QUEERPLATONIC"
 
 export class Relationship {
-    guildId: string
-    type: RelationshipType
-    leftUserId: number
-    rightUserId: number
-    leftUser: User | null = null
-    rightUser: User | null = null
+    guildId: string;
+    type: RelationshipType;
+    leftUserId: number;
+    rightUserId: number;
+    leftUser: User | null = null;
+    rightUser: User | null = null;
+
     constructor(type: RelationshipType, leftUserId: number | User, rightUserId: number | User, guildId: string) {
-        this.type = type
+        this.type = type;
         if (typeof leftUserId === "number") {
             this.leftUserId = leftUserId
-        }
-        else {
+        } else {
             this.leftUserId = leftUserId.id!;
             this.leftUser = leftUserId
         }
         if (typeof rightUserId === "number") {
             this.rightUserId = rightUserId
-        }
-        else {
-            this.rightUserId = rightUserId.id!
+        } else {
+            this.rightUserId = rightUserId.id!;
             this.rightUser = rightUserId
         }
         if (this.rightUserId > this.leftUserId) {
@@ -43,4 +49,4 @@ export const relationshipTypeToColor: {
     "IN SYSTEM WITH": "#FFE599",
     "CUDDLES WITH": "#F6B26B",
     "QUEERPLATONIC": "#2A2A2A"
-}
+};

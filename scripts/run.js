@@ -1,10 +1,10 @@
-const cp = require("child_process")
+const cp = require("child_process");
 const fs = require('fs');
 const path = require('path');
-const threads = require("worker_threads")
-const dateformat = require("dateformat")
+const threads = require("worker_threads");
+const dateformat = require("dateformat");
 
-const PRODUCTION = process.env.NODE_ENV === "production"
+const PRODUCTION = process.env.NODE_ENV === "production";
 
 const deleteFolderRecursive = function (_path) {
     if (fs.existsSync(_path)) {
@@ -55,26 +55,26 @@ function copyFolderRecursiveSync(source, target) {
 
 let tsc = new Promise((resolve, reject) => {
     cp.exec("tsc", (err, stdout, stderr) => {
-        console.log("tsc-out: " + stdout)
-        console.log("tsc-err: " + stderr)
+        console.log("tsc-out: " + stdout);
+        console.log("tsc-err: " + stderr);
         if (err) {
-            console.log("ERROR: " + err)
+            console.log("ERROR: " + err);
             reject(err)
         }
         else {
             resolve();
         }
     })
-})
+});
 
 let copy = new Promise((resolve, reject) => {
     try {
         if (fs.existsSync("dist")) {
             deleteFolderRecursive("dist");
         }
-        fs.mkdirSync("dist")
-        fs.mkdirSync("dist/lib")
-        copyFolderRecursiveSync("lib/wasmlib", "dist/lib")
+        fs.mkdirSync("dist");
+        fs.mkdirSync("dist/lib");
+        copyFolderRecursiveSync("lib/wasmlib", "dist/lib");
         resolve()
     }
     catch (e) { reject(e) }
@@ -89,12 +89,12 @@ function startProd() {
         if (!fs.existsSync("logs")) {
             fs.mkdirSync("logs")
         }
-        const log = fs.createWriteStream("logs/" + formatNow() + ".log")
+        const log = fs.createWriteStream("logs/" + formatNow() + ".log");
         const main = new threads.Worker(indexPath);
         main.on("message", message => {
-            log.write(message.type + " at " + formatNow() + ": " + message.data + "\n")
+            log.write(message.type + " at " + formatNow() + ": " + message.data + "\n");
             if (message.exit !== undefined) {
-                log.write("exited with exit code " + message.exit)
+                log.write("exited with exit code " + message.exit);
                 main.terminate();
                 resolve(message.exit)
             }
@@ -102,7 +102,7 @@ function startProd() {
     })
 }
 
-console.log("running in " + (PRODUCTION ? "production" : "development") + " mode")
+console.log("running in " + (PRODUCTION ? "production" : "development") + " mode");
 
 function startDev() {
     require(indexPath)
@@ -113,17 +113,17 @@ function startDev() {
         await Promise.all([tsc, copy])
     }
     catch (e) {
-        console.log("could not start")
-        console.log(e)
+        console.log("could not start");
+        console.log(e);
         process.exit(1)
     }
     if (PRODUCTION) {
         while (true) {
-            console.log("exited with code " + await startProd())
+            console.log("exited with code " + await startProd());
             console.log("restarting")
         }
     }
     else{
         startDev();
     }
-})()
+})();
