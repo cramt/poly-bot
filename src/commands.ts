@@ -17,8 +17,8 @@ import * as Discord from "discord.js"
 import {User, Gender, genderToColor, GuildUser, DiscordUser} from "./User";
 import * as db from "./db";
 import {Relationship, RelationshipType, relationshipTypeToColor} from "./Relationship";
-import {prefix} from "./index"
 import {polyMapGenerate} from "./polyMapGenerate";
+import secret from "./secret";
 
 export async function parseDiscordUserOrUser(thing: User | Discord.User): Promise<User> {
     if ((thing as User).gender === undefined) {
@@ -30,7 +30,7 @@ export async function parseDiscordUserOrUser(thing: User | Discord.User): Promis
 export const commands: Command[] = [
     new Command("help", "prints all the commands the bot has available", new StandardArgumentList(), async () => {
         let str = "```";
-        str += "prefix = \"" + prefix + "\"\r\n\r\n";
+        str += "prefix = \"" + secret.PREFIX + "\"\r\n\r\n";
         str += commands.map(x => x.name + ": " + x.description + x.arguments.description).join("\r\n\r\n\r\n")
         str += "```";
         return new CommandReponseInSameChannel(str)

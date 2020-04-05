@@ -1,8 +1,8 @@
 import {Client, ClientConfig} from 'pg'
-import SECRET from './SECRET';
 import {Gender, User, constructUser, DiscordUser, GuildUser} from './User';
 import {Relationship, RelationshipType} from './Relationship';
 import * as fs from "fs"
+import secret from "./secret";
 
 let client: Client;
 
@@ -55,11 +55,11 @@ export async function setupSchema(dbClient = client) {
 }
 
 export async function openDB(config: ClientConfig = {
-    host: SECRET.DB_HOST,
-    user: SECRET.DB_USER,
-    password: SECRET.DB_PASSWORD,
-    port: parseInt(SECRET.DB_PORT) || 5432,
-    database: SECRET.DB_NAME
+    host: secret.DB.HOST,
+    user: secret.DB.USER,
+    password: secret.DB.PASSWORD,
+    port: secret.DB.PORT,
+    database: secret.DB.NAME
 }) {
     client = new Client(config);
     await client.connect();
