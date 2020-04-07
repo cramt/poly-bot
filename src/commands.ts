@@ -31,7 +31,7 @@ export const commands: Command[] = [
     new Command("help", "prints all the commands the bot has available", new StandardArgumentList(), async () => {
         let str = "```";
         str += "prefix = \"" + secret.PREFIX + "\"\r\n\r\n";
-        str += commands.map(x => x.name + ": " + x.description + x.arguments.description).join("\r\n\r\n\r\n")
+        str += commands.map(x => x.name + ": " + x.description + x.arguments.description).join("\r\n\r\n\r\n");
         str += "```";
         return new CommandReponseInSameChannel(str)
     }),
@@ -135,11 +135,11 @@ export const commands: Command[] = [
                 type: "required"
             }])
         , async input => {
-            let _user = input.args[0].value as Discord.User | User | "me";
-            if (_user === "me") {
-                _user = input.author
+            let user = input.args[0].value as Discord.User | User | "me";
+            if (user === "me") {
+                user = input.author
             }
-            let [leftUser, rightUser] = await Promise.all([await parseDiscordUserOrUser(_user), input.args[1].value]);
+            let [leftUser, rightUser] = await Promise.all([await parseDiscordUserOrUser(user), input.args[1].value]);
             let guildId = (input.channel as Discord.TextChannel).guild.id;
             if (leftUser.name === rightUser.name) {
                 return new CommandReponseInSameChannel("you cant make a relationship with yourself")

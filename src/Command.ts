@@ -199,7 +199,7 @@ export class CommandReponseInSameChannel extends CommandReponseBase {
         super();
         let block = false;
         if (text.startsWith("```") && text.endsWith("```")) {
-            text = text.substring(3, text.length - 3)
+            text = text.substring(3, text.length - 3);
             block = true;
         }
         this.text = splitMessageForDiscord(text, block);

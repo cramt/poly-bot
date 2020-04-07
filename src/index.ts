@@ -40,6 +40,7 @@ if ((global as any).util === undefined) {
 
 
     client.on("ready", async () => {
+        console.log("poly-bot online");
         await client.user.setActivity("with polyamory")
     });
 

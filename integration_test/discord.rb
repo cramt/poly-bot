@@ -26,8 +26,25 @@ module Bots
         }
     }
 
+    cwd = Dir.pwd
+    thread = Thread.new {sleep}
+    Thread.new {
+        Dir.chdir("../")
+        node_process = IO.popen({"TEST_BOTS" => @bots.map {|x| x.bot_user.id}.join(",")}, "node scripts/run.js") {|node|
+            node.each do |x|
+                puts x
+                if x == "poly-bot online\n"
+                    thread.terminate
+                end
+            end
+        }
+        at_exit {node_process.close}
+    }
+    thread.join
+    Dir.chdir(cwd)
+
     @bot = secret["bot_id"]
-    secret = JSON.parse(File.read("../SECRET.json"))
+    secret = JSON.parse(File.read(File.join(Dir.pwd, "../SECRET.json")))
     @prefix = secret["PREFIX"]
 
     @callback_dictionary = {}
