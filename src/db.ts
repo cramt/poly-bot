@@ -1,8 +1,8 @@
 import {Client, ClientConfig} from 'pg'
-import SECRET from './SECRET';
 import {Gender, User, constructUser, DiscordUser, GuildUser} from './User';
 import {Relationship, RelationshipType} from './Relationship';
 import * as fs from "fs"
+import secret from "./secret";
 
 let client: Client;
 
@@ -47,7 +47,9 @@ export async function setupSchema(dbClient = client) {
     for (let i = currentVersion + 1; i <= maxMigrations; i++) {
         q.push(fs.promises.readFile("migrations/" + i + ".sql").then(x => x.toString()))
     }
-    await dbClient.query((await Promise.all(q)).join("\r\n\r\n"));
+    for (const query of q) {
+        await dbClient.query((await query).toString());
+    }
     if ((await dbClient.query("UPDATE public.info SET schema_version = $1 RETURNING *", [maxMigrations])).rows.length === 0) {
         await dbClient.query("INSERT INTO public.info (schema_version) values ($1)", [maxMigrations])
     }
@@ -55,11 +57,11 @@ export async function setupSchema(dbClient = client) {
 }
 
 export async function openDB(config: ClientConfig = {
-    host: SECRET.DB_HOST,
-    user: SECRET.DB_USER,
-    password: SECRET.DB_PASSWORD,
-    port: parseInt(SECRET.DB_PORT) || 5432,
-    database: SECRET.DB_NAME
+    host: secret.DB.HOST,
+    user: secret.DB.USER,
+    password: secret.DB.PASSWORD,
+    port: secret.DB.PORT,
+    database: secret.DB.NAME
 }) {
     client = new Client(config);
     await client.connect();

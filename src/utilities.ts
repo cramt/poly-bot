@@ -1,9 +1,11 @@
 import * as fs from "fs"
 import {Relationship} from "./Relationship"
-import {User} from "./User"
+import {DiscordUser, GuildUser, User} from "./User"
 import AggregateError from "aggregate-error"
 import * as Discord from "discord.js"
 import {client} from "."
+import beginningOfLine = Mocha.reporters.Base.cursor.beginningOfLine;
+import {relationships, users} from "./db";
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ");
@@ -81,19 +83,53 @@ export function humanPrintArray(arr: string[], andOr = "or"): string {
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
     let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] };
     let userMap = new Map<number, User>();
-    data.users.forEach(x => Object.setPrototypeOf(x, User.prototype));
+    data.users.forEach(x => {
+        if ((x as any).guildId) {
+            Object.setPrototypeOf(x, GuildUser.prototype)
+        } else {
+            Object.setPrototypeOf(x, DiscordUser.prototype)
+        }
+    });
     data.relationships.forEach(x => Object.setPrototypeOf(x, Relationship.prototype));
     data.users.forEach(x => userMap.set(x.id!, x));
     data.users.forEach(x => {
         if (x.systemId !== null) {
-            x.system = userMap.get(x.systemId)!
+            //x.system = userMap.get(x.systemId)!
         }
     });
     data.relationships.forEach(x => {
         x.leftUser = userMap.get(x.leftUserId)!;
         x.rightUser = userMap.get(x.rightUserId)!
     });
+    data.users.forEach(x=>{
+        x.id = null
+    })
     return data;
+}
+
+export async function insertTestData(filename: string): Promise<void> {
+    let data = loadTestData(filename);
+
+    async function addUser(user: User) {
+
+        if (await users.add(user)) {
+            console.log("added " + user.name)
+        } else {
+            console.log("failed to add " + user.name)
+        }
+        for (const member of user.members) {
+            await addUser(member);
+        }
+    }
+
+    for (const user of data.users) {
+        await addUser(user)
+    }
+    console.log("now relationships")
+    for (const relationship of data.relationships) {
+        console.log("added " + relationship.leftUser!.name + " x " + relationship.rightUser!.name)
+        await relationships.add(relationship)
+    }
 }
 
 export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[]> {
@@ -168,8 +204,8 @@ export const math = {
     },
     gcd(array: number[]) {
         // Greatest common divisor of a list of integers
-        var n = 0;
-        for (var i = 0; i < array.length; ++i)
+        let n = 0;
+        for (let i = 0; i < array.length; ++i)
             n = math.gcd2(array[i], n);
         return n;
     },
@@ -179,8 +215,8 @@ export const math = {
     },
     lcm(array: number[]) {
         // Least common multiple of a list of integers
-        var n = 1;
-        for (var i = 0; i < array.length; ++i)
+        let n = 1;
+        for (let i = 0; i < array.length; ++i)
             n = math.lcm2(array[i], n);
         return n;
     }
@@ -188,10 +224,10 @@ export const math = {
 
 
 function longToByteArray(long: bigint) {
-    var byteArray = [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)];
+    const byteArray = [BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0), BigInt(0)];
 
-    for (var index = 0; index < byteArray.length; index++) {
-        var byte = long & BigInt(0xff);
+    for (let index = 0; index < byteArray.length; index++) {
+        const byte = long & BigInt(0xff);
         byteArray[index] = byte;
         long = (long - byte) / BigInt(256);
     }
@@ -200,10 +236,32 @@ function longToByteArray(long: bigint) {
 }
 
 function byteArrayToLong(byteArray: bigint[]) {
-    var value = BigInt(0);
-    for (var i = byteArray.length - 1; i >= 0; i--) {
+    let value = BigInt(0);
+    for (let i = byteArray.length - 1; i >= 0; i--) {
         value = (value * BigInt(256)) + byteArray[i];
     }
 
     return value;
+}
+
+export function splitMessageForDiscord(str: string, block: boolean = true): string[] {
+    let maxSize = 1998;
+    let blockStr = "";
+    if (block) {
+        blockStr = "```";
+        maxSize -= (blockStr.length * 2);
+    }
+    if (str.length < maxSize) {
+        return [blockStr + str + blockStr]
+    }
+    let res: string[] = [""];
+    let split = str.split(/\r?\n/);
+    split.forEach(x => {
+        if (res[res.length - 1].length + x.length > maxSize) {
+            res.push("");
+        }
+        res[res.length - 1] += x + "\r\n";
+    });
+    res = res.map(x => blockStr + x + blockStr);
+    return res;
 }

@@ -11,6 +11,8 @@ let dbclient: Client;
 const DELETE = "DELETE FROM users";
 
 before(async () => {
+    // @ts-ignore
+    this.timeout = 10000
     dbclient = await openDB();
     await dbclient.query(DELETE)
 });
