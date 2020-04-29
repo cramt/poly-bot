@@ -1,7 +1,7 @@
 import {User, genderToColor, DiscordUser} from "./User";
 import {Relationship, relationshipTypeToColor} from "./Relationship";
 import {graph, Node, Graph} from "graphviz";
-import SECRET from "./SECRET";
+import SECRET from "./secret";
 import Jimp from "jimp";
 import {exec} from "child_process";
 import * as path from "path"
