@@ -1,10 +1,11 @@
 import * as fs from "fs"
 import {Relationship} from "./Relationship"
-import {User} from "./User"
+import {DiscordUser, GuildUser, User} from "./User"
 import AggregateError from "aggregate-error"
 import * as Discord from "discord.js"
 import {client} from "."
 import beginningOfLine = Mocha.reporters.Base.cursor.beginningOfLine;
+import {relationships, users} from "./db";
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
     let commandNameIndex = str.indexOf(" ");
@@ -82,19 +83,53 @@ export function humanPrintArray(arr: string[], andOr = "or"): string {
 export function loadTestData(filename: string): { relationships: Relationship[], users: User[] } {
     let data = JSON.parse(fs.readFileSync(filename).toString()) as { relationships: Relationship[], users: User[] };
     let userMap = new Map<number, User>();
-    data.users.forEach(x => Object.setPrototypeOf(x, User.prototype));
+    data.users.forEach(x => {
+        if ((x as any).guildId) {
+            Object.setPrototypeOf(x, GuildUser.prototype)
+        } else {
+            Object.setPrototypeOf(x, DiscordUser.prototype)
+        }
+    });
     data.relationships.forEach(x => Object.setPrototypeOf(x, Relationship.prototype));
     data.users.forEach(x => userMap.set(x.id!, x));
     data.users.forEach(x => {
         if (x.systemId !== null) {
-            x.system = userMap.get(x.systemId)!
+            //x.system = userMap.get(x.systemId)!
         }
     });
     data.relationships.forEach(x => {
         x.leftUser = userMap.get(x.leftUserId)!;
         x.rightUser = userMap.get(x.rightUserId)!
     });
+    data.users.forEach(x=>{
+        x.id = null
+    })
     return data;
+}
+
+export async function insertTestData(filename: string): Promise<void> {
+    let data = loadTestData(filename);
+
+    async function addUser(user: User) {
+
+        if (await users.add(user)) {
+            console.log("added " + user.name)
+        } else {
+            console.log("failed to add " + user.name)
+        }
+        for (const member of user.members) {
+            await addUser(member);
+        }
+    }
+
+    for (const user of data.users) {
+        await addUser(user)
+    }
+    console.log("now relationships")
+    for (const relationship of data.relationships) {
+        console.log("added " + relationship.leftUser!.name + " x " + relationship.rightUser!.name)
+        await relationships.add(relationship)
+    }
 }
 
 export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[]> {
