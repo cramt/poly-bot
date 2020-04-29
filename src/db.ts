@@ -254,7 +254,7 @@ export const users = {
 };
 
 export const relationships = {
-    add: async (relationship: Relationship) => {
+        add: async (relationship: Relationship) => {
         try {
             await client.query("INSERT INTO relationships (relationship_type, left_user_id, right_user_id, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUserId, relationship.rightUserId, relationship.guildId]);
             return true
