@@ -71,7 +71,7 @@ describe('Database setup', () => {
                 console.error(e);
                 assert.fail()
             });
-    });
+    }).timeout(10000);
 
     it("can setup the schema for an empty database", async () => {
         await setupSchema(client)
@@ -87,7 +87,7 @@ describe('Database setup', () => {
                 console.error(e);
                 assert.fail()
             });
-    });
+    }).timeout(10000);
 
     after(async () => {
         await client.end()
