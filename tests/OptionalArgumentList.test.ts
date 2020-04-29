@@ -33,7 +33,7 @@ describe("OptionalArgumentList", () => {
                 type: "required"
             }
         ])
-        assert.eventually.deepEqual(list.parse(["2", "hello there", "a", "5"], discordData).then(y => y.map(x => x.value)), [2, "hello there", "a", 5])
+        assert.eventually.deepEqual(list.parse(["2", "hello there", "a", "5"], discordData).then(y => y.map(x => x.value)),  [2, "hello there", "a", 5])
     })
 
     it("can work with only optional", () => {

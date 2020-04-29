@@ -293,46 +293,75 @@ interface OptionalizedArgument {
 
 export class OptionalArgumentList extends ArgumentList {
     arguments: OptionalizedArgument[];
+    sizeMap = new Map<number, (values: string[], discord: DiscordInput) => Promise<ParseResult>[]>();
 
     constructor(args: OptionalizedArgument[]) {
         super();
         this.arguments = args
+        let required: OptionalizedArgument[] = [];
+        let optional: OptionalizedArgument[] = []
+        this.arguments.forEach(x => {
+            switch (x.type) {
+                case "default":
+                    optional.push(x)
+                    break
+                case "required":
+                    required.push(x)
+                    break
+                default:
+                    throw new TypeError("OptionalizedArgument.type is not default or required")
+            }
+        })
+        for (let i = required.length; i < this.arguments.length+1; i++) {
+
+            interface PossiblySetArgument {
+                isArgument: boolean
+                argument: OptionalizedArgument
+                set: any
+            }
+
+            let arr = [...this.arguments].reverse().map(x => ({
+                isArgument: true,
+                argument: x
+            } as PossiblySetArgument))
+            let leftToModify = optional.length - (i - required.length)
+            arr.forEach(x => {
+                if (leftToModify < 1) {
+                    return
+                }
+                if (x.argument.type === "default") {
+                    x.isArgument = false
+                    x.set = x.argument.default
+                    leftToModify--
+                }
+            })
+            arr.reverse()
+            this.sizeMap.set(i, (values: string[], discord: DiscordInput) => {
+                let vIndex = 0;
+                return (arr.map(async x => {
+                    if (x.isArgument) {
+                        return await x.argument.argument.parse({
+                            author: discord.author,
+                            channel: discord.channel,
+                            guild: discord.guild,
+                            content: values[vIndex++]
+                        })
+                    } else {
+                        return new ParseResult(x.set)
+                    }
+                }));
+            })
+        }
+
     }
 
     validLength(length: number): boolean {
-        return length >= this.arguments.filter(x => x.type === "required").length || length <= this.arguments.length
+        return this.sizeMap.has(length);
     }
 
     protected internalParse(_values: string[], discord: DiscordInput): Promise<ParseResult>[] {
-        interface Default {
-            value: any
-        }
-
-        let values: (string | Default)[] = _values.reverse();
-        let args = this.arguments.reverse();
-        let amount = values.length - args.filter(x => x.type === "required").length;
-        args.forEach((x, i) => {
-            if (x.type === "default" && amount === 0) {
-                values.splice(i, 0, {
-                    value: x.default
-                });
-                amount--
-            }
-        });
-        args = args.reverse();
-        values = values.reverse();
-        return values.map((x, i) => {
-            if (typeof x === "object") {
-                return new Promise<ParseResult>((resolve) => resolve(new ParseResult(x.value)))
-            } else {
-                return args[i].argument.parse({
-                    channel: discord.channel,
-                    guild: discord.guild,
-                    author: discord.author,
-                    content: x
-                })
-            }
-        })
+        let func = this.sizeMap.get(_values.length)!;
+        return func(_values, discord);
     }
 
     get description(): string {
