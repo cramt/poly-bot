@@ -153,7 +153,7 @@ async function compile() {
     if (PRODUCTION) {
         let main = new StartProd();
         let initPromise = main.init();
-        const secret = require(path.resolve(__dirname, "../dist/src/SECRET.js")).default;
+        const secret = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../SECRET.json")).toString());
         const port = secret.HTTP_PORT;
         const githubSecret = secret.GITHUB_SECRET;
         const handler = require('github-webhook-handler')({path: "/github_webhook", secret: githubSecret});
