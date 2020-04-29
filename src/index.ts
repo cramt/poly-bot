@@ -1,5 +1,5 @@
 import * as Discord from "discord.js"
-import SECRET from "./SECRET"
+import secret from "./secret"
 import {commandLineArgSplit} from "./utilities"
 import {openDB, polymapCache} from "./db"
 import {commands} from "./commands"
@@ -13,8 +13,6 @@ import * as threads from "worker_threads";
 if (process.platform !== "win32" && process.platform !== "linux") {
     console.warn("youre currently running this program on " + process.platform + " which is currently not actively supported")
 }
-
-export const prefix = SECRET.PREFIX;
 
 export const client = new Discord.Client();
 
@@ -42,6 +40,7 @@ if ((global as any).util === undefined) {
 
 
     client.on("ready", async () => {
+        console.log("poly-bot online");
         await client.user.setActivity("with polyamory")
     });
 
@@ -61,9 +60,9 @@ if ((global as any).util === undefined) {
         if (message.author.bot && !testBots.includes(message.author.id)) {
             return;
         }
-        if (message.content.startsWith(prefix)) {
+        if (message.content.startsWith(secret.PREFIX)) {
             let channel = message.channel;
-            let userCommand = commandLineArgSplit(message.content.substring(prefix.length));
+            let userCommand = commandLineArgSplit(message.content.substring(secret.PREFIX.length));
             let command = commands.filter(x => x.name === userCommand.commandName && (x.arguments.validLength(userCommand.args.length)) && x.channelType.includes(channel.type))[0] || null;
             if (command === null) {
                 await message.channel.send("there is no command with that name and that amount of arguments");
@@ -92,7 +91,7 @@ if ((global as any).util === undefined) {
     });
 
 
-    await client.login(SECRET.DISCORD_TOKEN)
+    await client.login(secret.DISCORD_TOKEN)
 
 })();
 
