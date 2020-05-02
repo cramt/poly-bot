@@ -98,8 +98,9 @@ class StartProd {
         ` : `pkill -P ${process.pid}`;
 
         return new Promise((resolve, reject)=>{
-            cp.exec(getPids, process.platform === "win32" ? {} : {
+            cp.exec(getPids, process.platform === "win32" ? {
                 shell: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+            } : {
             },(err, stdout, stderr)=>{
                 if(err){
                     reject(err)
