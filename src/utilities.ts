@@ -1,7 +1,6 @@
 import * as fs from "fs"
 import {Relationship} from "./Relationship"
 import {DiscordUser, GuildUser, User} from "./User"
-import AggregateError from "aggregate-error"
 import * as Discord from "discord.js"
 import {client} from "."
 import beginningOfLine = Mocha.reporters.Base.cursor.beginningOfLine;
@@ -101,7 +100,7 @@ export function loadTestData(filename: string): { relationships: Relationship[],
         x.leftUser = userMap.get(x.leftUserId)!;
         x.rightUser = userMap.get(x.rightUserId)!
     });
-    data.users.forEach(x=>{
+    data.users.forEach(x => {
         x.id = null
     })
     return data;
@@ -237,4 +236,16 @@ export function splitMessageForDiscord(str: string, block: boolean = true): stri
     });
     res = res.map(x => blockStr + x + blockStr);
     return res;
+}
+
+export class AggregateError extends Error {
+    public errors: Error[];
+    constructor(errors: Error[]) {
+        let message = errors.map(error => error.stack).join('\n');
+        super(message)
+        this.errors = errors
+        this.name = "AggregateError"
+        console.log("aaa")
+    }
+
 }
