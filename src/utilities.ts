@@ -132,33 +132,6 @@ export async function insertTestData(filename: string): Promise<void> {
     }
 }
 
-export function awaitAll<T>(values: readonly (T | PromiseLike<T>)[]): Promise<T[]> {
-    return new Promise<T[]>((resolve, reject) => {
-        let res: T[] = [];
-        let errors: any[] = [];
-        let index = 0;
-        if (values.length === 0) {
-            resolve(res);
-        } else {
-            values.forEach(async (x, i) => {
-                try {
-                    res[i] = await x
-                } catch (e) {
-                    errors[i] = e
-                }
-                index++;
-                if (index === values.length) {
-                    if (errors.length !== 0) {
-                        reject(new AggregateError(errors))
-                    } else {
-                        resolve(res)
-                    }
-                }
-            })
-        }
-    })
-}
-
 export function waitForReaction(message: Discord.Message, user: Discord.User, timeout = -1) {
     return new Promise<Discord.MessageReaction>((resolve, reject) => {
         let f = (reaction: Discord.MessageReaction, author: Discord.User) => {
