@@ -126,6 +126,23 @@ export const users = {
         return constructUser(result.rows[0].username, genderIntToString[result.rows[0].gender], result.rows[0].guild_id, result.rows[0].discord_id, id, result.rows[0].system_id)
     },
     add: async (user: User) => {
+        let guildId: string | null = null;
+        let discordId: string | null = null;
+        if (user instanceof DiscordUser) {
+            discordId = user.discordId
+        } else if (user instanceof GuildUser) {
+            guildId = user.guildId
+        }
+        try {
+            const result = await client.query("INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($1, $2, $3, $4, $5)", [guildId, discordId, user.name, genderStringToInt[user.gender], user.systemId])
+            user.id = result.rows[0].id
+            return true
+        }
+        catch (e) {
+            return false
+        }
+    },
+    oldAdd: async (user: User) => {
         let toAdd: User[] = [];
 
         function rec(user: User) {
@@ -204,14 +221,18 @@ export const users = {
     },
     getMembers: async (user: User) => {
         let userResults = await client.query(`
-        WITH RECURSIVE members AS (
-            SELECT username, gender, system_id, id FROM users
-            WHERE system_id = $1
-            UNION 
-                SELECT u.username, u.gender, u.system_id, u.id FROM users u
-                INNER JOIN members m ON m.id = u.system_id
-        ) SELECT username, gender, system_id, id FROM members 
-    `, [user.id]);
+            WITH RECURSIVE members AS (
+                SELECT username, gender, system_id, id
+                FROM users
+                WHERE system_id = $1
+                UNION
+                SELECT u.username, u.gender, u.system_id, u.id
+                FROM users u
+                         INNER JOIN members m ON m.id = u.system_id
+            )
+            SELECT username, gender, system_id, id
+            FROM members
+        `, [user.id]);
         let guildId: string | null = null;
         let discordId: string | null = null;
         if (user instanceof GuildUser) {
@@ -230,10 +251,14 @@ export const users = {
         } else {
             id = userOrId.id!
         }
-        return (await client.query(`WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [id])).rows[0].count == '1'
+        return (await client.query(`WITH deleted AS (DELETE FROM users WHERE id = $1 RETURNING *)
+                                    SELECT COUNT(*)
+                                    FROM deleted `, [id])).rows[0].count == '1'
     },
     deleteByDiscord: async (discordId: string) => {
-        return (await client.query(`WITH deleted AS(DELETE FROM users WHERE discord_id = $1 RETURNING *) SELECT COUNT(*) FROM deleted `, [discordId])).rows[0].count == '1'
+        return (await client.query(`WITH deleted AS (DELETE FROM users WHERE discord_id = $1 RETURNING *)
+                                    SELECT COUNT(*)
+                                    FROM deleted `, [discordId])).rows[0].count == '1'
     },
     update: async (user: User) => {
         let guildId: string | null = null;
@@ -254,7 +279,7 @@ export const users = {
 };
 
 export const relationships = {
-        add: async (relationship: Relationship) => {
+    add: async (relationship: Relationship) => {
         try {
             await client.query("INSERT INTO relationships (relationship_type, left_user_id, right_user_id, guild_id) VALUES ($1, $2, $3, $4)", [relationshipStringToInt[relationship.type], relationship.leftUserId, relationship.rightUserId, relationship.guildId]);
             return true
@@ -331,44 +356,55 @@ export const polymapCache = {
 
 export async function getAllInGuild(guildId: string, discordIds: string[]): Promise<{ relationships: Relationship[], users: User[] }> {
     const result = await client.query(`WITH left_user AS (
-        SELECT 
-        bottom.username, bottom.id, top.id as topmost_system_id, bottom.gender, bottom.system_id, top.discord_id, top.guild_id
+        SELECT bottom.username,
+               bottom.id,
+               top.id as topmost_system_id,
+               bottom.gender,
+               bottom.system_id,
+               top.discord_id,
+               top.guild_id
         FROM users bottom
-        INNER JOIN users top
-        ON top.id = get_topmost_system(bottom.id)
-        WHERE
-        top.discord_id = ANY($1)
-        OR
-        top.guild_id = $2
+                 INNER JOIN users top
+                            ON top.id = get_topmost_system(bottom.id)
+        WHERE top.discord_id = ANY ($1)
+           OR top.guild_id = $2
     )
-    , right_user AS (
-        SELECT 
-        bottom.username, bottom.id, top.id as topmost_system_id, bottom.gender, bottom.system_id, top.discord_id, top.guild_id
-        FROM users bottom
-        INNER JOIN users top
-        ON top.id = get_topmost_system(bottom.id)
-        WHERE
-        top.discord_id = ANY($1)
-        OR
-        top.guild_id = $2
-    )
-    SELECT 
-    r.relationship_type, r.guild_id as rguild_id, 
-    u1.username as username1, u2.username as username2,
-    u1.id as id1, u2.id as id2,
-    u1.gender as gender1, u2.gender as gender2,
-    u1.guild_id as guild_id1,
-    u2.guild_id as guild_id2,
-    u1.system_id as system_id1, u2.system_id as system_id2,
-    u1.discord_id as discord_id1,
-    u2.discord_id as discord_id2,
-    r.left_user_id, r.right_user_id
-    
-    FROM relationships r
-    INNER JOIN left_user u1
-    ON r.left_user_id = u1.id
-    INNER JOIN right_user u2
-    ON r.right_user_id = u2.id;`, [discordIds, guildId]);
+                                          , right_user AS (
+            SELECT bottom.username,
+                   bottom.id,
+                   top.id as topmost_system_id,
+                   bottom.gender,
+                   bottom.system_id,
+                   top.discord_id,
+                   top.guild_id
+            FROM users bottom
+                     INNER JOIN users top
+                                ON top.id = get_topmost_system(bottom.id)
+            WHERE top.discord_id = ANY ($1)
+               OR top.guild_id = $2
+        )
+                                       SELECT r.relationship_type,
+                                              r.guild_id    as rguild_id,
+                                              u1.username   as username1,
+                                              u2.username   as username2,
+                                              u1.id         as id1,
+                                              u2.id         as id2,
+                                              u1.gender     as gender1,
+                                              u2.gender     as gender2,
+                                              u1.guild_id   as guild_id1,
+                                              u2.guild_id   as guild_id2,
+                                              u1.system_id  as system_id1,
+                                              u2.system_id  as system_id2,
+                                              u1.discord_id as discord_id1,
+                                              u2.discord_id as discord_id2,
+                                              r.left_user_id,
+                                              r.right_user_id
+
+                                       FROM relationships r
+                                                INNER JOIN left_user u1
+                                                           ON r.left_user_id = u1.id
+                                                INNER JOIN right_user u2
+                                                           ON r.right_user_id = u2.id;`, [discordIds, guildId]);
     let userMap = new Map<number, User>();
     let relationships: Relationship[] = [];
     result.rows.forEach(x => {

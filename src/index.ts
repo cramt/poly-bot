@@ -1,10 +1,9 @@
 import * as Discord from "discord.js"
 import secret from "./secret"
-import {commandLineArgSplit} from "./utilities"
+import {AggregateError, commandLineArgSplit} from "./utilities"
 import {openDB, polymapCache} from "./db"
 import {commands} from "./commands"
 import {ArgumentError} from "./Command"
-import AggregateError from "aggregate-error"
 import * as job from "microjob"
 import * as fs from "fs"
 import * as wasm from "../lib/wasmlib/wasmlib.js"
@@ -74,8 +73,9 @@ if ((global as any).util === undefined) {
             } catch (ae) {
                 if (ae instanceof AggregateError) {
                     let errorMessages: string[] = [];
-                    for (const argError of ae) {
-                        if (argError instanceof ArgumentError) {
+                    for (let i = 0; i < ae.errors.length; i++) {
+                        let argError = ae.errors[i];
+                        if ((argError as any).argument !== undefined) {
                             errorMessages.push(argError.message)
                         } else {
                             throw argError
@@ -155,7 +155,7 @@ if ((global as any).util === undefined) {
         })
     }
 
-    process.on("unhandledRejection", onError);
-    process.on("uncaughtException", onError)
+    //process.on("unhandledRejection", onError);
+    //process.on("uncaughtException", onError)
 }
 

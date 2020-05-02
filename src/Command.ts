@@ -2,7 +2,7 @@ import * as Discord from "discord.js"
 import {client} from "./index"
 import {users} from "./db";
 import {DiscordUser} from "./User";
-import {getType, humanPrintArray, discordRequestChoice, splitMessageForDiscord} from "./utilities"
+import {getType, humanPrintArray, discordRequestChoice, splitMessageForDiscord, AggregateError} from "./utilities"
 
 
 export interface DiscordInput {
@@ -32,11 +32,13 @@ export class ParseResult {
 }
 
 export class ArgumentError extends Error {
+
     argument: Argument;
 
     constructor(message: string, arg: Argument) {
         super(message);
         this.argument = arg;
+        (this as any).__proto__ = ArgumentError
     }
 }
 
@@ -163,7 +165,7 @@ export class NumberArgument extends Argument {
 }
 
 export class SpecificArgument extends Argument {
-    private specificStrings: string[];
+    private readonly specificStrings: string[];
 
     constructor(...specificString: string[]) {
         super();
@@ -255,7 +257,20 @@ export abstract class ArgumentList {
     protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
 
     async parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
-        return (await Promise.allSettled(this.internalParse(values, discord))).map(x => x.value || x.reason)
+        let resolved: ParseResult[] = [];
+        let rejected: Error[] = [];
+        (await Promise.allSettled(this.internalParse(values, discord))).forEach(x => {
+            if (x.status === "rejected") {
+                rejected.push(x.reason)
+            } else {
+                resolved.push(x.value)
+            }
+        })
+        if (rejected.length === 0) {
+            return resolved;
+        } else {
+            throw new AggregateError(rejected);
+        }
     }
 }
 
