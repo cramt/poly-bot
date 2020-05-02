@@ -80,6 +80,37 @@ class StartProd {
         await this.thread.terminate()
     }
 
+    _killSubProcesses(){
+        const getPids = process.platform === "win32" ? `
+        $ps = New-Object System.Collections.Generic.List[System.Object]
+        function get($process) {
+            Foreach($p in Get-Process){
+                if($p.Parent.Id -eq $process.Id){
+                    $ps.Add($p)
+                    get($p)
+                }
+            }
+        }
+        get(Get-Process -id ${process.pid})
+        Foreach($p in $ps) {
+            Stop-Process $p
+        }
+        ` : `pkill -P ${process.pid}`;
+
+        return new Promise((resolve, reject)=>{
+            cp.exec(getPids, process.platform === "win32" ? {} : {
+                shell: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+            },(err, stdout, stderr)=>{
+                if(err){
+                    reject(err)
+                }
+                else{
+                    resolve()
+                }
+            })
+        })
+    }
+
     init() {
         return new Promise(async (resolve1, reject) => {
             while (true) {
@@ -104,6 +135,7 @@ class StartProd {
                 });
                 console.log("exited with code " + code);
                 console.log("restarting")
+                await this._killSubProcesses()
             }
         })
     }
