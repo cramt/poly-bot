@@ -11,7 +11,7 @@ import {PluralKitApi} from "./PluralKitApi";
 import {Relationship} from "./Relationship";
 import {User} from "./User";
 import {spawn, exec} from "child_process";
-import {loadTestData, awaitAll} from "./utilities";
+import {loadTestData} from "./utilities";
 import {commands} from "./commands";
 import {NumberArgument, StandardArgumentList} from "./Command";
 import AggregateError from "aggregate-error";

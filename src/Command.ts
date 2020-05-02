@@ -2,7 +2,7 @@ import * as Discord from "discord.js"
 import {client} from "./index"
 import {users} from "./db";
 import {DiscordUser} from "./User";
-import {getType, humanPrintArray, awaitAll, discordRequestChoice, splitMessageForDiscord} from "./utilities"
+import {getType, humanPrintArray, discordRequestChoice, splitMessageForDiscord} from "./utilities"
 
 
 export interface DiscordInput {
@@ -254,8 +254,8 @@ export abstract class ArgumentList {
 
     protected abstract internalParse(values: string[], discord: DiscordInput): Promise<ParseResult>[]
 
-    parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
-        return awaitAll(this.internalParse(values, discord))
+    async parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
+        return (await Promise.allSettled(this.internalParse(values, discord))).map(x => x.value || x.reason)
     }
 }
 
@@ -312,7 +312,7 @@ export class OptionalArgumentList extends ArgumentList {
                     throw new TypeError("OptionalizedArgument.type is not default or required")
             }
         })
-        for (let i = required.length; i < this.arguments.length+1; i++) {
+        for (let i = required.length; i < this.arguments.length + 1; i++) {
 
             interface PossiblySetArgument {
                 isArgument: boolean
