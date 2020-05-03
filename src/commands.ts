@@ -64,7 +64,7 @@ export const commands: Command[] = [
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
             } else {
-                return new CommandReponseInSameChannel("there is already a person with that name on this discord server")
+                return new CommandReponseInSameChannel("this discord user already is a polybot user")
             }
         }),
     new Command("add-local",
