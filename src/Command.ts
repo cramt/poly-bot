@@ -166,17 +166,37 @@ export class NumberArgument extends Argument {
 
 export class SpecificArgument extends Argument {
     private readonly specificStrings: string[];
+    private readonly ignoreCapital: boolean = true;
 
     constructor(...specificString: string[]) {
         super();
+
         this.specificStrings = specificString
+        let max = Math.max(...specificString.map(x => x.length))
+        for (let i = 1; i < max; i++) {
+            for (let j = i; j < max; j++) {
+                if (this.specificStrings[i] && this.specificStrings[j] && this.specificStrings[i].substring(0, i).toLowerCase() === this.specificStrings[j].substring(0, i)) {
+                    this.ignoreCapital = false;
+                }
+            }
+        }
     }
 
     async parse(input: ArgumentFuncInput) {
-        if (!this.specificStrings.includes(input.content)) {
-            throw new ArgumentError(input.content + " is not part of " + humanPrintArray(this.specificStrings), this)
+        let strings = [...this.specificStrings].map((x, i) => ({str: x, index: i}))
+        let content = input.content
+        if (this.ignoreCapital) {
+            strings.forEach(x => {
+                x.str = x.str.toLowerCase()
+            })
+            content = content.toLowerCase()
         }
-        return new ParseResult(input.content)
+        let res = strings.filter(x => x.str.substring(0, content.length) === content)
+        if (res.length === 1) {
+            let a = new ParseResult(this.specificStrings[res[0].index])
+            return a;
+        }
+        throw new ArgumentError(content + " is not part of " + humanPrintArray(strings.map(x => x.str)), this)
     }
 
     get description() {

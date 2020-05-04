@@ -70,7 +70,7 @@ if ((global as any).util === undefined) {
             try {
                 let respond = await command.call(userCommand.args, message.author, channel, message.guild);
                 await respond.respond(message)
-            } catch (ae) {a
+            } catch (ae) {
                 if (ae instanceof AggregateError) {
                     let errorMessages: string[] = [];
                     for (let i = 0; i < ae.errors.length; i++) {

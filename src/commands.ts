@@ -66,7 +66,7 @@ export const commands: Command[] = [
             } else {
                 return new CommandReponseInSameChannel("this discord user already is a polybot user")
             }
-        }),
+        }), 
     new Command("add-local",
         "adds you to the polycule",
         new StandardArgumentList(new AnyArgument(),
