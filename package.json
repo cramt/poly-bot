@@ -6,7 +6,8 @@
     "scripts": {
         "test": "mocha -r ts-node/register tests/**/*.test.ts",
         "coverage": "nyc -r text -e .ts -x \"tests/*.test.ts\" npm run test",
-        "compile-rust": "compile.sh"
+        "compile-rust": "node scripts/wasm_compile.js",
+        "run": "node scripts/run.js"
     },
     "keywords": [],
     "author": "",
