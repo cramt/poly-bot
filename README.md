@@ -27,6 +27,7 @@ HTTP_PORT and GITHUB_SECRET is only relevant for auto updating in production, yo
 the bot uses a postgresql database
 
 ## TODO
+- add command for reading log files
 - add pluralkit import support
 - add alias' to commands
 - move generation of maps off main thread
