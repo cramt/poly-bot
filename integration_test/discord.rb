@@ -27,18 +27,20 @@ module Bots
     }
 
     cwd = Dir.pwd
-    Promise.new { |resolve|
+    thread = Thread.new {sleep}
+    Thread.new {
         Dir.chdir("../")
         node_process = IO.popen({"TEST_BOTS" => @bots.map {|x| x.bot_user.id}.join(",")}, "node scripts/run.js") {|node|
             node.each do |x|
                 puts x
                 if x == "poly-bot online\n"
-                    resolve.call
+                    thread.terminate
                 end
             end
         }
         at_exit {node_process.close}
     }
+    thread.join
     Dir.chdir(cwd)
 
     @bot = Secret.local["bot_id"]

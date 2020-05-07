@@ -1,2 +1,2 @@
-require "./database"
+require "./discord.rb"
 
