@@ -2,18 +2,19 @@ require "discordrb"
 require "json"
 require 'securerandom'
 require "Promises"
+require "./secret.rb"
+require "./database.rb"
 
 module Bots
-    secret = JSON.parse(File.read("SECRET.json"))
-    threads = secret["bots"].map {|bot| Thread.new {Discordrb::Bot.new token: bot}}
+    threads = Secret.local["bots"].map {|bot| Thread.new {Discordrb::Bot.new token: bot}}
     threads.each(&:join)
     @bots = threads.map(&:value)
     @bots.each {|bot| Thread.new {bot.run}}
 
 
-    Promise.all(@bots.map {|bot| Promise.new {|resolve| bot.ready {resolve.call}}})
+    Promise.all(@bots.map {|bot| Promise.new {|resolve| bot.ready {resolve.call}}}).await
 
-    threads = secret["guilds"].map {|guild| Thread.new {@bots.lazy.map {|bot| bot.server(guild)}.find {|server| !server.nil?}}}
+    threads = Secret.local["guilds"].map {|guild| Thread.new {@bots.lazy.map {|bot| bot.server(guild)}.find {|server| !server.nil?}}}
     threads.each(&:join)
     @guilds = threads.map(&:value)
 
@@ -40,9 +41,8 @@ module Bots
     }
     Dir.chdir(cwd)
 
-    @bot = secret["bot_id"]
-    secret = JSON.parse(File.read(File.join(Dir.pwd, "../SECRET.json")))
-    @prefix = secret["PREFIX"]
+    @bot = Secret.local["bot_id"]
+    @prefix = Secret.global["PREFIX"]
 
     @callback_dictionary = {}
 

@@ -19,6 +19,7 @@
     <orderEntry type="library" scope="PROVIDED" name="mime-types-data (v3.2019.1009, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="netrc (v0.11.0, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="opus-ruby (v1.0.1, ruby-2.7.0-p0) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="pg (v1.2.3, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rbnacl (v3.4.0, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rest-client (v2.1.0, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rspec (v3.9.0, ruby-2.7.0-p0) [gem]" level="application" />
