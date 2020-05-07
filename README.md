@@ -4,7 +4,7 @@ this is a discord bot written in typescript to generate polycule maps over a dis
 ## setup
 first a config file with all the good secret stuff needs to be setup in SECERT.json in the root directory
 
-```json5
+```json
 {
   "DISCORD_TOKEN": "DISCORD TOKEN",
   "GRAPHVIZ_LOCATION": "/path/to/graphviz",
@@ -27,6 +27,7 @@ HTTP_PORT and GITHUB_SECRET is only relevant for auto updating in production, yo
 the bot uses a postgresql database
 
 ## TODO
+- add pluralkit import support
 - add alias' to commands
 - move generation of maps off main thread
 
