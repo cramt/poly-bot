@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/cramt/Promises.git
+  revision: 14b53fb8f25ab21c095f775a6ade692c464a21fc
+  specs:
+    Promises (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -57,6 +63,7 @@ PLATFORMS
   x64-mingw32
 
 DEPENDENCIES
+  Promises!
   discordrb
   rspec
 

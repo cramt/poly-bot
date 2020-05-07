@@ -4,3 +4,4 @@ source "https://rubygems.org"
 
 gem 'discordrb'
 gem "rspec"
+gem "Promises", :git => "git://github.com/cramt/Promises.git"

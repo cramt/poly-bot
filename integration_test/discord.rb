@@ -1,6 +1,7 @@
 require "discordrb"
 require "json"
 require 'securerandom'
+require "Promises"
 
 module Bots
     secret = JSON.parse(File.read("SECRET.json"))
@@ -10,9 +11,7 @@ module Bots
     @bots.each {|bot| Thread.new {bot.run}}
 
 
-    threads = @bots.map {|| Thread.new {sleep}}
-    @bots.each_with_index {|bot, i| bot.ready {threads[i].terminate}}
-    threads.each(&:join)
+    Promise.all(@bots.map {|bot| Promise.new {|resolve| bot.ready {resolve.call}}})
 
     threads = secret["guilds"].map {|guild| Thread.new {@bots.lazy.map {|bot| bot.server(guild)}.find {|server| !server.nil?}}}
     threads.each(&:join)
@@ -27,20 +26,18 @@ module Bots
     }
 
     cwd = Dir.pwd
-    thread = Thread.new {sleep}
-    Thread.new {
+    Promise.new { |resolve|
         Dir.chdir("../")
         node_process = IO.popen({"TEST_BOTS" => @bots.map {|x| x.bot_user.id}.join(",")}, "node scripts/run.js") {|node|
             node.each do |x|
                 puts x
                 if x == "poly-bot online\n"
-                    thread.terminate
+                    resolve.call
                 end
             end
         }
         at_exit {node_process.close}
     }
-    thread.join
     Dir.chdir(cwd)
 
     @bot = secret["bot_id"]
