@@ -245,7 +245,5 @@ export class AggregateError extends Error {
         super(message)
         this.errors = errors
         this.name = "AggregateError"
-        console.log("aaa")
     }
-
 }

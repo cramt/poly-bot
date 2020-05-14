@@ -2,7 +2,7 @@
 <module type="RUBY_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../integration_test" />
+    <content url="file://$MODULE_DIR$/../../end_to_end_test" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="RModuleSettingsStorage">
