@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$/../../end_to_end_test" />
     <orderEntry type="jdk" jdkName="ruby-2.7.0-p0" jdkType="RUBY_SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="Promises (v0.1.0@14b53f, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="bundler (v2.1.4, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="diff-lcs (v1.3, ruby-2.7.0-p0) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="discordrb (v3.3.0, ruby-2.7.0-p0) [gem]" level="application" />
