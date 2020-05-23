@@ -400,7 +400,7 @@ export class OptionalArgumentList extends ArgumentList {
     }
 
     get description(): string {
-        return this.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.argument.usage !== "" ? x.argument.usage + ", can be" : "") + x.argument.description + (x.type === "default" ? "default value is " + x.default : "")).join("")
+        return this.arguments.map((x, i) => "\r\nargument " + i + ": " + (x.argument.usage !== "" ? x.argument.usage + ", can be" : "") + x.argument.description + (x.type === "default" ? ", default value is " + x.default : "")).join("")
     }
 }
 
