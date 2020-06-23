@@ -66,7 +66,7 @@ export const commands: Command[] = [
             } else {
                 return new CommandReponseInSameChannel("this discord user already is a polybot user")
             }
-        }), 
+        }),
     new Command("add-local",
         "adds you to the polycule",
         new StandardArgumentList(new AnyArgument(),
@@ -173,7 +173,7 @@ export const commands: Command[] = [
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id;
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)]);
-            await db.relationships.delete(new Relationship("CUDDLES WITH", leftUser.id!, rightUser.id!, guildId));
+            await db.relationships.delete(new Relationship("ROMANTIC", leftUser.id!, rightUser.id!, guildId));
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 

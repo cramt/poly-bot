@@ -91,9 +91,8 @@ export const relationshipStringToInt: {
     "ROMANTIC": 0,
     "SEXUAL": 1,
     "FRIEND": 2,
-    "LIVES WITH": 3,
-    "IN SYSTEM WITH": 4,
-    "CUDDLES WITH": 5,
+    "CO-LIVES": 3,
+    "CUDDLES": 5,
     "QUEERPLATONIC": 6
 };
 
@@ -134,11 +133,12 @@ export const users = {
             guildId = user.guildId
         }
         try {
-            const result = await client.query("INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($1, $2, $3, $4, $5)", [guildId, discordId, user.name, genderStringToInt[user.gender], user.systemId])
+            const result = await client.query("INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", [guildId, discordId, user.name, genderStringToInt[user.gender], user.systemId])
             user.id = result.rows[0].id
             return true
         }
         catch (e) {
+            console.log(e);
             return false
         }
     },

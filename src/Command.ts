@@ -279,6 +279,7 @@ export abstract class ArgumentList {
     async parse(values: string[], discord: DiscordInput): Promise<ParseResult[]> {
         let resolved: ParseResult[] = [];
         let rejected: Error[] = [];
+        //@ts-ignore
         (await Promise.allSettled(this.internalParse(values, discord))).forEach(x => {
             if (x.status === "rejected") {
                 rejected.push(x.reason)
