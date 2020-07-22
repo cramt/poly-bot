@@ -3,6 +3,7 @@ import {Gender, User, constructUser, DiscordUser, GuildUser} from './User';
 import {Relationship, RelationshipType} from './Relationship';
 import * as fs from "fs"
 import secret from "./secret";
+import {getType} from "./utilities";
 
 let client: Client;
 
@@ -91,9 +92,8 @@ export const relationshipStringToInt: {
     "ROMANTIC": 0,
     "SEXUAL": 1,
     "FRIEND": 2,
-    "LIVES WITH": 3,
-    "IN SYSTEM WITH": 4,
-    "CUDDLES WITH": 5,
+    "CO-LIVES": 3,
+    "CUDDLES": 5,
     "QUEERPLATONIC": 6
 };
 
@@ -134,11 +134,11 @@ export const users = {
             guildId = user.guildId
         }
         try {
-            const result = await client.query("INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($1, $2, $3, $4, $5)", [guildId, discordId, user.name, genderStringToInt[user.gender], user.systemId])
+            const result = await client.query("INSERT INTO users (guild_id, discord_id, username, gender, system_id) VALUES ($1, $2, $3, $4, $5) RETURNING id", [guildId, discordId, user.name, genderStringToInt[user.gender], user.systemId])
             user.id = result.rows[0].id
             return true
-        }
-        catch (e) {
+        } catch (e) {
+            console.log(e);
             return false
         }
     },
@@ -219,12 +219,13 @@ export const users = {
         WHERE (${generateNullableEvaluation("top.guild_id", 1)} OR top.discord_id = ANY($2)) AND bottom.username = $3`, [guildId, discordIds, username])
             .then(y => y.rows.map(x => constructUser(username, genderIntToString[x.gender], x.guild_id, x.discord_id, x.id, x.system_id)))
     },
-    getMembers: async (user: User) => {
+    getMembers: async (_user: User[] | User) => {
+        let user = Array.isArray(_user) ? _user : [_user]
         let userResults = await client.query(`
             WITH RECURSIVE members AS (
                 SELECT username, gender, system_id, id
                 FROM users
-                WHERE system_id = $1
+                WHERE system_id = ANY ($1)
                 UNION
                 SELECT u.username, u.gender, u.system_id, u.id
                 FROM users u
@@ -232,17 +233,32 @@ export const users = {
             )
             SELECT username, gender, system_id, id
             FROM members
-        `, [user.id]);
-        let guildId: string | null = null;
-        let discordId: string | null = null;
-        if (user instanceof GuildUser) {
-            guildId = user.guildId;
-        } else if (user instanceof DiscordUser) {
-            discordId = user.discordId;
+        `, [user.map(x => x.id)]);
+        let map = new Map<number, User>();
+        user.forEach(x => {
+            map.set(x.id!, x);
+        })
+        while (userResults.rows.length != 0) {
+            let row = userResults.rows.shift();
+            let system_id = row.system_id;
+            let parent = map.get(system_id);
+            if (parent == null) {
+                userResults.rows.push(row);
+                continue;
+            }
+            let guildId: string | null = null;
+            let discordId: string | null = null;
+            if (parent instanceof DiscordUser) {
+                discordId = parent.discordId
+            } else if (parent instanceof GuildUser) {
+                guildId = parent.guildId
+            }
+            let user = constructUser(row.username, genderIntToString[row.gender], guildId, discordId, row.id, system_id);
+            user.system = parent;
+            map.set(user.id!, user);
         }
-        let users = userResults.rows.map(x => constructUser(x.username, genderIntToString[x.gender], guildId, discordId, x.id, x.system_id));
-        users.forEach(x => x.system = user);
-        return users
+        return Array.from(map).map(x => x[1]);
+        return Array.from(map).map(x => x[1]);
     },
     delete: async (userOrId: User | number) => {
         let id: number;
@@ -424,8 +440,13 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
         }
         relationships.push(new Relationship(relationshipIntToString[x.relationship_type], left, right, x.rguild_id))
     });
-    let users = Array.from(userMap.values());
-    users.forEach(x => {
+    (await users.getMembers(Array.from(userMap.values()))).forEach(x => {
+        if (!userMap.has(x.id!)) {
+            userMap.set(x.id!, x)
+        }
+    })
+    let user = Array.from(userMap.values());
+    user.forEach(x => {
         if (x.systemId !== null) {
             let system = userMap.get(x.systemId);
             if (system) {
@@ -434,7 +455,7 @@ export async function getAllInGuild(guildId: string, discordIds: string[]): Prom
         }
     });
     return {
-        users: users,
+        users: user,
         relationships: relationships
     }
 }

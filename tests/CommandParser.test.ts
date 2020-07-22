@@ -41,7 +41,7 @@ describe('Number Arguments', () => {
             channel: null as any,
             guild: null as any,
             author: null as any
-        }).then(x => x.value), ArgumentError)
+        }), ArgumentError)
     });
     it('accept valid numbers', async () => {
         await assert.eventually.equal(new NumberArgument().parse({

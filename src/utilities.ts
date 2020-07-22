@@ -3,7 +3,6 @@ import {Relationship} from "./Relationship"
 import {DiscordUser, GuildUser, User} from "./User"
 import * as Discord from "discord.js"
 import {client} from "."
-import beginningOfLine = Mocha.reporters.Base.cursor.beginningOfLine;
 import {relationships, users} from "./db";
 
 export function commandLineArgSplit(str: string): { commandName: string, args: string[] } {
@@ -245,7 +244,5 @@ export class AggregateError extends Error {
         super(message)
         this.errors = errors
         this.name = "AggregateError"
-        console.log("aaa")
     }
-
 }

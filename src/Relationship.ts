@@ -4,9 +4,8 @@ export type RelationshipType =
     "ROMANTIC"
     | "SEXUAL"
     | "FRIEND"
-    | "LIVES WITH"
-    | "IN SYSTEM WITH"
-    | "CUDDLES WITH"
+    | "CO-LIVES"
+    | "CUDDLES"
     | "QUEERPLATONIC"
 
 export class Relationship {
@@ -42,11 +41,10 @@ export class Relationship {
 export const relationshipTypeToColor: {
     [P in RelationshipType]: string
 } = {
-    "ROMANTIC": "#ff000",
+    "ROMANTIC": "#ff0000",
     "SEXUAL": "#8E7CC3",
     "FRIEND": "#6AA84F",
-    "LIVES WITH": "#FFFF00",
-    "IN SYSTEM WITH": "#FFE599",
-    "CUDDLES WITH": "#F6B26B",
+    "CO-LIVES": "#FFFF00",
+    "CUDDLES": "#F6B26B",
     "QUEERPLATONIC": "#2A2A2A"
 };

@@ -60,6 +60,7 @@ if ((global as any).util === undefined) {
             return;
         }
         if (message.content.startsWith(secret.PREFIX)) {
+            console.log("responding to " + message.content + " in " + message.guild.name);
             let channel = message.channel;
             let userCommand = commandLineArgSplit(message.content.substring(secret.PREFIX.length));
             let command = commands.filter(x => x.name === userCommand.commandName && (x.arguments.validLength(userCommand.args.length)) && x.channelType.includes(channel.type))[0] || null;

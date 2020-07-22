@@ -64,7 +64,7 @@ export const commands: Command[] = [
             if (await db.users.add(user)) {
                 return new CommandResponseReaction("👍")
             } else {
-                return new CommandReponseInSameChannel("there is already a person with that name on this discord server")
+                return new CommandReponseInSameChannel("this discord user already is a polybot user")
             }
         }),
     new Command("add-local",
@@ -102,7 +102,7 @@ export const commands: Command[] = [
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await db.relationships.getByUsers([user, ...await db.users.getMembers(user)]);
+        let relationships = await db.relationships.getByUsers(await db.users.getMembers(user));
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
             let you = x.rightUser!;
             let them = x.leftUser!;
@@ -173,7 +173,7 @@ export const commands: Command[] = [
         , async input => {
             let guildId = (input.channel as Discord.TextChannel).guild.id;
             let [leftUser, rightUser] = await Promise.all([parseDiscordUserOrUser(input.args[0].value), parseDiscordUserOrUser(input.args[1].value)]);
-            await db.relationships.delete(new Relationship("CUDDLES WITH", leftUser.id!, rightUser.id!, guildId));
+            await db.relationships.delete(new Relationship("ROMANTIC", leftUser.id!, rightUser.id!, guildId));
             return new CommandReponseInSameChannel("all relationships between " + leftUser.name + " and " + rightUser.name + " has been deleted")
         }),
 
@@ -189,7 +189,7 @@ export const commands: Command[] = [
 
     new Command("generate-system", "generates the polycule map but only for a system", new StandardArgumentList(new UserArgument()), async input => {
         let system = input.args[0].value as User;
-        let members = (await db.users.getMembers(system)).concat(system);
+        let members = await db.users.getMembers(system);
         let relationships = await db.relationships.getByUsers(members);
         let buffer = await polyMapGenerate(members, relationships);
         return new CommandResponseFile(buffer, "polycule_map.png")

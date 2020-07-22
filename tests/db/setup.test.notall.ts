@@ -87,7 +87,7 @@ describe('Database setup', () => {
                 console.error(e);
                 assert.fail()
             });
-    }).timeout(10000);
+    }).timeout(20000);
 
     after(async () => {
         await client.end()

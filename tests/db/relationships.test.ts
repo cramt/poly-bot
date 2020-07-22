@@ -87,7 +87,7 @@ describe('Relationships', () => {
             (<DiscordUser>testUsers.find(x => x.name === "Alexandra")).discordId
         );
         let relationship1 = new Relationship("FRIEND", user1, user2!, "1");
-        let relationship2 = new Relationship("CUDDLES WITH", user1, user2!, "1");
+        let relationship2 = new Relationship("CUDDLES", user1, user2!, "1");
         await assert.isFulfilled(relationships.add(relationship1));
         await assert.isFulfilled(relationships.add(relationship2));
         let foundRelationships = await relationships.getByUsers([user1])
