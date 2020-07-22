@@ -102,7 +102,7 @@ export const commands: Command[] = [
         if (user === null) {
             return new CommandReponseInSameChannel("you have not been added yet")
         }
-        let relationships = await db.relationships.getByUsers([user, ...await db.users.getMembers(user)]);
+        let relationships = await db.relationships.getByUsers(await db.users.getMembers(user));
         return new CommandReponseInSameChannel("```name: " + user.name + "\ngender: " + user.gender.toLowerCase() + relationships.map(x => {
             let you = x.rightUser!;
             let them = x.leftUser!;
@@ -189,7 +189,7 @@ export const commands: Command[] = [
 
     new Command("generate-system", "generates the polycule map but only for a system", new StandardArgumentList(new UserArgument()), async input => {
         let system = input.args[0].value as User;
-        let members = (await db.users.getMembers(system)).concat(system);
+        let members = await db.users.getMembers(system);
         let relationships = await db.relationships.getByUsers(members);
         let buffer = await polyMapGenerate(members, relationships);
         return new CommandResponseFile(buffer, "polycule_map.png")

@@ -87,7 +87,7 @@ describe("Database System User", () => {
         let headMate = new GuildUser("headmate", "FEMME", null, guildUser.id, "");
         await assert.eventually.isTrue(users.add(headMate));
         assert.isNotNull(headMate.id)
-    });
+    }).timeout(10000);
 
     it('can retrieve a system member by username', async () => {
         await users.add(guildUser);
@@ -95,8 +95,22 @@ describe("Database System User", () => {
         await users.add(headMate);
         headMate.guildId = guildUser.guildId;
         await assert.eventually.deepEqual(users.getByUsername(headMate.name, guildUser.guildId, []), [headMate])
-    });
-    it('can retrieve a system member by discord id')
+    }).timeout(10000);
+    it('can retrieve all members of system', async () => {
+        await users.add(guildUser);
+        let headmate_a = new GuildUser("headmate_a", "SYSTEM", null, guildUser.id, guildId);
+        headmate_a.system = guildUser;
+        await users.add(headmate_a);
+        let headmate_a_b = new GuildUser("headmate_a_b", "FEMME", null, headmate_a.id, guildId);
+        headmate_a_b.system = headmate_a;
+        await users.add(headmate_a_b);
+        let headmate_b = new GuildUser("headmate_b", "MASC", null, guildUser.id, guildId);
+        headmate_b.system = guildUser;
+        await users.add(headmate_b);
+        let gotten = await users.get(guildUser.id!);
+        await users.getMembers(gotten!);
+        assert.deepEqual(gotten, guildUser);
+    }).timeout(10000)
 
 });
 
