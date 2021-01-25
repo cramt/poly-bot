@@ -1,7 +1,1 @@
-node_modules/
-dist/
-output.png
-wasmlib/target
-logs/
-integration_test/SECRET.json
-SECRET.json
+/target/
