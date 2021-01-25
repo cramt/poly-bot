@@ -1,31 +1,39 @@
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
-use once_cell::sync::Lazy;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     #[serde(alias = "DISCORD_TOKEN")]
-    discord_token: String,
+    pub discord_token: String,
     #[serde(alias = "PREFIX")]
-    prefix: String,
+    pub prefix: String,
     #[serde(alias = "DB")]
-    db: ConfigDb
+    pub db: ConfigDb,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigDb {
     #[serde(alias = "HOST")]
-    host: String,
+    pub host: String,
     #[serde(alias = "NAME")]
-    name: String,
+    pub name: String,
     #[serde(alias = "PORT")]
-    port: usize,
+    pub port: usize,
     #[serde(alias = "PASSWORD")]
-    password: String,
+    pub password: String,
     #[serde(alias = "USER")]
-    user: String,
+    pub user: String,
 }
 
-pub const CONFIG: Lazy<Config> = Lazy::new(|| {
-   serde_json::from_str::<Config>(include_str!("../SECRET.json")).unwrap()
-});
+impl ToString for ConfigDb {
+    fn to_string(&self) -> String {
+        format!(
+            "host={} dbname={} port={} password={} user={}",
+            self.host, self.name, self.port, self.password, self.user
+        )
+    }
+}
+
+pub const CONFIG: Lazy<Config> =
+    Lazy::new(|| serde_json::from_str::<Config>(include_str!("../SECRET.json")).unwrap());
