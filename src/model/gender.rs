@@ -29,7 +29,7 @@ impl Gender {
         }
     }
 
-    pub fn to_number(&self) -> u8 {
+    pub fn to_number(&self) -> i16 {
         match self {
             Self::Femme => 0,
             Self::Masc => 1,
@@ -50,7 +50,7 @@ impl Gender {
 
 impl Into<u8> for Gender {
     fn into(self) -> u8 {
-        self.to_number()
+        self.to_number() as u8
     }
 }
 

@@ -12,7 +12,7 @@ fn correct_order_users(left_user: User, right_user: User) -> (User, User) {
 
 #[derive(Clone, Debug)]
 pub struct Relationship {
-    pub id: u64,
+    pub id: i64,
     pub relationship_type: RelationshipType,
     pub left_user: User,
     pub right_user: User,
@@ -20,7 +20,7 @@ pub struct Relationship {
 
 impl Relationship {
     pub fn new(
-        id: u64,
+        id: i64,
         relationship_type: RelationshipType,
         left_user: User,
         right_user: User,
@@ -52,7 +52,7 @@ impl RelationshipNoId {
         }
     }
 
-    pub fn add_id(self, id: u64) -> Relationship {
+    pub fn add_id(self, id: i64) -> Relationship {
         Relationship::new(id, self.relationship_type, self.left_user, self.right_user)
     }
 }

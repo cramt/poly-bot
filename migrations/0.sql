@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-    id            SERIAL,
+    id            BIGSERIAL,
     name          TEXT     NOT NULL,
     gender        SMALLINT NOT NULL,
     parent_system INTEGER,

@@ -1,6 +1,6 @@
 CREATE TABLE relationships
 (
-    id                SERIAL,
+    id                BIGSERIAL,
     relationship_type SMALLINT NOT NULL,
     right_user_id     INTEGER  NOT NULL,
     left_user_id      INTEGER  NOT NULL,

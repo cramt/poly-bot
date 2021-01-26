@@ -4,5 +4,5 @@ pub mod relationship_type;
 pub mod user;
 
 pub trait RelationalId {
-    fn id(&self) -> u64;
+    fn id(&self) -> i64;
 }

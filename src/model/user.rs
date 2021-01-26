@@ -4,20 +4,22 @@ use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub struct User {
-    pub id: u64,
+    pub id: i64,
     pub name: String,
     pub gender: Gender,
     pub system: Option<Box<User>>,
     pub members: Vec<User>,
+    pub discord_id: u64,
 }
 
 impl User {
     pub fn new<S: AsRef<str>>(
-        id: u64,
+        id: i64,
         name: S,
         gender: Gender,
         system: Option<Box<User>>,
         members: Vec<User>,
+        discord_id: u64,
     ) -> Self {
         Self {
             id,
@@ -25,12 +27,13 @@ impl User {
             gender,
             system,
             members,
+            discord_id,
         }
     }
 }
 
 impl RelationalId for User {
-    fn id(&self) -> u64 {
+    fn id(&self) -> i64 {
         self.id
     }
 }
@@ -41,6 +44,7 @@ pub struct UserNoId {
     pub gender: Gender,
     pub system: Option<Box<User>>,
     pub members: Vec<User>,
+    pub discord_id: u64,
 }
 
 impl UserNoId {
@@ -49,22 +53,37 @@ impl UserNoId {
         gender: Gender,
         system: Option<Box<User>>,
         members: Vec<User>,
+        discord_id: u64,
     ) -> Self {
         Self {
             name: name.as_ref().to_string(),
             gender,
             system,
             members,
+            discord_id,
         }
     }
 
-    pub fn add_id(self, id: u64) -> User {
-        User::new(id, self.name, self.gender, self.system, self.members)
+    pub fn add_id(self, id: i64) -> User {
+        User::new(
+            id,
+            self.name,
+            self.gender,
+            self.system,
+            self.members,
+            self.discord_id,
+        )
     }
 }
 
 impl Into<UserNoId> for User {
     fn into(self) -> UserNoId {
-        UserNoId::new(self.name, self.gender, self.system, self.members)
+        UserNoId::new(
+            self.name,
+            self.gender,
+            self.system,
+            self.members,
+            self.discord_id,
+        )
     }
 }

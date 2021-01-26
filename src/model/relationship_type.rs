@@ -32,7 +32,7 @@ impl RelationshipType {
         }
     }
 
-    pub fn to_number(&self) -> u8 {
+    pub fn to_number(&self) -> i16 {
         match self {
             RelationshipType::Romantic => 0,
             RelationshipType::Sexual => 1,
@@ -55,7 +55,7 @@ impl RelationshipType {
 
 impl Into<u8> for RelationshipType {
     fn into(self) -> u8 {
-        self.to_number()
+        self.to_number() as u8
     }
 }
 
