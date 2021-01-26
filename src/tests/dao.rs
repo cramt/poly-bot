@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod dao {
-    use crate::dao::postgres::{ConnectionProvider, DockerConnectionProvider, apply_migrations};
+    use crate::dao::postgres::{apply_migrations, ConnectionProvider, DockerConnectionProvider};
 
     #[tokio::test]
     async fn migration() {

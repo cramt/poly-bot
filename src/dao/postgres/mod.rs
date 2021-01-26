@@ -1,34 +1,42 @@
 pub mod relationships;
 
 use crate::config::CONFIG;
+use crate::migration_constants::MIGRATION_FILES;
 use async_trait::async_trait;
 use std::fmt::Debug;
 use std::ops::Deref;
 use tokio_postgres::tls::NoTlsStream;
 use tokio_postgres::{Client, Connection, NoTls, Socket};
-use crate::migration_constants::MIGRATION_FILES;
 
 pub async fn apply_migrations(client: Client) {
-    let ( schema_version, info_exists) = client
+    let (schema_version, info_exists) = client
         .query("SELECT schema_version FROM info", &[])
         .await
         .ok()
-        .map(|x|
-            (x.first().map(|y| {
-                y.get::<_, i32>(0)
-            }).unwrap_or(-1), true)
-        )
+        .map(|x| (x.first().map(|y| y.get::<_, i32>(0)).unwrap_or(-1), true))
         .unwrap_or((-1, false));
     if !info_exists {
-        client.execute("CREATE TABLE info(schema_version INTEGER NOT NULL)", &[]).await.unwrap();
+        client
+            .execute("CREATE TABLE info(schema_version INTEGER NOT NULL)", &[])
+            .await
+            .unwrap();
     }
     let mut new_schema_version = -1;
-    for (version, sql) in MIGRATION_FILES.iter().filter(|(i, _)| schema_version.clone() < (i.clone() as i32)) {
+    for (version, sql) in MIGRATION_FILES
+        .iter()
+        .filter(|(i, _)| schema_version.clone() < (i.clone() as i32))
+    {
         client.execute(sql.as_str(), &[]).await.unwrap();
         new_schema_version = version.clone() as i32
     }
     client.execute("DELETE FROM info", &[]).await.unwrap();
-    client.execute("INSERT INTO info (schema_version) VALUES ($1)", &[&new_schema_version]).await.unwrap();
+    client
+        .execute(
+            "INSERT INTO info (schema_version) VALUES ($1)",
+            &[&new_schema_version],
+        )
+        .await
+        .unwrap();
 }
 
 #[async_trait]
@@ -65,7 +73,7 @@ impl ConnectionProvider for DockerConnectionProvider {
             "user=postgres password=postgres dbname=postgres host=localhost",
             NoTls,
         )
-            .await
-            .unwrap()
+        .await
+        .unwrap()
     }
 }
