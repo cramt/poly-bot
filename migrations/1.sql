@@ -1,14 +1,10 @@
-CREATE OR REPLACE FUNCTION public.get_topmost_system(start_id integer)
-RETURNS integer as $$
-DECLARE
-    curr integer;
-BEGIN
-	curr = start_id;
-    LOOP
-		EXIT WHEN (SELECT COUNT(*) FROM users WHERE id = curr AND system_id IS NULL) = 1;
-        SELECT system_id FROM users WHERE id = curr INTO curr;
-    END LOOP;
-    return curr;
-END;
-
-$$ LANGUAGE plpgsql;
+CREATE TABLE relationships
+(
+    id                SERIAL,
+    relationship_type SMALLINT NOT NULL,
+    right_user_id     INTEGER  NOT NULL,
+    left_user_id      INTEGER  NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (right_user_id) REFERENCES users (id),
+    FOREIGN KEY (left_user_id) REFERENCES users (id)
+)

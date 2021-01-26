@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod dao {
-    use crate::dao::{ConnectionProvider, DockerConnectionProvider};
+    use crate::dao::postgres::{ConnectionProvider, DockerConnectionProvider, apply_migrations};
 
     #[tokio::test]
-    async fn idk() {
-        let conn = DockerConnectionProvider::open_client().await;
+    async fn migration() {
+        apply_migrations(DockerConnectionProvider::open_client().await).await
     }
 }
