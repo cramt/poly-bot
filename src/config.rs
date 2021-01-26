@@ -1,6 +1,5 @@
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {

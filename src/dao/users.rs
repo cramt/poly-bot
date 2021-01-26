@@ -1,9 +1,7 @@
-use crate::dao::postgres::users::UsersImpl;
 use crate::dao::postgres::PostgresImpl;
 use crate::model::user::{User, UserNoId};
-use crate::model::RelationalId;
+
 use async_trait::async_trait;
-use std::ops::Deref;
 
 #[async_trait]
 pub trait Users {

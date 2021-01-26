@@ -1,6 +1,5 @@
 use crate::model::gender::Gender;
 use crate::model::RelationalId;
-use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub struct User {

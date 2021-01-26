@@ -1,10 +1,6 @@
 use include_dir::{include_dir, Dir};
 use once_cell::sync::Lazy;
-use regex::{Captures, Regex};
-use std::num::ParseIntError;
-use std::ops::Deref;
-use std::path::Path;
-use std::string::FromUtf8Error;
+use regex::Regex;
 
 const MIGRATION_DIR: Dir = include_dir!("./migrations");
 

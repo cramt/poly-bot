@@ -47,11 +47,11 @@ impl Relationships for RelationshipsImpl {
         relationship.add_id(id)
     }
 
-    async fn delete(&self, relationship: Relationship) -> bool {
+    async fn delete(&self, _relationship: Relationship) -> bool {
         unimplemented!()
     }
 
-    async fn get_by_users(&self, users: Vec<User>) -> Vec<Relationship> {
+    async fn get_by_users(&self, _users: Vec<User>) -> Vec<Relationship> {
         unimplemented!()
     }
 }
