@@ -5,6 +5,6 @@ CREATE TABLE relationships
     right_user_id     BIGINT  NOT NULL,
     left_user_id      BIGINT  NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (right_user_id) REFERENCES users (id),
-    FOREIGN KEY (left_user_id) REFERENCES users (id)
+    FOREIGN KEY (right_user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (left_user_id) REFERENCES users (id) ON DELETE CASCADE
 )
