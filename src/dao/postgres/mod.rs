@@ -4,20 +4,20 @@ pub mod users;
 
 use crate::config::CONFIG;
 use crate::migration_constants::MIGRATION_FILES;
+use crate::utilities::shell;
 use async_trait::async_trait;
+use once_cell::sync::Lazy;
 use serenity::static_assertions::_core::ops::DerefMut;
+use serenity::static_assertions::_core::time::Duration;
 use std::error::Error;
 use std::fmt::Debug;
 use std::ops::Deref;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::sleep;
 use tokio_postgres::tls::NoTlsStream;
 use tokio_postgres::types::private::BytesMut;
 use tokio_postgres::types::{IsNull, ToSql, Type};
 use tokio_postgres::{Client, Connection, NoTls, Row, Socket};
-use crate::utilities::shell;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::thread::sleep;
-use serenity::static_assertions::_core::time::Duration;
-use once_cell::sync::Lazy;
 
 pub async fn apply_migrations(client: &Client) {
     let (schema_version, info_exists) = client
@@ -35,7 +35,10 @@ pub async fn apply_migrations(client: &Client) {
         .iter()
         .filter(|(i, _)| schema_version.clone() < (i.clone() as i32))
     {
-        client.execute(sql.as_str(), &[]).await.expect(format!("failed to execute migration {}", version).as_str());
+        client
+            .execute(sql.as_str(), &[])
+            .await
+            .expect(format!("failed to execute migration {}", version).as_str());
         new_schema_version = version.clone() as i32
     }
     if new_schema_version.is_positive() {
@@ -79,22 +82,23 @@ impl ConnectionProvider for ConfigConnectionProvider {
 #[derive(Debug)]
 pub struct DockerConnectionProvider;
 
-
 #[async_trait]
 impl ConnectionProvider for DockerConnectionProvider {
     async fn create_connection(&self) -> (Client, Connection<Socket, NoTlsStream>) {
         tokio_postgres::connect(
             "user=postgres password=postgres dbname=postgres host=localhost",
             NoTls,
-        ).await.unwrap()
+        )
+        .await
+        .unwrap()
     }
 }
 
 pub trait PostgresImpl {
     fn new(provider: BoxedConnectionProvider) -> Self;
     fn default() -> Box<Self>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         if cfg!(test) {
             Box::new(Self::new(Box::new(DockerConnectionProvider)))
@@ -118,16 +122,16 @@ pub struct Sqlu64(u64);
 
 impl ToSql for Sqlu64 {
     fn to_sql(&self, ty: &Type, out: &mut BytesMut) -> Result<IsNull, Box<dyn Error + Sync + Send>>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         let signed: i64 = unsafe { std::mem::transmute(self.0) };
         signed.to_sql(ty, out)
     }
 
     fn accepts(ty: &Type) -> bool
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         i64::accepts(ty)
     }

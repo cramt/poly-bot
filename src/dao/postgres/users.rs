@@ -71,7 +71,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                    .as_str(),
+                .as_str(),
                 &[&id],
             )
             .await
@@ -84,10 +84,7 @@ impl Users for UsersImpl {
     }
 
     async fn add(&self, user: UserNoId) -> User {
-        let client = self
-            .provider
-            .open_client()
-            .await;
+        let client = self.provider.open_client().await;
         let id: i64 = client
             .query(
                 r"
@@ -129,7 +126,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                    .as_str(),
+                .as_str(),
                 &[&Sqlu64(id)],
             )
             .await
@@ -155,7 +152,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                    .as_str(),
+                .as_str(),
                 &[&username],
             )
             .await
