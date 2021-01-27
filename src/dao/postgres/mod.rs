@@ -1,5 +1,6 @@
 pub mod relationships;
 pub mod users;
+pub mod singleton;
 
 use crate::config::CONFIG;
 use crate::migration_constants::MIGRATION_FILES;
