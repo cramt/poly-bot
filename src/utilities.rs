@@ -1,4 +1,4 @@
-use std::process::{Command, Output};
+use std::process::{Command};
 
 pub fn shell<S: AsRef<str>>(s: S) -> Option<String> {
     match if cfg!(target_os = "windows") {

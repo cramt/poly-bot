@@ -2,12 +2,12 @@
 mod dao {
     use crate::dao::postgres::{apply_migrations, ConnectionProvider, DockerConnectionProvider};
     use once_cell::sync::Lazy;
-    use serenity::futures::future::BoxFuture;
+    
     use serenity::FutureExt;
     use std::collections::HashSet;
-    use std::future::Future;
-    use std::ops::{Deref, DerefMut};
-    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+    
+    use std::ops::{DerefMut};
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Mutex;
 
     static ATOMIC_DISCORD_ID: AtomicU64 = AtomicU64::new(0);
@@ -59,11 +59,11 @@ mod dao {
         use crate::model::gender::Gender;
         use crate::model::user::UserNoId;
         use crate::tests::dao::dao::{discord_id_provider, wait_for_test_db_ready};
-        use serenity::static_assertions::_core::sync::atomic::AtomicU64;
-        use serenity::static_assertions::_core::time::Duration;
-        use std::ops::Deref;
-        use std::sync::atomic::Ordering;
-        use std::thread::sleep;
+        
+        
+        
+        
+        
 
         #[tokio::test]
         async fn add_user() {

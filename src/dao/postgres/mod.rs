@@ -4,23 +4,23 @@ pub mod users;
 
 use crate::config::CONFIG;
 use crate::migration_constants::MIGRATION_FILES;
-use crate::utilities::shell;
+
 use async_trait::async_trait;
-use once_cell::sync::Lazy;
+
 use serenity::static_assertions::_core::ops::DerefMut;
-use serenity::static_assertions::_core::time::Duration;
+
 use std::error::Error;
 use std::fmt::Debug;
 use std::ops::Deref;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::thread::sleep;
+
+
 use tokio_postgres::tls::NoTlsStream;
 use tokio_postgres::types::private::BytesMut;
 use tokio_postgres::types::{IsNull, ToSql, Type};
 use tokio_postgres::{Client, Connection, NoTls, Row, Socket};
 
 pub async fn apply_migrations(client: &Client) {
-    let (schema_version, info_exists) = client
+    let (schema_version, _info_exists) = client
         .query("SELECT schema_version FROM info", &[])
         .await
         .ok()
