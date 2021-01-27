@@ -111,12 +111,56 @@ impl Users for UsersImpl {
         user.add_id(id)
     }
 
-    async fn get_by_discord_id(&self, _id: u64) -> Option<User> {
-        unimplemented!()
+    async fn get_by_discord_id(&self, id: u64) -> Option<User> {
+        let client = self.provider.open_client().await;
+        let mut dbrep_iter = client
+            .query(
+                format!(
+                    r"
+                    SELECT
+                    {}
+                    FROM
+                    users
+                    WHERE
+                    discord_id = $1
+                    ",
+                    UsersDbRep::select_order()
+                )
+                .as_str(),
+                &[&Sqlu64(id)],
+            )
+            .await
+            .unwrap()
+            .into_iter()
+            .map(UsersDbRep::new);
+        drop(client);
+        dbrep_iter.nth(0).map(|x| x.model())
     }
 
-    async fn get_by_username(&self, _username: String) -> Option<User> {
-        unimplemented!()
+    async fn get_by_username(&self, username: String) -> Vec<User> {
+        let client = self.provider.open_client().await;
+        let mut dbrep_iter = client
+            .query(
+                format!(
+                    r"
+                    SELECT
+                    {}
+                    FROM
+                    users
+                    WHERE
+                    username = $1
+                    ",
+                    UsersDbRep::select_order()
+                )
+                .as_str(),
+                &[&username],
+            )
+            .await
+            .unwrap()
+            .into_iter()
+            .map(UsersDbRep::new);
+        drop(client);
+        dbrep_iter.map(|x| x.model()).collect()
     }
 
     async fn get_members_multiple(&self, _users: Vec<User>) -> Vec<User> {

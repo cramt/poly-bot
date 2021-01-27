@@ -8,7 +8,7 @@ pub trait Users {
     async fn get(&self, id: i64) -> Option<User>;
     async fn add(&self, user: UserNoId) -> User;
     async fn get_by_discord_id(&self, id: u64) -> Option<User>;
-    async fn get_by_username(&self, username: String) -> Option<User>;
+    async fn get_by_username(&self, username: String) -> Vec<User>;
     async fn get_members(&self, user: User) -> Vec<User> {
         self.get_members_multiple(vec![user]).await
     }
