@@ -3,6 +3,7 @@ pub mod dao;
 pub mod migration_constants;
 pub mod model;
 pub mod tests;
+pub mod utilities;
 
 use tokio_postgres::Error;
 

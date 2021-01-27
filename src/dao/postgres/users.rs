@@ -58,7 +58,7 @@ impl PostgresImpl for UsersImpl {
 impl Users for UsersImpl {
     async fn get(&self, id: i64) -> Option<User> {
         let client = self.provider.open_client().await;
-        let mut dbrep_iter = client
+        let dbreps = client
             .query(
                 format!(
                     r"
@@ -71,22 +71,24 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                .as_str(),
+                    .as_str(),
                 &[&id],
             )
             .await
             .unwrap()
             .into_iter()
-            .map(UsersDbRep::new);
+            .map(UsersDbRep::new)
+            .collect::<Vec<UsersDbRep>>();
         drop(client);
-        dbrep_iter.nth(0).map(|x| x.model())
+        dbreps.into_iter().nth(0).map(|x| x.model())
     }
 
     async fn add(&self, user: UserNoId) -> User {
-        let id: i64 = self
+        let client = self
             .provider
             .open_client()
-            .await
+            .await;
+        let id: i64 = client
             .query(
                 r"
                 INSERT INTO
@@ -108,6 +110,7 @@ impl Users for UsersImpl {
             .first()
             .unwrap()
             .get(0);
+        drop(client);
         user.add_id(id)
     }
 
@@ -126,7 +129,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                .as_str(),
+                    .as_str(),
                 &[&Sqlu64(id)],
             )
             .await
@@ -152,7 +155,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                .as_str(),
+                    .as_str(),
                 &[&username],
             )
             .await
