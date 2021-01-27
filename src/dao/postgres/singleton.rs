@@ -1,13 +1,12 @@
 use crate::dao::postgres::{BoxedConnectionProvider, PostgresImpl};
 use crate::dao::singleton::Singleton;
-use crate::model::user::User;
 use crate::model::relationship::Relationship;
+use crate::model::user::User;
 use async_trait::async_trait;
-
 
 #[derive(Debug)]
 pub struct SingletonImpl {
-    provider: BoxedConnectionProvider
+    provider: BoxedConnectionProvider,
 }
 
 impl PostgresImpl for SingletonImpl {

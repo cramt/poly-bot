@@ -1,8 +1,8 @@
+use crate::dao::postgres::singleton::SingletonImpl;
+use crate::dao::postgres::PostgresImpl;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
 use async_trait::async_trait;
-use crate::dao::postgres::PostgresImpl;
-use crate::dao::postgres::singleton::SingletonImpl;
 
 #[async_trait]
 pub trait Singleton {
