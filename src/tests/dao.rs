@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod dao {
     use crate::dao::postgres::{
-        apply_migrations, ConnectionProvider, DockerConnectionProvider, PostgresImpl,
+        apply_migrations, ConnectionProvider, DockerConnectionProvider,
     };
-    use crate::dao::relationships::Relationships;
-    use crate::model::gender::Gender;
-    use crate::model::user::UserNoId;
+    
+    
+    
 
     #[tokio::test]
     async fn migration() {
@@ -19,7 +19,7 @@ mod dao {
 
         #[tokio::test]
         async fn add_user() {
-            let user = users::default()
+            let _user = users::default()
                 .add(UserNoId::new("person", Gender::Femme, None, vec![], 0))
                 .await;
         }

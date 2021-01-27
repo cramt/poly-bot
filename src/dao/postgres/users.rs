@@ -139,7 +139,7 @@ impl Users for UsersImpl {
 
     async fn get_by_username(&self, username: String) -> Vec<User> {
         let client = self.provider.open_client().await;
-        let mut dbrep_iter = client
+        let dbrep_iter = client
             .query(
                 format!(
                     r"
