@@ -13,7 +13,6 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::ops::Deref;
 
-
 use tokio_postgres::tls::NoTlsStream;
 use tokio_postgres::types::private::BytesMut;
 use tokio_postgres::types::{IsNull, ToSql, Type};

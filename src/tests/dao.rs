@@ -2,18 +2,18 @@
 mod dao {
     use crate::dao::postgres::{apply_migrations, ConnectionProvider, DockerConnectionProvider};
     use once_cell::sync::Lazy;
-    
+
     use serenity::FutureExt;
     use std::collections::HashSet;
-    
-    use std::ops::{DerefMut};
+
+    use std::ops::DerefMut;
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Mutex;
 
     static ATOMIC_DISCORD_ID: AtomicU64 = AtomicU64::new(0);
 
     pub fn discord_id_provider() -> u64 {
-        ATOMIC_DISCORD_ID.fetch_add(1, Ordering::SeqCst)
+        ATOMIC_DISCORD_ID.fetch_add(1, Ordering::SeqCst).clone()
     }
 
     static READY_FIRST: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(true));
@@ -59,16 +59,11 @@ mod dao {
         use crate::model::gender::Gender;
         use crate::model::user::UserNoId;
         use crate::tests::dao::dao::{discord_id_provider, wait_for_test_db_ready};
-        
-        
-        
-        
-        
 
         #[tokio::test]
         async fn add_user() {
             wait_for_test_db_ready().await;
-            let _user = users::default()
+            let user = users::default()
                 .add(UserNoId::new(
                     "person",
                     Gender::Femme,
@@ -77,6 +72,8 @@ mod dao {
                     discord_id_provider(),
                 ))
                 .await;
+            assert_eq!("person", user.name);
+            assert_eq!(Gender::Femme, user.gender);
         }
 
         #[tokio::test]
@@ -97,6 +94,49 @@ mod dao {
             assert_eq!(user.gender, found_user.gender);
             assert_eq!(user.name, found_user.name);
             assert_eq!(user.discord_id, found_user.discord_id)
+        }
+
+        #[tokio::test]
+        async fn get_user_by_discord_id() {
+            wait_for_test_db_ready().await;
+            let discord_id = discord_id_provider();
+            let client = users::default();
+            let user = client
+                .add(UserNoId::new(
+                    "person",
+                    Gender::Femme,
+                    None,
+                    vec![],
+                    discord_id,
+                ))
+                .await;
+            let found_user = client.get_by_discord_id(discord_id).await.unwrap();
+            assert_eq!(user.id, found_user.id);
+            assert_eq!(user.gender, found_user.gender);
+            assert_eq!(user.name, found_user.name);
+            assert_eq!(user.discord_id, found_user.discord_id)
+        }
+
+        #[tokio::test]
+        async fn get_user_by_username() {
+            wait_for_test_db_ready().await;
+            let username = "dude_mcperson".to_string();
+            let client = users::default();
+            let user = client
+                .add(UserNoId::new(
+                    username.clone(),
+                    Gender::Femme,
+                    None,
+                    vec![],
+                    discord_id_provider(),
+                ))
+                .await;
+            assert!(client
+                .get_by_username(username)
+                .await
+                .into_iter()
+                .find(|x| x.id.clone() == user.id)
+                .is_some());
         }
     }
 }

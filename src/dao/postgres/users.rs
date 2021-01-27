@@ -113,7 +113,7 @@ impl Users for UsersImpl {
 
     async fn get_by_discord_id(&self, id: u64) -> Option<User> {
         let client = self.provider.open_client().await;
-        let mut dbrep_iter = client
+        let dbreps = client
             .query(
                 format!(
                     r"
@@ -132,9 +132,10 @@ impl Users for UsersImpl {
             .await
             .unwrap()
             .into_iter()
-            .map(UsersDbRep::new);
+            .map(UsersDbRep::new)
+            .collect::<Vec<UsersDbRep>>();
         drop(client);
-        dbrep_iter.nth(0).map(|x| x.model())
+        dbreps.into_iter().nth(0).map(|x| x.model())
     }
 
     async fn get_by_username(&self, username: String) -> Vec<User> {
@@ -148,7 +149,7 @@ impl Users for UsersImpl {
                     FROM
                     users
                     WHERE
-                    username = $1
+                    name = $1
                     ",
                     UsersDbRep::select_order()
                 )
