@@ -14,7 +14,6 @@ impl IdTree {
         }
     }
 
-
     pub fn new_single(value: i64) -> Self {
         Self::new(value, vec![])
     }

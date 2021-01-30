@@ -3,9 +3,9 @@ use crate::dao::users::Users;
 use crate::model::user::{User, UserNoId};
 
 use crate::model::gender::Gender;
+use crate::model::id_tree::IdTree;
 use async_trait::async_trait;
 use tokio_postgres::Row;
-use crate::model::id_tree::IdTree;
 
 pub struct UsersDbRep {
     id: i64,

@@ -1,6 +1,6 @@
 use crate::model::gender::Gender;
-use crate::model::RelationalId;
 use crate::model::id_tree::IdTree;
+use crate::model::RelationalId;
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]
@@ -68,7 +68,12 @@ impl UserNoId {
     pub fn add_id(self, id_tree: IdTree) -> User {
         let id = id_tree.deref().clone();
         let inner_members = id_tree.member_values;
-        let members = self.members.into_iter().zip(inner_members.into_iter()).map(|(member, id)| member.add_id(id)).collect();
+        let members = self
+            .members
+            .into_iter()
+            .zip(inner_members.into_iter())
+            .map(|(member, id)| member.add_id(id))
+            .collect();
         User::new(
             id,
             self.name,

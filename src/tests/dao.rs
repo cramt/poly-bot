@@ -80,8 +80,24 @@ mod dao {
         async fn add_member_to_user() {
             wait_for_test_db_ready().await;
             let client = users::default();
-            let root = client.add(UserNoId::new("root", Gender::System, None, vec![], discord_id_provider())).await;
-            let member = client.add(UserNoId::new("member", Gender::Femme, Some(Box::new(root.clone())), vec![], discord_id_provider())).await;
+            let root = client
+                .add(UserNoId::new(
+                    "root",
+                    Gender::System,
+                    None,
+                    vec![],
+                    discord_id_provider(),
+                ))
+                .await;
+            let member = client
+                .add(UserNoId::new(
+                    "member",
+                    Gender::Femme,
+                    Some(Box::new(root.clone())),
+                    vec![],
+                    discord_id_provider(),
+                ))
+                .await;
             assert_eq!(root.id, member.system.unwrap().id);
         }
 
@@ -89,12 +105,27 @@ mod dao {
         async fn add_user_with_members() {
             wait_for_test_db_ready().await;
             let client = users::default();
-            let user = client.add(UserNoId::new("root", Gender::System, None, vec![UserNoId::new(
-                "member", Gender::Femme, None, vec![], discord_id_provider(),
-            )], discord_id_provider())).await;
+            let user = client
+                .add(UserNoId::new(
+                    "root",
+                    Gender::System,
+                    None,
+                    vec![UserNoId::new(
+                        "member",
+                        Gender::Femme,
+                        None,
+                        vec![],
+                        discord_id_provider(),
+                    )],
+                    discord_id_provider(),
+                ))
+                .await;
             let found_user = client.get(user.id).await.unwrap();
             assert_eq!(user.id, found_user.id);
-            assert_eq!(user.members.first().unwrap().id, found_user.members.first().unwrap().id)
+            assert_eq!(
+                user.members.first().unwrap().id,
+                found_user.members.first().unwrap().id
+            )
         }
 
         #[tokio::test]
