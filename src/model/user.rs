@@ -1,5 +1,7 @@
 use crate::model::gender::Gender;
 use crate::model::RelationalId;
+use crate::model::id_tree::IdTree;
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub struct User {
@@ -42,7 +44,7 @@ pub struct UserNoId {
     pub name: String,
     pub gender: Gender,
     pub system: Option<Box<User>>,
-    pub members: Vec<User>,
+    pub members: Vec<UserNoId>,
     pub discord_id: u64,
 }
 
@@ -51,7 +53,7 @@ impl UserNoId {
         name: S,
         gender: Gender,
         system: Option<Box<User>>,
-        members: Vec<User>,
+        members: Vec<UserNoId>,
         discord_id: u64,
     ) -> Self {
         Self {
@@ -63,13 +65,16 @@ impl UserNoId {
         }
     }
 
-    pub fn add_id(self, id: i64) -> User {
+    pub fn add_id(self, id_tree: IdTree) -> User {
+        let id = id_tree.deref().clone();
+        let inner_members = id_tree.member_values;
+        let members = self.members.into_iter().zip(inner_members.into_iter()).map(|(member, id)| member.add_id(id)).collect();
         User::new(
             id,
             self.name,
             self.gender,
             self.system,
-            self.members,
+            members,
             self.discord_id,
         )
     }
@@ -81,7 +86,7 @@ impl Into<UserNoId> for User {
             self.name,
             self.gender,
             self.system,
-            self.members,
+            self.members.into_iter().map(|x| x.into()).collect(),
             self.discord_id,
         )
     }

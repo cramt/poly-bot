@@ -5,6 +5,7 @@ use crate::model::user::{User, UserNoId};
 use crate::model::gender::Gender;
 use async_trait::async_trait;
 use tokio_postgres::Row;
+use crate::model::id_tree::IdTree;
 
 pub struct UsersDbRep {
     id: i64,
@@ -108,7 +109,7 @@ impl Users for UsersImpl {
             .unwrap()
             .get(0);
         drop(client);
-        user.add_id(id)
+        user.add_id(IdTree::new_single(id))
     }
 
     async fn get_by_discord_id(&self, id: u64) -> Option<User> {
