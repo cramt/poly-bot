@@ -7,7 +7,7 @@ use crate::model::id_tree::IdTree;
 use crate::utilities::U64Utils;
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
-use std::iter::FromIterator;
+
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
@@ -23,7 +23,7 @@ pub struct UsersDbRep {
 
 impl UsersDbRep {
     pub fn create_tree_structure(v: Vec<Self>) -> Vec<User> {
-        let (mut main, mut v): (Vec<Self>, Vec<Self>) =
+        let (main, mut v): (Vec<Self>, Vec<Self>) =
             v.into_iter().partition(|x| x.parent_system_id.is_none());
         let mut main = main.into_iter().map(|x| x.model()).collect::<Vec<User>>();
         let mut map = main
@@ -39,7 +39,7 @@ impl UsersDbRep {
 
             for entry in now {
                 let parent = map.get_mut(&entry.parent_system_id.unwrap()).unwrap();
-                let mut model = entry.model();
+                let model = entry.model();
                 parent.members.push(model);
             }
 
