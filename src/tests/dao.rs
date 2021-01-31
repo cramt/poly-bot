@@ -12,8 +12,8 @@ mod dao {
 
     static ATOMIC_DISCORD_ID: AtomicU64 = AtomicU64::new(0);
 
-    pub fn discord_id_provider() -> u64 {
-        ATOMIC_DISCORD_ID.fetch_add(1, Ordering::SeqCst).clone()
+    pub fn discord_id_provider() -> Option<u64> {
+        Some(ATOMIC_DISCORD_ID.fetch_add(1, Ordering::SeqCst).clone())
     }
 
     static READY_FIRST: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(true));
@@ -98,7 +98,7 @@ mod dao {
                     discord_id_provider(),
                 ))
                 .await;
-            assert_eq!(root.id, member.system.unwrap().id);
+            assert_eq!(root.members.first().unwrap().id, member.id);
         }
 
         #[tokio::test]
@@ -162,7 +162,7 @@ mod dao {
                     discord_id,
                 ))
                 .await;
-            let found_user = client.get_by_discord_id(discord_id).await.unwrap();
+            let found_user = client.get_by_discord_id(discord_id.unwrap()).await.unwrap();
             assert_eq!(user.id, found_user.id);
             assert_eq!(user.gender, found_user.gender);
             assert_eq!(user.name, found_user.name);

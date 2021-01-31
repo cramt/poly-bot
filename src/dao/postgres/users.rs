@@ -4,15 +4,66 @@ use crate::model::user::{User, UserNoId};
 
 use crate::model::gender::Gender;
 use crate::model::id_tree::IdTree;
+use crate::utilities::U64Utils;
 use async_trait::async_trait;
+use std::collections::{HashMap, VecDeque};
+use std::iter::FromIterator;
+use std::ops::Deref;
+use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
 
+#[derive(Debug)]
 pub struct UsersDbRep {
     id: i64,
     name: String,
     gender: i16,
     parent_system_id: Option<i64>,
-    discord_id: i64,
+    discord_id: Option<i64>,
+}
+
+impl UsersDbRep {
+    pub fn create_tree_structure(v: Vec<Self>) -> Vec<User> {
+        let (mut main, mut v): (Vec<Self>, Vec<Self>) =
+            v.into_iter().partition(|x| x.parent_system_id.is_none());
+        let mut main = main.into_iter().map(|x| x.model()).collect::<Vec<User>>();
+        let mut map = main
+            .iter_mut()
+            .map(|x| (x.id.clone(), x))
+            .collect::<HashMap<i64, &mut User>>();
+        loop {
+            let (now, later): (Vec<Self>, Vec<Self>) = v
+                .into_iter()
+                .partition(|x| map.contains_key(&x.parent_system_id.unwrap()));
+
+            let now_empty = now.is_empty();
+
+            for entry in now {
+                let parent = map.get_mut(&entry.parent_system_id.unwrap()).unwrap();
+                let mut model = entry.model();
+                parent.members.push(model);
+            }
+
+            v = later;
+            if v.is_empty() {
+                break;
+            }
+
+            if now_empty {
+                panic!("wow, this shouldnt ever happen")
+            }
+        }
+        main
+    }
+
+    fn transformed_discord_id(&self) -> Option<u64> {
+        self.discord_id
+            .as_ref()
+            .map(|x| unsafe { std::mem::transmute(x.clone()) })
+    }
+
+    fn transformed_gender(&self) -> Gender {
+        Gender::parse(self.gender as u8).unwrap()
+    }
 }
 
 impl DbRep for UsersDbRep {
@@ -29,18 +80,13 @@ impl DbRep for UsersDbRep {
     }
 
     fn model(self) -> Self::Output {
-        Self::Output::new(
-            self.id,
-            self.name,
-            Gender::parse(self.gender as u8).unwrap(),
-            None,
-            vec![],
-            unsafe { std::mem::transmute(self.discord_id) },
-        )
+        let gender = self.transformed_gender();
+        let discord_id = self.transformed_discord_id();
+        Self::Output::new(self.id, self.name, gender, vec![], discord_id)
     }
 
-    fn select_order() -> &'static str {
-        "id, name, gender, parent_system, discord_id"
+    fn select_order_raw() -> &'static [&'static str] {
+        &["id", "name", "gender", "parent_system", "discord_id"]
     }
 }
 
@@ -63,14 +109,46 @@ impl Users for UsersImpl {
             .query(
                 format!(
                     r"
-                    SELECT
-                    {}
-                    FROM
-                    users
-                    WHERE
-                    id = $1
+                    WITH top_id as (SELECT get_topmost_system($1))
+                    SELECT * FROM
+                    (
+                        WITH RECURSIVE members AS (
+                            SELECT
+                            {x}
+                            FROM
+                            users
+                            WHERE parent_system = (select * from top_id)
+                            UNION
+                            SELECT
+                            {ux}
+                            FROM
+                            users u
+                            INNER JOIN
+                            members m
+                            ON
+                            m.id = u.parent_system
+                        )
+                        SELECT
+                        {x}
+                        FROM
+                        members
+
+                        UNION
+
+                        SELECT
+                        {x}
+                        FROM
+                        users
+                        WHERE
+                        id = (select * from top_id)
+                    ) _
                     ",
-                    UsersDbRep::select_order()
+                    x = UsersDbRep::select_order(),
+                    ux = UsersDbRep::select_order_raw()
+                        .into_iter()
+                        .map(|x| format!("u.{}", x))
+                        .collect::<Vec<String>>()
+                        .join(", ")
                 )
                 .as_str(),
                 &[&id],
@@ -81,35 +159,108 @@ impl Users for UsersImpl {
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
         drop(client);
-        dbreps.into_iter().nth(0).map(|x| x.model())
+        UsersDbRep::create_tree_structure(dbreps).into_iter().nth(0)
     }
 
     async fn add(&self, user: UserNoId) -> User {
-        let client = self.provider.open_client().await;
-        let id: i64 = client
-            .query(
+        fn generate_query(user: &UserNoId, n: &mut u64, id_ref: String) -> (String, Vec<String>) {
+            let my_id_ref = format!("u{}", n);
+            let my_query = format!(
                 r"
-                INSERT INTO
-                users
-                (name, gender, parent_system, discord_id)
-                VALUES
-                ($1, $2, $3, $4)
-                RETURNING id
+                {}
+                AS (
+                    INSERT INTO
+                    users
+                    (parent_system, name, gender, discord_id)
+                    VALUES
+                    ({}, ${}, ${}, ${})
+                    RETURNING id
+                )
                 ",
-                &[
-                    &user.name,
-                    &user.gender.to_number(),
-                    &user.system.as_ref().map(|x| x.id),
-                    &Sqlu64(user.discord_id),
-                ],
+                my_id_ref,
+                id_ref,
+                n.increment(),
+                n.increment(),
+                n.increment()
+            );
+            let (mut post_queries, mut id_refs) = user
+                .members
+                .iter()
+                .map(|x| generate_query(x, n, format!("(SELECT id FROM {})", my_id_ref)))
+                .fold((VecDeque::new(), vec![]), |(mut a, b), x| {
+                    a.push_back(x.0);
+                    (a, b.into_iter().chain(x.1.into_iter()).collect())
+                });
+            post_queries.push_front(my_query);
+            id_refs.push(my_id_ref);
+            (
+                post_queries.into_iter().collect::<Vec<String>>().join(","),
+                id_refs,
+            )
+        }
+        fn generate_content(
+            user: &UserNoId,
+            mut v: Vec<Box<(dyn ToSql + Sync + Send)>>,
+            first: bool,
+        ) -> Vec<Box<(dyn ToSql + Sync + Send)>> {
+            let system = user.system.as_ref().map(|x| x.id);
+            if first {
+                v.push(Box::new(system));
+            }
+            let name = user.name.clone();
+            v.push(Box::new(name));
+            let gender = user.gender.to_number();
+            v.push(Box::new(gender));
+            let discord_id = user.discord_id.as_ref().map(|x| Sqlu64(x.clone()));
+            v.push(Box::new(discord_id));
+
+            for m in user.members.iter() {
+                v = generate_content(m, v, false)
+            }
+
+            v
+        }
+        fn generate_post_query(mut v: Vec<String>) -> String {
+            v.reverse();
+            v.into_iter()
+                .map(|x| format!("SELECT id FROM {}", x))
+                .collect::<Vec<String>>()
+                .join(" UNION ")
+        }
+        let (query, id_refs) = generate_query(&user, &mut 1, "$1".to_string());
+        let query = format!("WITH {} {}", query, generate_post_query(id_refs));
+        let content = generate_content(&user, vec![], true);
+        let client = self.provider.open_client().await;
+        let mut id = client
+            .query(
+                query.as_str(),
+                content
+                    .iter()
+                    .map(|x| x.deref())
+                    .map(|x| x as &(dyn ToSql + Sync))
+                    .collect::<Vec<&(dyn ToSql + Sync)>>()
+                    .as_slice(),
             )
             .await
             .unwrap()
-            .first()
-            .unwrap()
-            .get(0);
+            .into_iter()
+            .map(|x| {
+                let i: i64 = x.get(0);
+                i
+            })
+            .collect::<VecDeque<i64>>();
         drop(client);
-        user.add_id(IdTree::new_single(id))
+
+        fn make_id_tree(v: &mut VecDeque<i64>, user: &UserNoId) -> IdTree {
+            IdTree::new(
+                v.pop_front().unwrap(),
+                user.members.iter().map(|x| make_id_tree(v, x)).collect(),
+            )
+        }
+
+        let id_tree = make_id_tree(&mut id, &user);
+
+        user.add_id(id_tree)
     }
 
     async fn get_by_discord_id(&self, id: u64) -> Option<User> {

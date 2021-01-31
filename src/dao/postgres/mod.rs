@@ -111,7 +111,10 @@ pub trait DbRep {
     type Output;
     fn new(row: Row) -> Self;
     fn model(self) -> Self::Output;
-    fn select_order() -> &'static str;
+    fn select_order_raw() -> &'static [&'static str];
+    fn select_order() -> String {
+        Self::select_order_raw().join(", ")
+    }
 }
 
 pub type BoxedConnectionProvider = Box<dyn ConnectionProvider + Sync + std::marker::Send>;

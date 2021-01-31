@@ -8,9 +8,8 @@ pub struct User {
     pub id: i64,
     pub name: String,
     pub gender: Gender,
-    pub system: Option<Box<User>>,
     pub members: Vec<User>,
-    pub discord_id: u64,
+    pub discord_id: Option<u64>,
 }
 
 impl User {
@@ -18,15 +17,13 @@ impl User {
         id: i64,
         name: S,
         gender: Gender,
-        system: Option<Box<User>>,
         members: Vec<User>,
-        discord_id: u64,
+        discord_id: Option<u64>,
     ) -> Self {
         Self {
             id,
             name: name.as_ref().to_string(),
             gender,
-            system,
             members,
             discord_id,
         }
@@ -45,7 +42,7 @@ pub struct UserNoId {
     pub gender: Gender,
     pub system: Option<Box<User>>,
     pub members: Vec<UserNoId>,
-    pub discord_id: u64,
+    pub discord_id: Option<u64>,
 }
 
 impl UserNoId {
@@ -54,13 +51,13 @@ impl UserNoId {
         gender: Gender,
         system: Option<Box<User>>,
         members: Vec<UserNoId>,
-        discord_id: u64,
+        discord_id: Option<u64>,
     ) -> Self {
         Self {
             name: name.as_ref().to_string(),
             gender,
-            system,
             members,
+            system,
             discord_id,
         }
     }
@@ -74,14 +71,7 @@ impl UserNoId {
             .zip(inner_members.into_iter())
             .map(|(member, id)| member.add_id(id))
             .collect();
-        User::new(
-            id,
-            self.name,
-            self.gender,
-            self.system,
-            members,
-            self.discord_id,
-        )
+        User::new(id, self.name, self.gender, members, self.discord_id)
     }
 }
 
@@ -90,7 +80,7 @@ impl Into<UserNoId> for User {
         UserNoId::new(
             self.name,
             self.gender,
-            self.system,
+            None,
             self.members.into_iter().map(|x| x.into()).collect(),
             self.discord_id,
         )

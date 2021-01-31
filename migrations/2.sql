@@ -1,10 +1,10 @@
 
-CREATE OR REPLACE FUNCTION public.get_topmost_system(start_id integer)
-    RETURNS integer as
+CREATE OR REPLACE FUNCTION public.get_topmost_system(start_id bigint)
+    RETURNS bigint as
 $$
 DECLARE
-    curr_id        integer NOT NULL = start_id;
-    curr_system_id integer;
+    curr_id        bigint NOT NULL = start_id;
+    curr_system_id bigint;
 BEGIN
     curr_system_id = NULL;
     LOOP
