@@ -14,7 +14,12 @@ pub trait Command: Send + Sync {
     fn name(&self) -> &'static str;
     fn help(&self) -> &'static str;
     fn argument_help(&self) -> &'static str;
-    fn run(&self) -> Result<String>;
+    fn run(&self) -> Result<CommandOutput>;
+}
+
+pub enum CommandOutput {
+    Text(String),
+    TextBlock(String)
 }
 
 pub fn all_commands() -> &'static HashMap<&'static str, Box<dyn Command>> {

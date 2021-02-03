@@ -8,6 +8,7 @@ mod argument_parsing {
     use crate::command::argument_parser::ArgumentParser;
     use crate::model::gender::Gender;
     use crate::model::relationship_type::RelationshipType;
+    use crate::command::help::Help;
 
     #[test]
     fn single_string_argument_parsing() {
@@ -73,4 +74,6 @@ mod argument_parsing {
         assert_eq!("", str);
         assert_eq!(123, output);
     }
+
+
 }

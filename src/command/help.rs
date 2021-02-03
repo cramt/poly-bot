@@ -1,4 +1,4 @@
-use crate::command::{all_commands, Command};
+use crate::command::{all_commands, Command, CommandOutput};
 use eyre::*;
 
 #[derive(Debug)]
@@ -17,13 +17,13 @@ impl Command for Help {
         "\"help\" takes no arguments"
     }
 
-    fn run(&self) -> Result<String> {
-        Ok(all_commands()
+    fn run(&self) -> Result<CommandOutput> {
+        Ok(CommandOutput::TextBlock(all_commands()
             .into_iter()
             .map(|(name, value)| (name, value.help()))
             .map(|(name, help)| format!("{}: {}", name, help))
             .collect::<Vec<String>>()
-            .join("\r\n"))
+            .join("\r\n")))
     }
 }
 
