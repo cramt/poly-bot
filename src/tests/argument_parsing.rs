@@ -6,7 +6,7 @@ mod argument_parsing {
     };
     use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
     use crate::command::argument_parser::ArgumentParser;
-    
+
     use crate::model::gender::Gender;
     use crate::model::relationship_type::RelationshipType;
 
