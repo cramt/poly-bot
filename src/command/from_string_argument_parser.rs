@@ -1,32 +1,40 @@
-use std::str::FromStr;
-use std::marker::PhantomData;
-use crate::command::ArgumentParser;
-use serde::ser::StdError;
-use eyre::Report;
 use crate::command::string_argument_parser::StringArgumentParser;
+use crate::command::ArgumentParser;
+use crate::model::gender::Gender;
+use crate::model::relationship_type::RelationshipType;
+use eyre::Report;
 use eyre::Result;
+use serde::ser::StdError;
+use std::marker::PhantomData;
+use std::str::FromStr;
 
 pub struct FromStringArgumentParser<T: FromStr> {
-    a: PhantomData<T>
+    a: PhantomData<T>,
 }
 
-impl<T> ArgumentParser for FromStringArgumentParser<T> where T: FromStr, <T as FromStr>::Err: StdError + Send + Sync + 'static {
+impl<T> ArgumentParser for FromStringArgumentParser<T>
+where
+    T: FromStr,
+    <T as FromStr>::Err: StdError + Send + Sync + 'static,
+{
     type Output = T;
 
     fn parse(&self, input: &mut String) -> Result<Self::Output> {
-        StringArgumentParser::new().parse(input)?.parse().map_err(|x| Report::new(x))
+        StringArgumentParser::new()
+            .parse(input)?
+            .parse()
+            .map_err(|x| Report::new(x))
     }
 
     fn new() -> Self {
         Self {
-            a: PhantomData::default()
+            a: PhantomData::default(),
         }
     }
 }
 
 macro_rules! create_number_argument_parser {
-
-    ($name:ident, $t:ident) => {
+    ($name:ident, $t:ty) => {
         pub struct $name;
 
         impl ArgumentParser for $name {
@@ -53,3 +61,6 @@ create_number_argument_parser!(I16ArgumentParser, i16);
 create_number_argument_parser!(I32ArgumentParser, i32);
 create_number_argument_parser!(I64ArgumentParser, i64);
 create_number_argument_parser!(I128ArgumentParser, i128);
+
+create_number_argument_parser!(GenderArgumentParser, Gender);
+create_number_argument_parser!(RelationshipTypeArgumentParser, RelationshipType);

@@ -1,11 +1,11 @@
-pub mod string_argument_parser;
 pub mod from_string_argument_parser;
 pub mod rest_argument_parser;
+pub mod string_argument_parser;
 
-use eyre::{Result, Report};
-use std::str::FromStr;
-use std::marker::PhantomData;
+use eyre::{Report, Result};
 use serde::de::StdError;
+use std::marker::PhantomData;
+use std::str::FromStr;
 
 pub trait Command<T: ArgumentParser> {
     fn help() -> String;

@@ -1,2 +1,2 @@
-mod dao;
 mod commands;
+mod dao;

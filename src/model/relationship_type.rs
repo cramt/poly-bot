@@ -1,3 +1,6 @@
+use std::fmt::Formatter;
+use std::str::FromStr;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RelationshipType {
     Romantic,
@@ -17,6 +20,48 @@ impl ToString for RelationshipType {
             RelationshipType::CuddleBuddy => "Cuddle Buddy",
         }
         .to_string()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParseRelationshipTypeError {
+    incorrect_relationship_type: String,
+}
+
+impl ParseRelationshipTypeError {
+    pub fn new<S: AsRef<str>>(s: S) -> Self {
+        Self {
+            incorrect_relationship_type: s.as_ref().to_string(),
+        }
+    }
+}
+
+impl std::fmt::Display for ParseRelationshipTypeError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(
+            format!(
+                "{} isnt a relationship type",
+                self.incorrect_relationship_type
+            )
+            .as_str(),
+        )
+    }
+}
+
+impl std::error::Error for ParseRelationshipTypeError {}
+
+impl FromStr for RelationshipType {
+    type Err = ParseRelationshipTypeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "romantic" => Ok(Self::Romantic),
+            "sexual" => Ok(Self::Sexual),
+            "friend" => Ok(Self::Friend),
+            "queerplatonic" => Ok(Self::Queerplatonic),
+            "cuddlebuddy" => Ok(Self::CuddleBuddy),
+            _x => Err(ParseRelationshipTypeError::new(_x)),
+        }
     }
 }
 

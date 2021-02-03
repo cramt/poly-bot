@@ -1,3 +1,10 @@
+use eyre::Report;
+use eyre::*;
+use serenity::static_assertions::_core::fmt::Formatter;
+use serenity::static_assertions::_core::num::ParseIntError;
+use std::fmt::Display;
+use std::str::FromStr;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Gender {
     Femme,
@@ -15,6 +22,41 @@ impl ToString for Gender {
             Self::System => "System",
         }
         .to_string()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParseGenderError {
+    incorrect_gender: String,
+}
+
+impl ParseGenderError {
+    pub fn new<S: AsRef<str>>(s: S) -> Self {
+        Self {
+            incorrect_gender: s.as_ref().to_string(),
+        }
+    }
+}
+
+impl Display for ParseGenderError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(format!("{} isnt a gender", self.incorrect_gender).as_str())
+    }
+}
+
+impl std::error::Error for ParseGenderError {}
+
+impl FromStr for Gender {
+    type Err = ParseGenderError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "femme" => Ok(Self::Femme),
+            "masc" => Ok(Self::Masc),
+            "neutral" => Ok(Self::Neutral),
+            "system" => Ok(Self::System),
+            _x => Err(ParseGenderError::new(_x)),
+        }
     }
 }
 
