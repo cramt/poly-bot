@@ -1,17 +1,18 @@
 #[cfg(test)]
-mod commands {
-    use crate::command::discord_tag_argument_parser::DiscordTagArgumentParser;
-    use crate::command::from_string_argument_parser::{
+mod argument_parsing {
+    use crate::command::argument_parser::discord_tag_argument_parser::DiscordTagArgumentParser;
+    use crate::command::argument_parser::from_string_argument_parser::{
         FromStringArgumentParser, GenderArgumentParser, RelationshipTypeArgumentParser,
     };
-    use crate::command::string_argument_parser::StringArgumentParser;
-    use crate::command::ArgumentParser;
+    use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
+    use crate::command::argument_parser::ArgumentParser;
     use crate::model::gender::Gender;
     use crate::model::relationship_type::RelationshipType;
 
     #[test]
     fn single_string_argument_parsing() {
         let mut str = "hello".to_string();
+
         let output = StringArgumentParser::new().parse(&mut str).unwrap();
         assert_eq!("", str);
         assert_eq!("hello", output);

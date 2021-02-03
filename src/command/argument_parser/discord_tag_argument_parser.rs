@@ -1,8 +1,8 @@
-use crate::command::string_argument_parser::StringArgumentParser;
-use crate::command::ArgumentParser;
+use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
+use crate::command::argument_parser::ArgumentParser;
 use eyre::*;
 use once_cell::sync::Lazy;
-use regex::{Regex};
+use regex::Regex;
 
 static DISCORD_TAG_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"<@!?([0-9]+)>").unwrap());
 

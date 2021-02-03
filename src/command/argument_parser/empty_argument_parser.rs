@@ -1,4 +1,4 @@
-use crate::command::ArgumentParser;
+use crate::command::argument_parser::ArgumentParser;
 use eyre::*;
 
 pub struct EmptyArgumentParser;

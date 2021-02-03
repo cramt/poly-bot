@@ -1,5 +1,5 @@
-use crate::command::string_argument_parser::StringArgumentParser;
-use crate::command::ArgumentParser;
+use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
+use crate::command::argument_parser::ArgumentParser;
 use crate::model::gender::Gender;
 use crate::model::relationship_type::RelationshipType;
 use eyre::Report;
