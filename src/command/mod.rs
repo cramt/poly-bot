@@ -1,9 +1,9 @@
 use crate::command::argument_parser::ArgumentParser;
 use crate::command::help::Help;
 use eyre::Result;
-use eyre::*;
+
 use once_cell::sync::Lazy;
-use std::collections::hash_map::RandomState;
+
 use std::collections::HashMap;
 use std::ops::Deref;
 
