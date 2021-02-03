@@ -3,7 +3,6 @@ mod dao {
     use crate::dao::postgres::{apply_migrations, ConnectionProvider, DockerConnectionProvider};
     use once_cell::sync::Lazy;
 
-    use serenity::FutureExt;
     use std::collections::HashSet;
 
     use std::ops::DerefMut;

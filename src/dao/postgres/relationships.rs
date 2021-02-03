@@ -1,11 +1,10 @@
 use crate::dao::postgres::{
-    BoxedConnectionProvider, ConfigConnectionProvider, ConnectionProvider,
+    BoxedConnectionProvider, ConfigConnectionProvider,
     DockerConnectionProvider, PostgresImpl,
 };
 use crate::dao::relationships::Relationships;
 use crate::model::relationship::{Relationship, RelationshipNoId};
 use crate::model::user::User;
-use crate::model::RelationalId;
 use async_trait::async_trait;
 
 #[derive(Debug)]
