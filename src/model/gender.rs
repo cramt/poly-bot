@@ -1,7 +1,7 @@
-use eyre::Report;
+
 use eyre::*;
 use serenity::static_assertions::_core::fmt::Formatter;
-use serenity::static_assertions::_core::num::ParseIntError;
+
 use std::fmt::Display;
 use std::str::FromStr;
 
