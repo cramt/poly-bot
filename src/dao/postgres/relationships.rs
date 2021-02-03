@@ -1,6 +1,5 @@
 use crate::dao::postgres::{
-    BoxedConnectionProvider, ConfigConnectionProvider,
-    DockerConnectionProvider, PostgresImpl,
+    BoxedConnectionProvider, PostgresImpl,
 };
 use crate::dao::relationships::Relationships;
 use crate::model::relationship::{Relationship, RelationshipNoId};
