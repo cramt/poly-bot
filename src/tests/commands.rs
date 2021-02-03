@@ -7,7 +7,7 @@ mod commands {
     fn help_command_includes_itself() {
         let text = match Help::new().run().unwrap() {
             CommandOutput::TextBlock(x) => x,
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         assert!(text.contains("help: prints all help text for all commands"))
     }

@@ -18,12 +18,14 @@ impl Command for Help {
     }
 
     fn run(&self) -> Result<CommandOutput> {
-        Ok(CommandOutput::TextBlock(all_commands()
-            .into_iter()
-            .map(|(name, value)| (name, value.help()))
-            .map(|(name, help)| format!("{}: {}", name, help))
-            .collect::<Vec<String>>()
-            .join("\r\n")))
+        Ok(CommandOutput::TextBlock(
+            all_commands()
+                .into_iter()
+                .map(|(name, value)| (name, value.help()))
+                .map(|(name, help)| format!("{}: {}", name, help))
+                .collect::<Vec<String>>()
+                .join("\r\n"),
+        ))
     }
 }
 

@@ -19,7 +19,7 @@ pub trait Command: Send + Sync {
 
 pub enum CommandOutput {
     Text(String),
-    TextBlock(String)
+    TextBlock(String),
 }
 
 pub fn all_commands() -> &'static HashMap<&'static str, Box<dyn Command>> {
