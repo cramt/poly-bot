@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod commands {
+    use crate::command::discord_tag_argument_parser::DiscordTagArgumentParser;
     use crate::command::from_string_argument_parser::{
         FromStringArgumentParser, GenderArgumentParser, RelationshipTypeArgumentParser,
     };
@@ -54,5 +55,21 @@ mod commands {
             .unwrap();
         assert_eq!("", str);
         assert_eq!(RelationshipType::Sexual, output);
+    }
+
+    #[test]
+    fn parse_discord_tag_with_exclamation_mark() {
+        let mut str = "<@!123>".to_string();
+        let output = DiscordTagArgumentParser::new().parse(&mut str).unwrap();
+        assert_eq!("", str);
+        assert_eq!(123, output);
+    }
+
+    #[test]
+    fn parse_discord_tag_without_exclamation_mark() {
+        let mut str = "<@123>".to_string();
+        let output = DiscordTagArgumentParser::new().parse(&mut str).unwrap();
+        assert_eq!("", str);
+        assert_eq!(123, output);
     }
 }

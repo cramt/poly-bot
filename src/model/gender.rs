@@ -1,4 +1,3 @@
-
 use eyre::*;
 use serenity::static_assertions::_core::fmt::Formatter;
 
