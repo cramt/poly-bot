@@ -4,7 +4,7 @@ use crate::model::user::{User, UserNoId};
 
 use crate::model::gender::Gender;
 use crate::model::id_tree::IdTree;
-use crate::utilities::U64Utils;
+use crate::utilities::{U64Utils, PostgresClientUtils};
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 
@@ -158,7 +158,7 @@ impl Users for UsersImpl {
             .into_iter()
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
-        drop(client);
+        client.close();
         UsersDbRep::create_tree_structure(dbreps).into_iter().nth(0)
     }
 
@@ -249,7 +249,7 @@ impl Users for UsersImpl {
                 i
             })
             .collect::<VecDeque<i64>>();
-        drop(client);
+        client.close();
 
         fn make_id_tree(v: &mut VecDeque<i64>, user: &UserNoId) -> IdTree {
             IdTree::new(
@@ -286,7 +286,7 @@ impl Users for UsersImpl {
             .into_iter()
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
-        drop(client);
+        client.close();
         dbreps.into_iter().nth(0).map(|x| x.model())
     }
 
@@ -312,7 +312,7 @@ impl Users for UsersImpl {
             .unwrap()
             .into_iter()
             .map(UsersDbRep::new);
-        drop(client);
+        client.close();
         dbrep_iter.map(|x| x.model()).collect()
     }
 

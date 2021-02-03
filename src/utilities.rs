@@ -21,3 +21,13 @@ impl U64Utils for u64 {
         *self
     }
 }
+
+pub trait PostgresClientUtils {
+    fn close(self);
+}
+
+impl PostgresClientUtils for tokio_postgres::Client {
+    fn close(self) {
+        std::mem::drop(self)
+    }
+}
