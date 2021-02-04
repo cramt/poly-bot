@@ -4,7 +4,7 @@ use crate::model::user::{User, UserNoId};
 
 use crate::model::gender::Gender;
 use crate::model::id_tree::IdTree;
-use crate::utilities::{PostgresClientUtils, U64Utils};
+use crate::utilities::{NumUtils, PostgresClientUtils};
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 

@@ -50,6 +50,7 @@ macro_rules! create_number_argument_parser {
         }
     };
 }
+
 create_number_argument_parser!(U8ArgumentParser, u8);
 create_number_argument_parser!(U16ArgumentParser, u16);
 create_number_argument_parser!(U32ArgumentParser, u32);
