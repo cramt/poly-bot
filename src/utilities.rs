@@ -1,17 +1,16 @@
+use std::borrow::BorrowMut;
 use std::process::Command;
 
 pub fn shell<S: AsRef<str>>(s: S, use_pwsh_if_windows: bool) -> Option<String> {
     match if cfg!(target_os = "windows") {
         if use_pwsh_if_windows {
-            Command::new("powershell")
+            Command::new("powershell").arg(s.as_ref()).output()
         } else {
-            Command::new("cmd").arg("/C")
+            Command::new("cmd").arg("/C").arg(s.as_ref()).output()
         }
     } else {
-        Command::new("sh").arg("-c")
+        Command::new("sh").arg("-c").arg(s.as_ref()).output()
     }
-    .arg(s.as_ref())
-    .output()
     .ok()
     {
         None => None,
