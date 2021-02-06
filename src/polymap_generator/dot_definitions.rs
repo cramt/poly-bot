@@ -2,8 +2,8 @@ use crate::config::CONFIG;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
 use crate::utilities::{shell, shell_raw};
-use std::process::{Command, Stdio};
 use std::io::Write;
+use std::process::{Command, Stdio};
 
 pub trait DotGenerate {
     fn dot_id(&self) -> String;
@@ -88,13 +88,12 @@ pub fn invoke_graphviz(s: String) -> Option<String> {
     } else {
         "/"
     };
-    let fdp = format!(
-        r#"{}{}fdp -Tsvg"#,
-        CONFIG.graphviz_location, seperator
-    );
+    let fdp = format!(r#"{}{}fdp -Tsvg"#, CONFIG.graphviz_location, seperator);
     let mut p = shell_raw(fdp, false)
         .stdin(Stdio::piped())
-        .stdout(Stdio::piped()).spawn().unwrap();
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
     p.stdin.as_mut().unwrap().write_all(s.as_bytes()).unwrap();
     String::from_utf8(p.wait_with_output().unwrap().stdout).ok()
 }

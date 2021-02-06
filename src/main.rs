@@ -13,14 +13,14 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use std::fs::File;
 use std::io::Write;
 
-use tokio_postgres::Error;
-use crate::polymap_generator::svg_renderer::render_svg;
-use crate::model::user::User;
 use crate::model::color::Color;
 use crate::model::relationship::Relationship;
 use crate::model::relationship_type::RelationshipType;
+use crate::model::user::User;
 use crate::polymap_generator::dot_definitions::{dot_generate, invoke_graphviz};
+use crate::polymap_generator::svg_renderer::render_svg;
 use crate::utilities::shell;
+use tokio_postgres::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -44,10 +44,19 @@ async fn main() -> Result<(), Error> {
     let userb = User::new(1, "bb", Color::default(), vec![], None);
     let relationship = Relationship::new(3, RelationshipType::Sexual, usera.clone(), userb.clone());
     let dot_str = dot_generate(&[&usera, &userb, &relationship]);
-    File::create("aa.dot").unwrap().write(dot_str.as_bytes()).unwrap();
+    File::create("aa.dot")
+        .unwrap()
+        .write(dot_str.as_bytes())
+        .unwrap();
     let svg_str = invoke_graphviz(dot_str).unwrap();
-    File::create("bb.svg").unwrap().write(svg_str.as_bytes()).unwrap();
+    File::create("bb.svg")
+        .unwrap()
+        .write(svg_str.as_bytes())
+        .unwrap();
     let png = render_svg(svg_str).await.unwrap();
-    File::create("cc.png").unwrap().write(png.as_slice()).unwrap();
+    File::create("cc.png")
+        .unwrap()
+        .write(png.as_slice())
+        .unwrap();
     Ok(())
 }
