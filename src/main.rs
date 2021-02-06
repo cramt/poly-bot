@@ -3,19 +3,19 @@ pub mod config;
 pub mod dao;
 pub mod migration_constants;
 pub mod model;
+pub mod polymap_generator;
 pub mod tests;
 pub mod utilities;
-pub mod polymap_generator;
 
-use tokio_postgres::Error;
+use headless_chrome::protocol::page::ScreenshotFormat;
 use headless_chrome::Browser;
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS, NON_ALPHANUMERIC};
-use headless_chrome::protocol::page::ScreenshotFormat;
 use std::fs::File;
 use std::io::Write;
-use tokio::time::Sleep;
 use std::thread::sleep;
 use std::time::Duration;
+use tokio::time::Sleep;
+use tokio_postgres::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -38,7 +38,13 @@ async fn main() -> Result<(), Error> {
     let browser = Browser::default().unwrap();
     let _ = browser.wait_for_initial_tab().unwrap();
     let tab = browser.new_tab().unwrap();
-    tab.navigate_to(format!("data:text/html,{}", utf8_percent_encode(svg, NON_ALPHANUMERIC)).as_str());
+    tab.navigate_to(
+        format!(
+            "data:text/html,{}",
+            utf8_percent_encode(svg, NON_ALPHANUMERIC)
+        )
+        .as_str(),
+    );
     let svg = tab.wait_for_element("svg").unwrap();
     tab.evaluate(r#"
         document.getElementsByTagName("svg")[0].style.overflow = "hidden";

@@ -1,9 +1,9 @@
-use once_cell::sync::Lazy;
-use headless_chrome::{Browser, Tab};
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use std::sync::Mutex;
 use headless_chrome::protocol::page::ScreenshotFormat;
+use headless_chrome::{Browser, Tab};
+use once_cell::sync::Lazy;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use std::ops::Deref;
+use std::sync::Mutex;
 
 static CHROMIUM: Lazy<Mutex<Browser>> = Lazy::new(|| {
     let b = Browser::default().unwrap();
@@ -14,7 +14,13 @@ static CHROMIUM: Lazy<Mutex<Browser>> = Lazy::new(|| {
 pub async fn render_svg<S: AsRef<str>>(svg: S) -> Option<Vec<u8>> {
     let browser = CHROMIUM.lock().ok()?;
     let tab = browser.new_tab().ok()?;
-    tab.navigate_to(format!("data:text/html,{}", utf8_percent_encode(svg.as_ref(), NON_ALPHANUMERIC)).as_str());
+    tab.navigate_to(
+        format!(
+            "data:text/html,{}",
+            utf8_percent_encode(svg.as_ref(), NON_ALPHANUMERIC)
+        )
+        .as_str(),
+    );
     let svg = tab.wait_for_element("svg").unwrap();
     tab.evaluate(r#"
         document.getElementsByTagName("svg")[0].style.overflow = "hidden";

@@ -4,7 +4,6 @@ use regex::{Captures, Regex};
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 
-
 use std::str::FromStr;
 
 make_css_color_names_map!();
