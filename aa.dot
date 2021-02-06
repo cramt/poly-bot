@@ -1,0 +1,8 @@
+
+    graph G {
+        graph [ splines = "compound", K =0.8, overlap = "10000:prism", bgcolor = " #00000000", compound =true ];
+        "0" [ color = "black", fillcolor = "#ffffff", style = "filled", shape =ellipse, fontname = "arial", label = "aa 😀" ];
+"1" [ color = "black", fillcolor = "#ffffff", style = "filled", shape =ellipse, fontname = "arial", label = "bb" ];
+"0" -- "1" [ color = "#8E7CC3", arrowhead =none ];
+    }
+    

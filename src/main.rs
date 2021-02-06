@@ -14,6 +14,13 @@ use std::fs::File;
 use std::io::Write;
 
 use tokio_postgres::Error;
+use crate::polymap_generator::svg_renderer::render_svg;
+use crate::model::user::User;
+use crate::model::color::Color;
+use crate::model::relationship::Relationship;
+use crate::model::relationship_type::RelationshipType;
+use crate::polymap_generator::dot_definitions::{dot_generate, invoke_graphviz};
+use crate::utilities::shell;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -33,23 +40,14 @@ async fn main() -> Result<(), Error> {
   <text x="65" y="55" class="Rrrrr">Grumpy!</text>
 </svg>
     "#;
-    let browser = Browser::default().unwrap();
-    let _ = browser.wait_for_initial_tab().unwrap();
-    let tab = browser.new_tab().unwrap();
-    tab.navigate_to(
-        format!(
-            "data:text/html,{}",
-            utf8_percent_encode(svg, NON_ALPHANUMERIC)
-        )
-        .as_str(),
-    );
-    let svg = tab.wait_for_element("svg").unwrap();
-    tab.evaluate(r#"
-        document.getElementsByTagName("svg")[0].style.overflow = "hidden";
-        document.getElementsByTagName("svg")[0].style.background = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABQAAAAMABAMAAACJGtf+AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAD1BMVEVbzvqZwOD1qbj97vH///8ruxH3AAAAAWJLR0QEj2jZUQAAAAd0SU1FB+IEBg0YFNeqNkIAAAQVSURBVHja7dJBDQAgAAOxWcACFrCAf01IgN9C0kq4XAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcDOgKBOKDIgBMSAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgGBADYkAwIAYEA2JAMCAGBANiQDAgBgQDYkAwIAYEA2JAMCAGBANiQDAgBgQDYkAwIAYEA2JAMCAGBANiQAwIBsSAYEAMCAbEgGBADAgGxIBgQAwIBsSAYEAMCAbEgGBADAgGxIBgQAwIBsSAYEAMCAbEgBhQAgyIAcGAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgBgQA4IBMSAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgGBADggH5ZMAFRdlQZEAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgGBADggExIBgQA2JAMCAGBANiQDAgBgQDYkAwIAYEA2JAMCAGBANiQDAgBgQDYkAwIAYEA2JAMCAGBANiQDAgBsSAEmBADAgGxIBgQAwIBsSAYEAMCAbEgGBADAgGxIBgQAwIBsSAYEAMCAbEgGBADAgGxIBgQAwIBsSAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEN4HXFCUCUUGxIAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAExIBgQA4IBMSAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgGBADggExIBgQA4IBMSAYEAOCATEgBgQDYkAwIAYEA2JAMCAGBANiQDAgBgQDYkAwIAYEA2JAMCAGBANiQDAgBgQDYkAwIAYEA2JADCgBBsSAYEAMCAbEgGBADAgGxIBgQAwIBsSAYEAMCAbEgGBADAgGxIBgQAwIBsSAYEAMCAbEgGBADIgBwYAYEAyIAcGAGBAMiAHBgBgQDIgBwYAYEAyIAcGAGBAMiAHBgHwy4ICiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADcHJcM6eZjs9OqAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE4LTA0LTA2VDEzOjI0OjIwKzAwOjAwSqSOtwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxOC0wNC0wNlQxMzoyNDoyMCswMDowMDv5NgsAAAAASUVORK5CYII=')";
-        document.getElementsByTagName("svg")[0].style.backgroundSize = "contain";
-    "#, false).unwrap();
-    let png = svg.capture_screenshot(ScreenshotFormat::PNG).unwrap();
-    File::create("idk.png").unwrap().write(&png).unwrap();
+    let usera = User::new(0, "aa 😀", Color::default(), vec![], None);
+    let userb = User::new(1, "bb", Color::default(), vec![], None);
+    let relationship = Relationship::new(3, RelationshipType::Sexual, usera.clone(), userb.clone());
+    let dot_str = dot_generate(&[&usera, &userb, &relationship]);
+    File::create("aa.dot").unwrap().write(dot_str.as_bytes()).unwrap();
+    let svg_str = invoke_graphviz(dot_str).unwrap();
+    File::create("bb.svg").unwrap().write(svg_str.as_bytes()).unwrap();
+    let png = render_svg(svg_str).await.unwrap();
+    File::create("cc.png").unwrap().write(png.as_slice()).unwrap();
     Ok(())
 }

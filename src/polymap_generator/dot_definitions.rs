@@ -1,9 +1,11 @@
 use crate::config::CONFIG;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
-use crate::utilities::shell;
+use crate::utilities::{shell, shell_raw};
+use std::process::{Command, Stdio};
+use std::io::Write;
 
-trait DotGenerate {
+pub trait DotGenerate {
     fn dot_id(&self) -> String;
     fn generate(&self) -> String;
 }
@@ -48,7 +50,7 @@ impl DotGenerate for User {
 impl DotGenerate for Relationship {
     fn dot_id(&self) -> String {
         format!(
-            r#""{}" -- {}""#,
+            r#""{}" -- "{}""#,
             self.left_user.dot_id(),
             self.right_user.dot_id()
         )
@@ -56,7 +58,7 @@ impl DotGenerate for Relationship {
 
     fn generate(&self) -> String {
         format!(
-            r#"{} [ color = "{}", arrowhead =none"#,
+            r#"{} [ color = "{}", arrowhead =none ];"#,
             self.dot_id(),
             self.relationship_type.to_colour()
         )
@@ -72,7 +74,7 @@ pub fn dot_generate(dots: &[&(dyn DotGenerate + Sync)]) -> String {
     format!(
         r#"
     graph G {{
-        graph [ splines = "compound", K =0.8, overlap = "10000:prism", bgcolor = "\#00000000", compound =true ];
+        graph [ splines = "compound", K =0.8, overlap = "10000:prism", bgcolor = " #00000000", compound =true ];
         {}
     }}
     "#,
@@ -86,11 +88,13 @@ pub fn invoke_graphviz(s: String) -> Option<String> {
     } else {
         "/"
     };
-    shell(
-        format!(
-            r#"echo '{}' | {}{}fdp -Tsvg"#,
-            s, CONFIG.graphviz_location, seperator
-        ),
-        true,
-    )
+    let fdp = format!(
+        r#"{}{}fdp -Tsvg"#,
+        CONFIG.graphviz_location, seperator
+    );
+    let mut p = shell_raw(fdp, false)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped()).spawn().unwrap();
+    p.stdin.as_mut().unwrap().write_all(s.as_bytes()).unwrap();
+    String::from_utf8(p.wait_with_output().unwrap().stdout).ok()
 }
