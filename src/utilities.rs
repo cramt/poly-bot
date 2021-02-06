@@ -1,4 +1,4 @@
-use std::borrow::BorrowMut;
+
 use std::process::Command;
 
 pub fn shell<S: AsRef<str>>(s: S, use_pwsh_if_windows: bool) -> Option<String> {
