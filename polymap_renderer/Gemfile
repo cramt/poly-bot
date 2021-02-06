@@ -1,0 +1,4 @@
+source 'https://rubygems.org'
+gem 'puppeteer-ruby'
+gem 'ruby-graphviz'
+gem 'minitest'

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/poly-bot.iml" filepath="$PROJECT_DIR$/poly-bot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/polymap_renderer/polymap_renderer.iml" filepath="$PROJECT_DIR$/polymap_renderer/polymap_renderer.iml" />
     </modules>
   </component>
 </project>

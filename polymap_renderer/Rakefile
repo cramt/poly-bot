@@ -1,0 +1,8 @@
+require 'rake/testtask'
+$LOAD_PATH.unshift File.expand_path('./src', __dir__)
+
+Rake::TestTask.new(:test) do |t|
+  t.libs << 'test'
+  t.libs << 'src'
+  t.test_files = FileList['spec/**/*.rb']
+end
