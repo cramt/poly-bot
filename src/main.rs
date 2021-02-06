@@ -13,8 +13,6 @@ use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use std::fs::File;
 use std::io::Write;
 
-
-
 use tokio_postgres::Error;
 
 #[tokio::main]

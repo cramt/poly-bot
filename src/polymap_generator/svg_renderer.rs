@@ -1,5 +1,5 @@
 use headless_chrome::protocol::page::ScreenshotFormat;
-use headless_chrome::{Browser};
+use headless_chrome::Browser;
 use once_cell::sync::Lazy;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 

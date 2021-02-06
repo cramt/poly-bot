@@ -22,6 +22,7 @@ macros = { path = "./macros" }
 bit-vec = "0.6.3"
 headless_chrome = { git = "https://github.com/atroche/rust-headless-chrome.git" }
 percent-encoding = "2.1.0"
+dot = "0.1.4"
 
 [dependencies.serenity]
 default-features = false

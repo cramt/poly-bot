@@ -9,6 +9,8 @@ pub struct Config {
     pub prefix: String,
     #[serde(alias = "DB")]
     pub db: ConfigDb,
+    #[serde(alias = "GRAPHVIZ_LOCATION")]
+    pub graphviz_location: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
