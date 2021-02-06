@@ -1,8 +1,8 @@
 use headless_chrome::protocol::page::ScreenshotFormat;
-use headless_chrome::{Browser, Tab};
+use headless_chrome::{Browser};
 use once_cell::sync::Lazy;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
-use std::ops::Deref;
+
 use std::sync::Mutex;
 
 static CHROMIUM: Lazy<Mutex<Browser>> = Lazy::new(|| {

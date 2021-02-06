@@ -9,12 +9,12 @@ pub mod utilities;
 
 use headless_chrome::protocol::page::ScreenshotFormat;
 use headless_chrome::Browser;
-use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS, NON_ALPHANUMERIC};
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use std::fs::File;
 use std::io::Write;
-use std::thread::sleep;
-use std::time::Duration;
-use tokio::time::Sleep;
+
+
+
 use tokio_postgres::Error;
 
 #[tokio::main]
