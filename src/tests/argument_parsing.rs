@@ -1,12 +1,14 @@
 #[cfg(test)]
 mod argument_parsing {
     use crate::command::argument_parser::discord_tag_argument_parser::DiscordTagArgumentParser;
-    use crate::command::argument_parser::from_string_argument_parser::{FromStringArgumentParser, RelationshipTypeArgumentParser, ColorArgumentParser};
+    use crate::command::argument_parser::from_string_argument_parser::{
+        ColorArgumentParser, FromStringArgumentParser, RelationshipTypeArgumentParser,
+    };
     use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
     use crate::command::argument_parser::ArgumentParser;
 
-    use crate::model::relationship_type::RelationshipType;
     use crate::model::color::Color;
+    use crate::model::relationship_type::RelationshipType;
 
     #[test]
     fn single_string_argument_parsing() {

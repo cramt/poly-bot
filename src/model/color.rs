@@ -1,11 +1,11 @@
 use macros::make_css_color_names_map;
-use std::str::FromStr;
-use std::fmt::{Display, Formatter};
 use once_cell::sync::Lazy;
-use regex::{Regex, Captures};
-use std::num::ParseIntError;
+use regex::{Captures, Regex};
 use std::borrow::Cow;
+use std::fmt::{Display, Formatter};
+use std::num::ParseIntError;
 use std::ops::Deref;
+use std::str::FromStr;
 
 make_css_color_names_map!();
 
@@ -31,11 +31,7 @@ pub struct Color {
 
 impl Color {
     pub const fn new(r: u8, g: u8, b: u8) -> Color {
-        Self {
-            r,
-            g,
-            b,
-        }
+        Self { r, g, b }
     }
 }
 
@@ -67,9 +63,11 @@ impl ParseColorError {
 
 impl std::error::Error for ParseColorError {}
 
-static HEX_COLOR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"#?([0-f][0-f])([0-f][0-f])([0-f][0-f])").unwrap());
+static HEX_COLOR_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"#?([0-f][0-f])([0-f][0-f])([0-f][0-f])").unwrap());
 
-static RGB_COLOR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"rgb\(\s*([0-9]{1,3}),\s*([0-9]{1,3}),\s*([0-9]{1,3})\s*\)").unwrap());
+static RGB_COLOR_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"rgb\(\s*([0-9]{1,3}),\s*([0-9]{1,3}),\s*([0-9]{1,3})\s*\)").unwrap());
 
 impl FromStr for Color {
     type Err = ParseColorError;
@@ -85,23 +83,19 @@ impl FromStr for Color {
         let fetched_color_by_name = fetched_color_by_name.ok_or(Self::Err::UnsupportedFormat);
         let fetched_color_by_hex = match HEX_COLOR_REGEX.captures(s) {
             None => Err(Self::Err::UnsupportedFormat),
-            Some(caps) => {
-                match caps_parse(caps) {
-                    Ok((r, g, b)) => {
-                        match from_hex(r) {
-                            None => Err(Self::Err::ParseR),
-                            Some(r) => match from_hex(g) {
-                                None => Err(Self::Err::ParseG),
-                                Some(g) => match from_hex(b) {
-                                    None => Err(Self::Err::ParseB),
-                                    Some(b) => Ok(Color::new(r, g, b))
-                                }
-                            }
-                        }
-                    }
-                    Err(e) => Err(e)
-                }
-            }
+            Some(caps) => match caps_parse(caps) {
+                Ok((r, g, b)) => match from_hex(r) {
+                    None => Err(Self::Err::ParseR),
+                    Some(r) => match from_hex(g) {
+                        None => Err(Self::Err::ParseG),
+                        Some(g) => match from_hex(b) {
+                            None => Err(Self::Err::ParseB),
+                            Some(b) => Ok(Color::new(r, g, b)),
+                        },
+                    },
+                },
+                Err(e) => Err(e),
+            },
         };
         let fetched_color_by_rgb = match RGB_COLOR_REGEX.captures(s) {
             None => Err(Self::Err::UnsupportedFormat),
@@ -127,18 +121,18 @@ impl FromStr for Color {
                                                     Ok(Color::new(r, g, b))
                                                 }
                                             }
-                                            Err(_) => Err(Self::Err::ParseB)
+                                            Err(_) => Err(Self::Err::ParseB),
                                         }
                                     }
                                 }
-                                Err(_) => Err(Self::Err::ParseG)
+                                Err(_) => Err(Self::Err::ParseG),
                             }
                         }
                     }
-                    Err(_) => Err(Self::Err::ParseR)
-                }
-                Err(e) => Err(e)
-            }
+                    Err(_) => Err(Self::Err::ParseR),
+                },
+                Err(e) => Err(e),
+            },
         };
         let options = vec![
             fetched_color_by_hex.map(|x| Cow::Owned(x)),
@@ -150,7 +144,7 @@ impl FromStr for Color {
         } else {
             if let Some(err) = options.iter().find(|x| match x {
                 Ok(_) => false,
-                Err(e) => e.is_unsupported()
+                Err(e) => e.is_unsupported(),
             }) {
                 Err(err.as_ref().err().unwrap().clone())
             } else {

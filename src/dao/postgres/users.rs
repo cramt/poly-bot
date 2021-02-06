@@ -7,10 +7,10 @@ use crate::utilities::{NumUtils, PostgresClientUtils};
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 
+use crate::model::color::Color;
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
-use crate::model::color::Color;
 
 #[derive(Debug)]
 pub struct UsersDbRep {
@@ -150,7 +150,7 @@ impl Users for UsersImpl {
                         .collect::<Vec<String>>()
                         .join(", ")
                 )
-                    .as_str(),
+                .as_str(),
                 &[&id],
             )
             .await
@@ -279,7 +279,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                    .as_str(),
+                .as_str(),
                 &[&Sqlu64(id)],
             )
             .await
@@ -306,7 +306,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                    .as_str(),
+                .as_str(),
                 &[&username],
             )
             .await

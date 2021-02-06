@@ -5,15 +5,8 @@ mod model {
 
         #[test]
         fn bits_to_color() {
-            let parsed_color: Color = [
-                0u8,
-                0,
-                0
-            ].into();
-            assert_eq!(
-                Color::default(),
-                parsed_color
-            )
+            let parsed_color: Color = [0u8, 0, 0].into();
+            assert_eq!(Color::default(), parsed_color)
         }
     }
 }
