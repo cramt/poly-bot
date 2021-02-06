@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use std::ops::Deref;
-use std::process::{Command, Output};
+use std::process::Command;
 
 #[cfg(target_os = "windows")]
 static ENSURE_WINDOWS_UNDERSTANDS_UTF8: Lazy<()> = Lazy::new(|| {

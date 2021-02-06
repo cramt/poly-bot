@@ -7,9 +7,6 @@ pub mod polymap_generator;
 pub mod tests;
 pub mod utilities;
 
-use headless_chrome::protocol::page::ScreenshotFormat;
-use headless_chrome::Browser;
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use std::fs::File;
 use std::io::Write;
 
@@ -19,12 +16,12 @@ use crate::model::relationship_type::RelationshipType;
 use crate::model::user::User;
 use crate::polymap_generator::dot_definitions::{dot_generate, invoke_graphviz};
 use crate::polymap_generator::svg_renderer::render_svg;
-use crate::utilities::shell;
+
 use tokio_postgres::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let svg = r#"<svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
+    let _svg = r#"<svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
   <style>
     .small { font: italic 13px sans-serif; }
     .heavy { font: bold 30px sans-serif; }

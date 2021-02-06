@@ -1,9 +1,9 @@
 use crate::config::CONFIG;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
-use crate::utilities::{shell, shell_raw};
+use crate::utilities::shell_raw;
 use std::io::Write;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 pub trait DotGenerate {
     fn dot_id(&self) -> String;
