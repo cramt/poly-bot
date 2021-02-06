@@ -1,14 +1,12 @@
 #[cfg(test)]
 mod argument_parsing {
     use crate::command::argument_parser::discord_tag_argument_parser::DiscordTagArgumentParser;
-    use crate::command::argument_parser::from_string_argument_parser::{
-        FromStringArgumentParser, GenderArgumentParser, RelationshipTypeArgumentParser,
-    };
+    use crate::command::argument_parser::from_string_argument_parser::{FromStringArgumentParser, RelationshipTypeArgumentParser, ColorArgumentParser};
     use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
     use crate::command::argument_parser::ArgumentParser;
 
-    use crate::model::gender::Gender;
     use crate::model::relationship_type::RelationshipType;
+    use crate::model::color::Color;
 
     #[test]
     fn single_string_argument_parsing() {
@@ -42,11 +40,11 @@ mod argument_parsing {
     }
 
     #[test]
-    fn parse_gender() {
-        let mut str = "femme".to_string();
-        let output = GenderArgumentParser::new().parse(&mut str).unwrap();
+    fn parse_color() {
+        let mut str = "white".to_string();
+        let output = ColorArgumentParser::new().parse(&mut str).unwrap();
         assert_eq!("", str);
-        assert_eq!(Gender::Femme, output);
+        assert_eq!(Color::default(), output);
     }
 
     #[test]

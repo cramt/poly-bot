@@ -2,7 +2,6 @@ use crate::dao::postgres::{BoxedConnectionProvider, DbRep, PostgresImpl, Sqlu64}
 use crate::dao::users::Users;
 use crate::model::user::{User, UserNoId};
 
-use crate::model::gender::Gender;
 use crate::model::id_tree::IdTree;
 use crate::utilities::{NumUtils, PostgresClientUtils};
 use async_trait::async_trait;
@@ -11,12 +10,13 @@ use std::collections::{HashMap, VecDeque};
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
+use crate::model::color::Color;
 
 #[derive(Debug)]
 pub struct UsersDbRep {
     id: i64,
     name: String,
-    gender: i16,
+    color: Box<[u8]>,
     parent_system_id: Option<i64>,
     discord_id: Option<i64>,
 }
@@ -61,8 +61,8 @@ impl UsersDbRep {
             .map(|x| unsafe { std::mem::transmute(x.clone()) })
     }
 
-    fn transformed_gender(&self) -> Gender {
-        Gender::parse(self.gender as u8).unwrap()
+    fn transformed_color(&self) -> Color {
+        self.color.clone().into()
     }
 }
 
@@ -73,20 +73,20 @@ impl DbRep for UsersDbRep {
         Self {
             id: row.get(0),
             name: row.get(1),
-            gender: row.get(2),
+            color: row.get::<_, &[u8]>(2).to_vec().into_boxed_slice(),
             parent_system_id: row.get(3),
             discord_id: row.get(4),
         }
     }
 
     fn model(self) -> Self::Output {
-        let gender = self.transformed_gender();
+        let color = self.transformed_color();
         let discord_id = self.transformed_discord_id();
-        Self::Output::new(self.id, self.name, gender, vec![], discord_id)
+        Self::Output::new(self.id, self.name, color, vec![], discord_id)
     }
 
     fn select_order_raw() -> &'static [&'static str] {
-        &["id", "name", "gender", "parent_system", "discord_id"]
+        &["id", "name", "color", "parent_system", "discord_id"]
     }
 }
 
@@ -150,7 +150,7 @@ impl Users for UsersImpl {
                         .collect::<Vec<String>>()
                         .join(", ")
                 )
-                .as_str(),
+                    .as_str(),
                 &[&id],
             )
             .await
@@ -171,7 +171,7 @@ impl Users for UsersImpl {
                 AS (
                     INSERT INTO
                     users
-                    (parent_system, name, gender, discord_id)
+                    (parent_system, name, color, discord_id)
                     VALUES
                     ({}, ${}, ${}, ${})
                     RETURNING id
@@ -209,8 +209,9 @@ impl Users for UsersImpl {
             }
             let name = user.name.clone();
             v.push(Box::new(name));
-            let gender = user.gender.to_number();
-            v.push(Box::new(gender));
+            let color: Box<[u8]> = user.color.clone().into();
+            let color = color.to_vec();
+            v.push(Box::new(color));
             let discord_id = user.discord_id.as_ref().map(|x| Sqlu64(x.clone()));
             v.push(Box::new(discord_id));
 
@@ -278,7 +279,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                .as_str(),
+                    .as_str(),
                 &[&Sqlu64(id)],
             )
             .await
@@ -305,7 +306,7 @@ impl Users for UsersImpl {
                     ",
                     UsersDbRep::select_order()
                 )
-                .as_str(),
+                    .as_str(),
                 &[&username],
             )
             .await

@@ -1,6 +1,6 @@
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 use crate::command::argument_parser::ArgumentParser;
-use crate::model::gender::Gender;
+use crate::model::color::Color;
 use crate::model::relationship_type::RelationshipType;
 use eyre::Report;
 use eyre::Result;
@@ -63,5 +63,5 @@ create_number_argument_parser!(I32ArgumentParser, i32);
 create_number_argument_parser!(I64ArgumentParser, i64);
 create_number_argument_parser!(I128ArgumentParser, i128);
 
-create_number_argument_parser!(GenderArgumentParser, Gender);
+create_number_argument_parser!(ColorArgumentParser, Color);
 create_number_argument_parser!(RelationshipTypeArgumentParser, RelationshipType);

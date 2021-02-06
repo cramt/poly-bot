@@ -55,9 +55,9 @@ mod dao {
 
     mod user {
         use crate::dao::users;
-        use crate::model::gender::Gender;
         use crate::model::user::UserNoId;
         use crate::tests::dao::dao::{discord_id_provider, wait_for_test_db_ready};
+        use crate::model::color::Color;
 
         #[tokio::test]
         async fn add_user() {
@@ -65,14 +65,13 @@ mod dao {
             let user = users::default()
                 .add(UserNoId::new(
                     "person",
-                    Gender::Femme,
+                    Color::default(),
                     None,
                     vec![],
                     discord_id_provider(),
                 ))
                 .await;
             assert_eq!("person", user.name);
-            assert_eq!(Gender::Femme, user.gender);
         }
 
         #[tokio::test]
@@ -82,7 +81,7 @@ mod dao {
             let root = client
                 .add(UserNoId::new(
                     "root",
-                    Gender::System,
+                    Color::default(),
                     None,
                     vec![],
                     discord_id_provider(),
@@ -91,12 +90,13 @@ mod dao {
             let member = client
                 .add(UserNoId::new(
                     "member",
-                    Gender::Femme,
+                    Color::default(),
                     Some(Box::new(root.clone())),
                     vec![],
                     discord_id_provider(),
                 ))
                 .await;
+            let root = client.get(root.id).await.unwrap();
             assert_eq!(root.members.first().unwrap().id, member.id);
         }
 
@@ -107,11 +107,11 @@ mod dao {
             let user = client
                 .add(UserNoId::new(
                     "root",
-                    Gender::System,
+                    Color::default(),
                     None,
                     vec![UserNoId::new(
                         "member",
-                        Gender::Femme,
+                        Color::default(),
                         None,
                         vec![],
                         discord_id_provider(),
@@ -134,7 +134,7 @@ mod dao {
             let user = client
                 .add(UserNoId::new(
                     "person",
-                    Gender::Femme,
+                    Color::default(),
                     None,
                     vec![],
                     discord_id_provider(),
@@ -142,8 +142,8 @@ mod dao {
                 .await;
             let found_user = client.get(user.id.clone()).await.unwrap();
             assert_eq!(user.id, found_user.id);
-            assert_eq!(user.gender, found_user.gender);
             assert_eq!(user.name, found_user.name);
+            assert_eq!(user.color, found_user.color);
             assert_eq!(user.discord_id, found_user.discord_id)
         }
 
@@ -155,7 +155,7 @@ mod dao {
             let user = client
                 .add(UserNoId::new(
                     "person",
-                    Gender::Femme,
+                    Color::default(),
                     None,
                     vec![],
                     discord_id,
@@ -163,7 +163,6 @@ mod dao {
                 .await;
             let found_user = client.get_by_discord_id(discord_id.unwrap()).await.unwrap();
             assert_eq!(user.id, found_user.id);
-            assert_eq!(user.gender, found_user.gender);
             assert_eq!(user.name, found_user.name);
             assert_eq!(user.discord_id, found_user.discord_id)
         }
@@ -176,7 +175,7 @@ mod dao {
             let user = client
                 .add(UserNoId::new(
                     username.clone(),
-                    Gender::Femme,
+                    Color::default(),
                     None,
                     vec![],
                     discord_id_provider(),
