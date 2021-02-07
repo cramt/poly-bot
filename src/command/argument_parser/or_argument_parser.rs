@@ -22,10 +22,24 @@ impl<A, B> Or<A, B> {
         }
     }
 
+    pub fn is_a(&self) -> bool {
+        match self {
+            Or::A(_) => true,
+            Or::B(_) => false,
+        }
+    }
+
     pub fn b(self) -> Option<B> {
         match self {
             Self::A(_) => None,
             Self::B(b) => Some(b),
+        }
+    }
+
+    pub fn is_b(&self) -> bool {
+        match self {
+            Or::A(_) => false,
+            Or::B(_) => true,
         }
     }
 

@@ -7,7 +7,6 @@ pub mod string_argument_parser;
 
 use eyre::*;
 
-
 pub trait ArgumentParser: Sized {
     type Output;
     fn parse(&self, input: &mut String) -> Result<Self::Output>;

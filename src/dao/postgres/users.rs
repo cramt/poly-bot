@@ -3,11 +3,11 @@ use crate::dao::users::Users;
 use crate::model::user::{User, UserNoId};
 
 use crate::model::id_tree::IdTree;
-use crate::utilities::{NumUtils, PostgresClientUtils};
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 
 use crate::model::color::Color;
+use crate::utilities::std_additions::{NumUtils, PostgresClientUtils};
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
