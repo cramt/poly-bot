@@ -17,10 +17,11 @@ use crate::model::user::User;
 use crate::polymap_generator::dot_definitions::{dot_generate, invoke_graphviz};
 use crate::polymap_generator::svg_renderer::render_svg;
 
-use tokio_postgres::Error;
+use eyre::*;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<()> {
+    color_eyre::install()?;
     let _svg = r#"<svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
   <style>
     .small { font: italic 13px sans-serif; }

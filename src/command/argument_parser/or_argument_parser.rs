@@ -68,7 +68,13 @@ where
         } else if let Ok(b) = b {
             Ok(Self::Output::B(b))
         } else {
-            Err(aggregate_errors(vec![a, b].into_iter().map(|x| x.err().unwrap())).unwrap())
+            Err(aggregate_errors(
+                vec![a.err(), b.err()]
+                    .into_iter()
+                    .map(|x| x.unwrap())
+                    .collect(),
+            )
+            .unwrap())
         }
     }
 
