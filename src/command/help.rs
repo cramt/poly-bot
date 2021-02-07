@@ -1,5 +1,6 @@
-use crate::command::{all_commands, Command, CommandOutput};
+use crate::command::{all_commands, Command, CommandResponse};
 use eyre::*;
+use serenity::model::channel::Message;
 
 #[derive(Debug)]
 pub struct Help;
@@ -17,8 +18,8 @@ impl Command for Help {
         "\"help\" takes no arguments"
     }
 
-    fn run(&self) -> Result<CommandOutput> {
-        Ok(CommandOutput::TextBlock(
+    fn run(&self, _: Message) -> Result<CommandResponse> {
+        Ok(CommandResponse::TextBlock(
             all_commands()
                 .into_iter()
                 .map(|(name, value)| (name, value.help()))

@@ -7,11 +7,9 @@ use crate::migration_constants::MIGRATION_FILES;
 
 use async_trait::async_trait;
 
-use serenity::static_assertions::_core::ops::DerefMut;
-
 use std::error::Error;
 use std::fmt::Debug;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use tokio_postgres::tls::NoTlsStream;
 use tokio_postgres::types::private::BytesMut;

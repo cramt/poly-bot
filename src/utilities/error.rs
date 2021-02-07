@@ -1,4 +1,3 @@
-
 use eyre::*;
 
 pub fn aggregate_errors(v: Vec<Report>) -> Option<Report> {
