@@ -1,7 +1,7 @@
-use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
-use std::marker::PhantomData;
-use eyre::*;
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
+use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
+use eyre::*;
+use std::marker::PhantomData;
 
 pub struct OrArgumentParser<A: SingleWordArgumentParser, B: SingleWordArgumentParser> {
     a: PhantomData<A>,
@@ -18,14 +18,14 @@ impl<A, B> Or<A, B> {
     pub fn a(self) -> Option<A> {
         match self {
             Self::A(a) => Some(a),
-            Self::B(_) => None
+            Self::B(_) => None,
         }
     }
 
     pub fn b(self) -> Option<B> {
         match self {
             Self::A(_) => None,
-            Self::B(b) => Some(b)
+            Self::B(b) => Some(b),
         }
     }
 
@@ -38,8 +38,10 @@ impl<A, B> Or<A, B> {
 }
 
 impl<A, B> ArgumentParser for OrArgumentParser<A, B>
-    where A: SingleWordArgumentParser,
-          B: SingleWordArgumentParser {
+where
+    A: SingleWordArgumentParser,
+    B: SingleWordArgumentParser,
+{
     type Output = Or<A::Output, B::Output>;
 
     fn parse(&self, input: &mut String) -> Result<Self::Output> {
@@ -64,5 +66,8 @@ impl<A, B> ArgumentParser for OrArgumentParser<A, B>
 }
 
 impl<A, B> SingleWordArgumentParser for OrArgumentParser<A, B>
-    where A: SingleWordArgumentParser,
-          B: SingleWordArgumentParser {}
+where
+    A: SingleWordArgumentParser,
+    B: SingleWordArgumentParser,
+{
+}

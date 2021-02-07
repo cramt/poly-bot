@@ -13,9 +13,9 @@ pub struct FromStringArgumentParser<T: FromStr> {
 }
 
 impl<T> ArgumentParser for FromStringArgumentParser<T>
-    where
-        T: FromStr,
-        <T as FromStr>::Err: StdError + Send + Sync + 'static,
+where
+    T: FromStr,
+    <T as FromStr>::Err: StdError + Send + Sync + 'static,
 {
     type Output = T;
 
@@ -33,9 +33,12 @@ impl<T> ArgumentParser for FromStringArgumentParser<T>
     }
 }
 
-impl<T> SingleWordArgumentParser for FromStringArgumentParser<T> where
+impl<T> SingleWordArgumentParser for FromStringArgumentParser<T>
+where
     T: FromStr,
-    <T as FromStr>::Err: StdError + Send + Sync + 'static,{}
+    <T as FromStr>::Err: StdError + Send + Sync + 'static,
+{
+}
 
 macro_rules! create_number_argument_parser {
     ($name:ident, $t:ty) => {
@@ -53,7 +56,7 @@ macro_rules! create_number_argument_parser {
             }
         }
 
-        impl SingleWordArgumentParser for $name { }
+        impl SingleWordArgumentParser for $name {}
     };
 }
 
