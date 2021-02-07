@@ -1,4 +1,4 @@
-use color_eyre::Section;
+
 use eyre::*;
 
 pub fn aggregate_errors(v: Vec<Report>) -> Option<Report> {
