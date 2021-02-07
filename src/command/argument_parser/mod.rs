@@ -6,7 +6,7 @@ pub mod rest_argument_parser;
 pub mod string_argument_parser;
 
 use eyre::*;
-use std::process::Output;
+
 
 pub trait ArgumentParser: Sized {
     type Output;
