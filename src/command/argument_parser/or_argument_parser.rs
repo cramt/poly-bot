@@ -29,10 +29,10 @@ impl<A, B> Or<A, B> {
         }
     }
 
-    pub fn as_ref(&self) -> Self<&A, &B> {
+    pub const fn as_ref(&self) -> Or<&A, &B> {
         match self {
-            Self::A(a) => Self::A(a),
-            Self::B(b) => Self::B(b),
+            Self::A(a) => Or::A(a),
+            Self::B(b) => Or::B(b),
         }
     }
 }
