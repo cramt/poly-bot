@@ -1,5 +1,6 @@
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
+use crate::utilities::error::aggregate_errors;
 use eyre::*;
 use std::marker::PhantomData;
 
@@ -67,7 +68,7 @@ where
         } else if let Ok(b) = b {
             Ok(Self::Output::B(b))
         } else {
-            Err(a.err().unwrap())
+            Err(aggregate_errors(vec![a, b].into_iter().map(|x| x.err().unwrap())).unwrap())
         }
     }
 
