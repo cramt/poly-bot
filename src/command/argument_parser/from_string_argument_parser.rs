@@ -1,5 +1,5 @@
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
-use crate::command::argument_parser::ArgumentParser;
+use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
 use crate::model::color::Color;
 use crate::model::relationship_type::RelationshipType;
 use eyre::Report;
@@ -13,9 +13,9 @@ pub struct FromStringArgumentParser<T: FromStr> {
 }
 
 impl<T> ArgumentParser for FromStringArgumentParser<T>
-where
-    T: FromStr,
-    <T as FromStr>::Err: StdError + Send + Sync + 'static,
+    where
+        T: FromStr,
+        <T as FromStr>::Err: StdError + Send + Sync + 'static,
 {
     type Output = T;
 
@@ -33,6 +33,10 @@ where
     }
 }
 
+impl<T> SingleWordArgumentParser for FromStringArgumentParser<T> where
+    T: FromStr,
+    <T as FromStr>::Err: StdError + Send + Sync + 'static,{}
+
 macro_rules! create_number_argument_parser {
     ($name:ident, $t:ty) => {
         pub struct $name;
@@ -48,6 +52,8 @@ macro_rules! create_number_argument_parser {
                 Self
             }
         }
+
+        impl SingleWordArgumentParser for $name { }
     };
 }
 

@@ -1,5 +1,5 @@
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
-use crate::command::argument_parser::ArgumentParser;
+use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
 use eyre::*;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -26,3 +26,5 @@ impl ArgumentParser for DiscordTagArgumentParser {
         Self
     }
 }
+
+impl SingleWordArgumentParser for DiscordTagArgumentParser {}
