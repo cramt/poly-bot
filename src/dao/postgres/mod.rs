@@ -5,9 +5,9 @@ pub mod users;
 use crate::config::CONFIG;
 use crate::migration_constants::MIGRATION_FILES;
 
-use async_trait::async_trait;
 
-use color_eyre::owo_colors::OwoColorize;
+
+
 use eyre::*;
 use std::error::Error;
 use std::fmt::Debug;
