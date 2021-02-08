@@ -2,11 +2,11 @@ pub mod relationships;
 pub mod singleton;
 pub mod users;
 
-use crate::config::CONFIG;
+use crate::{config::CONFIG, utilities::shell::shell};
 use crate::migration_constants::MIGRATION_FILES;
 
 use eyre::*;
-use std::error::Error;
+use std::{error::Error, thread::sleep, time::Duration};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 
@@ -78,10 +78,22 @@ impl ConnectionProvider {
     }
 }
 
+fn docker_config_string() -> &'static str {
+    let container_name = "poly-bot-postgres-test-container";
+    if shell(format!(r#"docker ps -aqf "name={}""#, container_name), true).unwrap_or("".to_string()).is_empty() {
+        println!("postgres docker container isnt running, starting it");
+        shell(format!(r#"docker run -d --rm --name {} -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres postgres:11.3-alpine -c shared_buffers=500MB -c fsync=off"#, container_name), true).unwrap();
+        println!("initializing, waiting 2 seconds to make sure its finished");
+        sleep(Duration::from_millis(2000));
+    }
+
+    "user=postgres password=postgres dbname=postgres host=localhost"
+}
+
 impl Default for ConnectionProvider {
     fn default() -> Self {
         if cfg!(test) {
-            Self::new("user=postgres password=postgres dbname=postgres host=localhost")
+            Self::new(docker_config_string())
         } else {
             Self::new(CONFIG.deref().db.to_string().as_str())
         }
