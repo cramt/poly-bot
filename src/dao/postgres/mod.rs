@@ -5,9 +5,6 @@ pub mod users;
 use crate::config::CONFIG;
 use crate::migration_constants::MIGRATION_FILES;
 
-
-
-
 use eyre::*;
 use std::error::Error;
 use std::fmt::Debug;
