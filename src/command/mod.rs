@@ -4,12 +4,12 @@ use eyre::Result;
 use once_cell::sync::Lazy;
 
 use crate::command::add_user::AddUser;
+use crate::command::color::Color;
 use crate::command::command_response::CommandResponse;
 use async_trait::async_trait;
 use serenity::model::channel::Message;
 use std::collections::HashMap;
 use std::ops::Deref;
-use crate::command::color::Color;
 
 pub mod add_user;
 pub mod argument_parser;
@@ -49,7 +49,7 @@ static ALL_COMMANDS: Lazy<HashMap<&'static str, Box<dyn Command>>> = Lazy::new(|
     let v: Vec<Box<dyn Command>> = vec![
         Box::new(Help::new()),
         Box::new(AddUser::new()),
-        Box::new(Color::new())
+        Box::new(Color::new()),
     ];
     v.into_iter().map(|x| (x.name(), x)).collect()
 });

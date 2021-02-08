@@ -2,14 +2,16 @@ use crate::command::argument_parser::from_string_argument_parser::ColorArgumentP
 use crate::command::argument_parser::ArgumentParser;
 use crate::command::command_response::CommandResponse;
 use crate::command::{Command, CommandContext};
-use eyre::*;
 use async_trait::async_trait;
+use eyre::*;
 
 #[derive(Debug)]
 pub struct Color;
 
 impl Color {
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 }
 
 #[async_trait]
