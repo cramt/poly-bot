@@ -1,5 +1,5 @@
 use crate::command::argument_parser::ArgumentParser;
-use color_eyre::owo_colors::OwoColorize;
+
 use eyre::Result;
 
 pub struct StringArgumentParser;

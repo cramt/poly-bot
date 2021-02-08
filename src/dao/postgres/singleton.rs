@@ -18,7 +18,7 @@ impl PostgresImpl for SingletonImpl {
 
 #[async_trait]
 impl Singleton for SingletonImpl {
-    async fn get_all_in(&self, discord_ids: Vec<u64>) -> Result<(Vec<Relationship>, Vec<User>)> {
+    async fn get_all_in(&self, _discord_ids: Vec<u64>) -> Result<(Vec<Relationship>, Vec<User>)> {
         unimplemented!()
     }
 }

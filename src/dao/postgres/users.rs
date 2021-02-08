@@ -318,19 +318,19 @@ impl Users for UsersImpl {
         Ok(dbrep_iter.map(|x| x.model()).collect())
     }
 
-    async fn get_members_multiple(&self, users: Vec<User>) -> Result<Vec<User>> {
+    async fn get_members_multiple(&self, _users: Vec<User>) -> Result<Vec<User>> {
         unimplemented!()
     }
 
-    async fn delete(&self, user: User) -> Result<()> {
+    async fn delete(&self, _user: User) -> Result<()> {
         unimplemented!()
     }
 
-    async fn delete_by_discord_id(&self, id: u64) -> Result<()> {
+    async fn delete_by_discord_id(&self, _id: u64) -> Result<()> {
         unimplemented!()
     }
 
-    async fn update(&self, user: User) -> Result<()> {
+    async fn update(&self, _user: User) -> Result<()> {
         unimplemented!()
     }
 }

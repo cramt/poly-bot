@@ -7,7 +7,7 @@ use crate::command::add_user::AddUser;
 use crate::command::color::Color;
 use crate::command::command_response::CommandResponse;
 use async_trait::async_trait;
-use serenity::model::channel::Message;
+
 use std::collections::HashMap;
 use std::ops::Deref;
 

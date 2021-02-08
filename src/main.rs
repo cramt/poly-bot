@@ -21,7 +21,7 @@ use serenity::model::prelude::Ready;
 use serenity::Client;
 
 use crate::dao::postgres::{apply_migrations, ConfigConnectionProvider, ConnectionProvider};
-use futures::Future;
+
 use std::collections::HashMap;
 
 struct Handler {

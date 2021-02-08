@@ -1,4 +1,4 @@
-use crate::dao::postgres::singleton::SingletonImpl;
+
 use crate::dao::postgres::PostgresImpl;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
