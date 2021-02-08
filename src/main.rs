@@ -20,7 +20,7 @@ use serenity::model::channel::Message;
 use serenity::model::prelude::Ready;
 use serenity::Client;
 
-use crate::dao::postgres::{apply_migrations, ConfigConnectionProvider, ConnectionProvider};
+use crate::dao::postgres::{apply_migrations, ConnectionProvider};
 
 use std::collections::HashMap;
 
@@ -58,13 +58,17 @@ impl EventHandler for Handler {
                     val.respond((ctx, msg)).await;
                 }
                 Err(err) => {
-                    msg.channel_id.say(&ctx.http, err).await.expect("couldnt send message");
+                    msg.channel_id
+                        .say(&ctx.http, err)
+                        .await
+                        .expect("couldnt send message");
                 }
             }
         } else {
             msg.channel_id
                 .say(&ctx.http, format!("command {} doesnt exist", name))
-                .await.expect("couldnt send message");
+                .await
+                .expect("couldnt send message");
         }
     }
 
@@ -74,7 +78,7 @@ impl EventHandler for Handler {
 }
 
 async fn ensure_database() -> Result<()> {
-    let client = ConfigConnectionProvider.open_client().await;
+    let client = ConnectionProvider::default().open_client().await;
     apply_migrations(&client).await
 }
 

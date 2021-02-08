@@ -2,7 +2,6 @@ use crate::command::{all_commands, Command, CommandContext, CommandResponse};
 use async_trait::async_trait;
 use eyre::*;
 
-
 #[derive(Debug)]
 pub struct Help;
 

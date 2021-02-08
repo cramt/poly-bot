@@ -1,4 +1,4 @@
-lpub mod relationships;
+pub mod relationships;
 pub mod singleton;
 pub mod users;
 
@@ -7,6 +7,7 @@ use crate::migration_constants::MIGRATION_FILES;
 
 use async_trait::async_trait;
 
+use color_eyre::owo_colors::OwoColorize;
 use eyre::*;
 use std::error::Error;
 use std::fmt::Debug;
@@ -52,11 +53,18 @@ pub async fn apply_migrations(client: &Client) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug)]
+pub struct ConnectionProvider {
+    pub connnection_string: String,
+}
 
-#[async_trait]
-pub trait ConnectionProvider: std::fmt::Debug {
-    async fn create_connection(&self) -> (Client, Connection<Socket, NoTlsStream>);
-    async fn open_client(&self) -> Client {
+impl ConnectionProvider {
+    pub async fn create_connection(&self) -> (Client, Connection<Socket, NoTlsStream>) {
+        tokio_postgres::connect(self.connnection_string.as_str(), NoTls)
+            .await
+            .unwrap()
+    }
+    pub async fn open_client(&self) -> Client {
         let (client, connection) = self.create_connection().await;
         tokio::spawn(async move {
             if let Err(e) = connection.await {
@@ -65,49 +73,33 @@ pub trait ConnectionProvider: std::fmt::Debug {
         });
         client
     }
-}
 
-#[derive(Debug)]
-pub struct ConfigConnectionProvider;
-
-#[async_trait]
-impl ConnectionProvider for ConfigConnectionProvider {
-    async fn create_connection(&self) -> (Client, Connection<Socket, NoTlsStream>) {
-        tokio_postgres::connect(CONFIG.deref().db.to_string().as_str(), NoTls)
-            .await
-            .unwrap()
+    pub fn new<S: ToString>(s: S) -> Self {
+        Self {
+            connnection_string: s.to_string(),
+        }
     }
 }
 
-#[derive(Debug)]
-pub struct DockerConnectionProvider;
-
-#[async_trait]
-impl ConnectionProvider for DockerConnectionProvider {
-    async fn create_connection(&self) -> (Client, Connection<Socket, NoTlsStream>) {
-        tokio_postgres::connect(
-            "user=postgres password=postgres dbname=postgres host=localhost",
-            NoTls,
-        )
-        .await
-        .unwrap()
+impl Default for ConnectionProvider {
+    fn default() -> Self {
+        if cfg!(test) {
+            Self::new("user=postgres password=postgres dbname=postgres host=localhost")
+        } else {
+            Self::new(CONFIG.deref().db.to_string().as_str())
+        }
     }
 }
 
 pub trait PostgresImpl {
-    fn new(provider: BoxedConnectionProvider) -> Self;
+    fn new(provider: ConnectionProvider) -> Self;
     fn default() -> Box<Self>
     where
         Self: Sized,
     {
-        if cfg!(test) {
-            Box::new(Self::new(Box::new(DockerConnectionProvider)))
-        } else {
-            Box::new(Self::new(Box::new(ConfigConnectionProvider)))
-        }
+        Box::new(Self::new(ConnectionProvider::default()))
     }
 }
-e
 pub trait DbRep {
     type Output;
     fn new(row: Row) -> Self;
@@ -117,8 +109,6 @@ pub trait DbRep {
         Self::select_order_raw().join(", ")
     }
 }
-
-pub type BoxedConnectionProvider = Box<dyn ConnectionProvider + Sync + std::marker::Send>;
 
 #[derive(Debug)]
 pub struct Sqlu64(u64);

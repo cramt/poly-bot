@@ -1,17 +1,22 @@
-use crate::dao::postgres::{BoxedConnectionProvider, DbRep, PostgresImpl, Sqlu64};
 use crate::dao::users::Users;
 use crate::model::user::{User, UserNoId};
+use crate::{
+    dao::postgres::{DbRep, PostgresImpl, Sqlu64},
+    utilities::std_additions::PostgresClientUtils,
+};
 
 use crate::model::id_tree::IdTree;
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 
 use crate::model::color::Color;
-use crate::utilities::std_additions::{NumUtils, PostgresClientUtils};
+use crate::utilities::std_additions::NumUtils;
 use eyre::*;
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
+
+use super::ConnectionProvider;
 
 #[derive(Debug)]
 pub struct UsersDbRep {
@@ -93,11 +98,11 @@ impl DbRep for UsersDbRep {
 
 #[derive(Debug)]
 pub struct UsersImpl {
-    provider: BoxedConnectionProvider,
+    provider: ConnectionProvider,
 }
 
 impl PostgresImpl for UsersImpl {
-    fn new(provider: BoxedConnectionProvider) -> Self {
+    fn new(provider: ConnectionProvider) -> Self {
         Self { provider }
     }
 }

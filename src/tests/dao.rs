@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod dao {
-    use crate::dao::postgres::{apply_migrations, ConnectionProvider, DockerConnectionProvider};
+    use crate::dao::postgres::{apply_migrations, ConnectionProvider};
     use once_cell::sync::Lazy;
 
     use std::collections::HashSet;
@@ -21,7 +21,7 @@ mod dao {
         let mut guard = READY_FIRST.lock().unwrap();
         let val = guard.deref_mut();
         if val.clone() {
-            let client = DockerConnectionProvider.open_client().await;
+            let client = ConnectionProvider::default().open_client().await;
             let mut tables = client
                 .query(
                     "SELECT table_name FROM information_schema.tables WHERE table_schema='public'",

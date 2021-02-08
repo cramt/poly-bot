@@ -9,7 +9,6 @@ use crate::model::user::UserNoId;
 use async_trait::async_trait;
 use eyre::*;
 
-
 #[derive(Debug)]
 pub struct AddUser;
 

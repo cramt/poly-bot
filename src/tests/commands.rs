@@ -1,8 +1,5 @@
 #[cfg(test)]
 mod commands {
-    
-    
-    
 
     #[test]
     fn help_command_includes_itself() {

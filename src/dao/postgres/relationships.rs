@@ -1,17 +1,19 @@
-use crate::dao::postgres::{BoxedConnectionProvider, PostgresImpl};
+use crate::dao::postgres::PostgresImpl;
 use crate::dao::relationships::Relationships;
 use crate::model::relationship::{Relationship, RelationshipNoId};
 use crate::model::user::User;
 use async_trait::async_trait;
 use eyre::*;
 
+use super::ConnectionProvider;
+
 #[derive(Debug)]
 pub struct RelationshipsImpl {
-    provider: BoxedConnectionProvider,
+    provider: ConnectionProvider,
 }
 
 impl PostgresImpl for RelationshipsImpl {
-    fn new(provider: BoxedConnectionProvider) -> Self {
+    fn new(provider: ConnectionProvider) -> Self {
         Self { provider }
     }
 }
