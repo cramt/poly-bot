@@ -1,8 +1,8 @@
+use inflector::cases::snakecase::to_snake_case;
 use proc_macro::TokenStream;
 use regex::Regex;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
-use inflector::cases::snakecase::to_snake_case;
+use std::collections::HashMap;
 
 #[proc_macro]
 pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
@@ -74,12 +74,18 @@ pub fn make_emoji_implementation(item: TokenStream) -> TokenStream {
     let mut v = item.split(",").map(|x| x.trim()).collect::<Vec<&str>>();
     let func = v.pop().unwrap();
     let tt = v.pop().unwrap();
-    let a = emoji_map.into_iter().map(|(name, char)|
-        format!(r#"pub fn {}() -> {} {{
-            {}("{}")
-        }}
-        "#, name, tt, func, char)
-    ).collect::<String>();
+    let a = emoji_map
+        .into_iter()
+        .map(|(name, char)| {
+            format!(
+                r#"pub fn {}() -> {} {{
+                    {}("{}")
+                }}
+                "#,
+                name, tt, func, char
+            )
+        })
+        .collect::<String>();
     //panic!(a);
     a.parse().unwrap()
 }

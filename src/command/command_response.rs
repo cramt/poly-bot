@@ -1,7 +1,7 @@
 use async_trait::async_trait;
+use macros::*;
 use serenity::client::Context;
 use serenity::model::channel::{Message, ReactionType};
-use macros::*;
 
 #[derive(Debug, Clone)]
 pub enum CommandResponse {
@@ -15,7 +15,7 @@ impl CommandResponse {
         Self::Reaction(ReactionType::Unicode(s.as_ref().to_string()))
     }
 
-    make_emoji_implementation!(Self,Self::internal_emoji_receiver);
+    make_emoji_implementation!(Self, Self::internal_emoji_receiver);
 }
 
 #[async_trait]
