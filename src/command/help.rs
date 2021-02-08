@@ -1,10 +1,12 @@
-use crate::command::{all_commands, Command, CommandResponse};
+use crate::command::{all_commands, Command, CommandContext, CommandResponse};
+use async_trait::async_trait;
 use eyre::*;
 use serenity::model::channel::Message;
 
 #[derive(Debug)]
 pub struct Help;
 
+#[async_trait]
 impl Command for Help {
     fn name(&self) -> &'static str {
         "help"
@@ -18,7 +20,7 @@ impl Command for Help {
         "\"help\" takes no arguments"
     }
 
-    fn run(&self, _: Message) -> Result<CommandResponse> {
+    async fn run(&self, _: CommandContext) -> Result<CommandResponse> {
         Ok(CommandResponse::TextBlock(
             all_commands()
                 .into_iter()

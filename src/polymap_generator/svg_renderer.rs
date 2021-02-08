@@ -20,7 +20,8 @@ pub async fn render_svg<S: AsRef<str>>(svg: S) -> Option<Vec<u8>> {
             utf8_percent_encode(svg.as_ref(), NON_ALPHANUMERIC)
         )
         .as_str(),
-    );
+    )
+    .unwrap();
     let svg = tab.wait_for_element("svg").unwrap();
     tab.evaluate(r#"
         document.getElementsByTagName("svg")[0].style.overflow = "hidden";

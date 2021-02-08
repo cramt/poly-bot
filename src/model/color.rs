@@ -79,8 +79,9 @@ impl FromStr for Color {
             Ok((r, g, b))
         }
         let fetched_color_by_name: Option<&Color> = CSS_COLOR_NAMES_MAP.get(s);
+        let s = s.to_lowercase();
         let fetched_color_by_name = fetched_color_by_name.ok_or(Self::Err::UnsupportedFormat);
-        let fetched_color_by_hex = match HEX_COLOR_REGEX.captures(s) {
+        let fetched_color_by_hex = match HEX_COLOR_REGEX.captures(s.as_str()) {
             None => Err(Self::Err::UnsupportedFormat),
             Some(caps) => match caps_parse(caps) {
                 Ok((r, g, b)) => match from_hex(r) {
@@ -96,7 +97,7 @@ impl FromStr for Color {
                 Err(e) => Err(e),
             },
         };
-        let fetched_color_by_rgb = match RGB_COLOR_REGEX.captures(s) {
+        let fetched_color_by_rgb = match RGB_COLOR_REGEX.captures(s.as_str()) {
             None => Err(Self::Err::UnsupportedFormat),
             Some(caps) => match caps_parse(caps) {
                 Ok((r, g, b)) => match r.parse::<usize>() {

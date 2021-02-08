@@ -1178,6 +1178,7 @@ dependencies = [
  "color-eyre",
  "dot",
  "eyre",
+ "futures",
  "headless_chrome",
  "include_dir",
  "macros",

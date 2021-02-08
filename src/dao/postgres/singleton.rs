@@ -3,6 +3,7 @@ use crate::dao::singleton::Singleton;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
 use async_trait::async_trait;
+use eyre::*;
 
 #[derive(Debug)]
 pub struct SingletonImpl {
@@ -17,7 +18,7 @@ impl PostgresImpl for SingletonImpl {
 
 #[async_trait]
 impl Singleton for SingletonImpl {
-    async fn get_all_in(_discord_ids: Vec<u64>) -> (Vec<Relationship>, Vec<User>) {
+    async fn get_all_in(&self, discord_ids: Vec<u64>) -> Result<(Vec<Relationship>, Vec<User>)> {
         unimplemented!()
     }
 }

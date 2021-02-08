@@ -7,13 +7,10 @@ pub mod polymap_generator;
 pub mod tests;
 pub mod utilities;
 
-use std::fs::File;
-use std::io::Write;
-
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 use crate::command::argument_parser::ArgumentParser;
-use crate::command::command_response::{CommandResponse, DiscordResponse};
-use crate::command::{all_commands, Command};
+use crate::command::command_response::DiscordResponse;
+use crate::command::{all_commands, Command, CommandContext};
 use crate::config::CONFIG;
 use async_trait::async_trait;
 use eyre::*;
@@ -22,9 +19,10 @@ use serenity::client::EventHandler;
 use serenity::model::channel::Message;
 use serenity::model::prelude::Ready;
 use serenity::Client;
-use std::collections::hash_map::RandomState;
+
+use crate::dao::postgres::{apply_migrations, ConfigConnectionProvider, ConnectionProvider};
+use futures::Future;
 use std::collections::HashMap;
-use std::ops::Deref;
 
 struct Handler {
     commands: &'static HashMap<&'static str, Box<dyn Command>>,
@@ -52,17 +50,21 @@ impl EventHandler for Handler {
         let mut content = msg.content[self.prefix.len()..].to_string();
         let name = StringArgumentParser::new().parse(&mut content).unwrap();
         if let Some(command) = self.commands.get(name.as_str()) {
-            match command.run(msg.clone()) {
+            match command
+                .run(CommandContext::new(content, msg.author.id.0))
+                .await
+            {
                 Ok(val) => {
-                    val.respond((ctx, msg));
+                    val.respond((ctx, msg)).await;
                 }
                 Err(err) => {
-                    msg.channel_id.say(&ctx.http, err);
+                    msg.channel_id.say(&ctx.http, err).await;
                 }
             }
         } else {
             msg.channel_id
-                .say(&ctx.http, format!("command {} doesnt exist", name));
+                .say(&ctx.http, format!("command {} doesnt exist", name))
+                .await;
         }
     }
 
@@ -71,12 +73,27 @@ impl EventHandler for Handler {
     }
 }
 
+async fn ensure_database() -> Result<()> {
+    let client = ConfigConnectionProvider.open_client().await;
+    apply_migrations(&client).await
+}
+
+async fn ensure_discord_client() -> Result<()> {
+    Client::builder(&CONFIG.discord_token)
+        .event_handler(Handler::default())
+        .await
+        .expect("failed to spawn client")
+        .start()
+        .await
+        .map_err(|x| Report::new(x))
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-    let mut client = Client::builder(&CONFIG.discord_token)
-        .event_handler(Handler::default())
-        .await
-        .expect("failed to spawn client");
-    client.start().await.map_err(|x| Report::new(x))
+    let (db, discord) = futures::future::join(ensure_database(), ensure_discord_client()).await;
+    vec![db, discord]
+        .into_iter()
+        .find(|x| x.is_err())
+        .unwrap_or(Ok(()))
 }

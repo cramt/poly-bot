@@ -7,6 +7,7 @@ use crate::migration_constants::MIGRATION_FILES;
 
 use async_trait::async_trait;
 
+use eyre::*;
 use std::error::Error;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
@@ -16,7 +17,7 @@ use tokio_postgres::types::private::BytesMut;
 use tokio_postgres::types::{IsNull, ToSql, Type};
 use tokio_postgres::{Client, Connection, NoTls, Row, Socket};
 
-pub async fn apply_migrations(client: &Client) {
+pub async fn apply_migrations(client: &Client) -> Result<()> {
     let (schema_version, _info_exists) = client
         .query("SELECT schema_version FROM info", &[])
         .await
@@ -35,7 +36,7 @@ pub async fn apply_migrations(client: &Client) {
         client
             .execute(sql.as_str(), &[])
             .await
-            .expect(format!("failed to execute migration {}", version).as_str());
+            .map_err(|x| Report::new(x))?;
         new_schema_version = version.clone() as i32
     }
     if new_schema_version.is_positive() {
@@ -46,8 +47,9 @@ pub async fn apply_migrations(client: &Client) {
                 &[&new_schema_version],
             )
             .await
-            .unwrap();
-    }
+            .map_err(|x| Report::new(x))?;
+    };
+    Ok(())
 }
 
 #[async_trait]

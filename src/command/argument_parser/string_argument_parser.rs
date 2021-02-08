@@ -1,4 +1,5 @@
 use crate::command::argument_parser::ArgumentParser;
+use color_eyre::owo_colors::OwoColorize;
 use eyre::Result;
 
 pub struct StringArgumentParser;
@@ -22,5 +23,14 @@ impl ArgumentParser for StringArgumentParser {
 
     fn new() -> Self {
         Self
+    }
+}
+
+impl StringArgumentParser {
+    pub fn undo(&self, input: &mut String, mut reverting: String) {
+        input.insert(0, ' ');
+        while let Some(c) = reverting.pop() {
+            input.insert(0, c);
+        }
     }
 }

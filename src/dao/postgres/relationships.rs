@@ -3,6 +3,7 @@ use crate::dao::relationships::Relationships;
 use crate::model::relationship::{Relationship, RelationshipNoId};
 use crate::model::user::User;
 use async_trait::async_trait;
+use eyre::*;
 
 #[derive(Debug)]
 pub struct RelationshipsImpl {
@@ -17,7 +18,7 @@ impl PostgresImpl for RelationshipsImpl {
 
 #[async_trait]
 impl Relationships for RelationshipsImpl {
-    async fn add(&self, relationship: RelationshipNoId) -> Relationship {
+    async fn add(&self, relationship: RelationshipNoId) -> Result<Relationship> {
         let client = self.provider.open_client().await;
         let id: i64 = client
             .query(
@@ -40,14 +41,14 @@ impl Relationships for RelationshipsImpl {
             .first()
             .unwrap()
             .get(0);
-        relationship.add_id(id)
+        Ok(relationship.add_id(id))
     }
 
-    async fn delete(&self, _relationship: Relationship) -> bool {
+    async fn delete(&self, relationship: Relationship) -> Result<(), Report> {
         unimplemented!()
     }
 
-    async fn get_by_users(&self, _users: Vec<User>) -> Vec<Relationship> {
+    async fn get_by_users(&self, users: Vec<User>) -> Result<Vec<Relationship>, Report> {
         unimplemented!()
     }
 }

@@ -1,11 +1,18 @@
 use async_trait::async_trait;
 use serenity::client::Context;
-use serenity::model::channel::Message;
+use serenity::model::channel::{Message, ReactionType};
 
 #[derive(Debug, Clone)]
 pub enum CommandResponse {
     Text(String),
     TextBlock(String),
+    Reaction(ReactionType),
+}
+
+impl CommandResponse {
+    pub fn thumbs_up() -> Self {
+        Self::Reaction(ReactionType::Unicode("👍".to_string()))
+    }
 }
 
 #[async_trait]
@@ -58,6 +65,11 @@ impl DiscordResponse for CommandResponse {
                         .await
                         .expect("message send failed");
                 }
+            }
+            CommandResponse::Reaction(reaction) => {
+                msg.react(&ctx.http, reaction)
+                    .await
+                    .expect("failed to react");
             }
         }
     }

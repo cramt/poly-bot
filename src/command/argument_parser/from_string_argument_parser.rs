@@ -20,10 +20,15 @@ where
     type Output = T;
 
     fn parse(&self, input: &mut String) -> Result<Self::Output> {
-        StringArgumentParser::new()
-            .parse(input)?
-            .parse()
-            .map_err(|x| Report::new(x))
+        let str_parser = StringArgumentParser::new();
+        let word = str_parser.parse(input)?;
+        match T::from_str(word.as_str()) {
+            Ok(x) => Ok(x),
+            Err(err) => {
+                str_parser.undo(input, word);
+                Err(Report::new(err))
+            }
+        }
     }
 
     fn new() -> Self {

@@ -70,7 +70,8 @@ mod dao {
                     vec![],
                     discord_id_provider(),
                 ))
-                .await;
+                .await
+                .unwrap();
             assert_eq!("person", user.name);
         }
 
@@ -86,7 +87,8 @@ mod dao {
                     vec![],
                     discord_id_provider(),
                 ))
-                .await;
+                .await
+                .unwrap();
             let member = client
                 .add(UserNoId::new(
                     "member",
@@ -95,8 +97,9 @@ mod dao {
                     vec![],
                     discord_id_provider(),
                 ))
-                .await;
-            let root = client.get(root.id).await.unwrap();
+                .await
+                .unwrap();
+            let root = client.get(root.id).await.unwrap().unwrap();
             assert_eq!(root.members.first().unwrap().id, member.id);
         }
 
@@ -118,8 +121,9 @@ mod dao {
                     )],
                     discord_id_provider(),
                 ))
-                .await;
-            let found_user = client.get(user.id).await.unwrap();
+                .await
+                .unwrap();
+            let found_user = client.get(user.id).await.unwrap().unwrap();
             assert_eq!(user.id, found_user.id);
             assert_eq!(
                 user.members.first().unwrap().id,
@@ -139,8 +143,9 @@ mod dao {
                     vec![],
                     discord_id_provider(),
                 ))
-                .await;
-            let found_user = client.get(user.id.clone()).await.unwrap();
+                .await
+                .unwrap();
+            let found_user = client.get(user.id.clone()).await.unwrap().unwrap();
             assert_eq!(user.id, found_user.id);
             assert_eq!(user.name, found_user.name);
             assert_eq!(user.color, found_user.color);
@@ -160,8 +165,13 @@ mod dao {
                     vec![],
                     discord_id,
                 ))
-                .await;
-            let found_user = client.get_by_discord_id(discord_id.unwrap()).await.unwrap();
+                .await
+                .unwrap();
+            let found_user = client
+                .get_by_discord_id(discord_id.unwrap())
+                .await
+                .unwrap()
+                .unwrap();
             assert_eq!(user.id, found_user.id);
             assert_eq!(user.name, found_user.name);
             assert_eq!(user.discord_id, found_user.discord_id)
@@ -180,10 +190,12 @@ mod dao {
                     vec![],
                     discord_id_provider(),
                 ))
-                .await;
+                .await
+                .unwrap();
             assert!(client
                 .get_by_username(username)
                 .await
+                .unwrap()
                 .into_iter()
                 .find(|x| x.id.clone() == user.id)
                 .is_some());

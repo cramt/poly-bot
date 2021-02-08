@@ -8,6 +8,7 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::model::color::Color;
 use crate::utilities::std_additions::{NumUtils, PostgresClientUtils};
+use eyre::*;
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
@@ -103,7 +104,7 @@ impl PostgresImpl for UsersImpl {
 
 #[async_trait]
 impl Users for UsersImpl {
-    async fn get(&self, id: i64) -> Option<User> {
+    async fn get(&self, id: i64) -> Result<Option<User>> {
         let client = self.provider.open_client().await;
         let dbreps = client
             .query(
@@ -159,10 +160,10 @@ impl Users for UsersImpl {
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
         client.close();
-        UsersDbRep::create_tree_structure(dbreps).into_iter().nth(0)
+        Ok(UsersDbRep::create_tree_structure(dbreps).into_iter().nth(0))
     }
 
-    async fn add(&self, user: UserNoId) -> User {
+    async fn add(&self, user: UserNoId) -> Result<User> {
         fn generate_query(user: &UserNoId, n: &mut u64, id_ref: String) -> (String, Vec<String>) {
             let my_id_ref = format!("u{}", n);
             let my_query = format!(
@@ -261,10 +262,10 @@ impl Users for UsersImpl {
 
         let id_tree = make_id_tree(&mut id, &user);
 
-        user.add_id(id_tree)
+        Ok(user.add_id(id_tree))
     }
 
-    async fn get_by_discord_id(&self, id: u64) -> Option<User> {
+    async fn get_by_discord_id(&self, id: u64) -> Result<Option<User>> {
         let client = self.provider.open_client().await;
         let dbreps = client
             .query(
@@ -288,10 +289,10 @@ impl Users for UsersImpl {
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
         client.close();
-        dbreps.into_iter().nth(0).map(|x| x.model())
+        Ok(dbreps.into_iter().nth(0).map(|x| x.model()))
     }
 
-    async fn get_by_username(&self, username: String) -> Vec<User> {
+    async fn get_by_username(&self, username: String) -> Result<Vec<User>> {
         let client = self.provider.open_client().await;
         let dbrep_iter = client
             .query(
@@ -314,22 +315,22 @@ impl Users for UsersImpl {
             .into_iter()
             .map(UsersDbRep::new);
         client.close();
-        dbrep_iter.map(|x| x.model()).collect()
+        Ok(dbrep_iter.map(|x| x.model()).collect())
     }
 
-    async fn get_members_multiple(&self, _users: Vec<User>) -> Vec<User> {
+    async fn get_members_multiple(&self, users: Vec<User>) -> Result<Vec<User>> {
         unimplemented!()
     }
 
-    async fn delete(&self, _user: User) -> bool {
+    async fn delete(&self, user: User) -> Result<()> {
         unimplemented!()
     }
 
-    async fn delete_by_discord_id(&self, _id: u64) -> bool {
+    async fn delete_by_discord_id(&self, id: u64) -> Result<()> {
         unimplemented!()
     }
 
-    async fn update(&self, _user: User) -> bool {
+    async fn update(&self, user: User) -> Result<()> {
         unimplemented!()
     }
 }

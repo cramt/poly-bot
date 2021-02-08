@@ -13,7 +13,7 @@ static ENSURE_WINDOWS_UNDERSTANDS_UTF8: Lazy<()> = Lazy::new(|| {
 
 pub fn shell_raw<S: AsRef<str>>(s: S, use_pwsh_if_windows: bool) -> Command {
     if cfg!(target_os = "windows") {
-        ENSURE_WINDOWS_UNDERSTANDS_UTF8.deref();
+        let _ = ENSURE_WINDOWS_UNDERSTANDS_UTF8.deref();
         if use_pwsh_if_windows {
             let mut a = Command::new("powershell");
             a.arg(s.as_ref());
