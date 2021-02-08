@@ -1,4 +1,4 @@
-pub mod relationships;
+lpub mod relationships;
 pub mod singleton;
 pub mod users;
 
@@ -24,7 +24,7 @@ pub async fn apply_migrations(client: &Client) -> Result<()> {
         .ok()
         .map(|x| (x.first().map(|y| y.get::<_, i32>(0)).unwrap_or(-1), true))
         .unwrap_or((-1, false));
-    client
+    let _ = client
         .execute("CREATE TABLE info(schema_version INTEGER NOT NULL)", &[])
         .await;
 
@@ -51,6 +51,7 @@ pub async fn apply_migrations(client: &Client) -> Result<()> {
     };
     Ok(())
 }
+
 
 #[async_trait]
 pub trait ConnectionProvider: std::fmt::Debug {
@@ -106,7 +107,7 @@ pub trait PostgresImpl {
         }
     }
 }
-
+e
 pub trait DbRep {
     type Output;
     fn new(row: Row) -> Self;

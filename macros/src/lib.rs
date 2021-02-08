@@ -1,7 +1,6 @@
 use proc_macro::TokenStream;
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::BufWriter;
 
 #[proc_macro]
 pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
@@ -11,7 +10,7 @@ pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
 
     let re = Regex::new(r"#([0-f][0-f])([0-f][0-f])([0-f][0-f])").expect("regex failed to parse");
     let color_str = include_str!("../../css-color-names.json");
-    let mut hashmap =
+    let hashmap =
         serde_json::from_str::<HashMap<&str, &str>>(color_str).expect("json failed to parse");
     let mut map = phf_codegen::Map::new();
     for (key, val) in hashmap.into_iter() {

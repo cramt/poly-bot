@@ -47,7 +47,7 @@ mod dao {
                     tables.remove(&x);
                 }
             }
-            apply_migrations(&client).await;
+            apply_migrations(&client).await.expect("migration failed")
         }
         *val = false;
         std::mem::drop(guard)

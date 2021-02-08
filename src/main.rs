@@ -58,13 +58,13 @@ impl EventHandler for Handler {
                     val.respond((ctx, msg)).await;
                 }
                 Err(err) => {
-                    msg.channel_id.say(&ctx.http, err).await;
+                    msg.channel_id.say(&ctx.http, err).await.expect("couldnt send message");
                 }
             }
         } else {
             msg.channel_id
                 .say(&ctx.http, format!("command {} doesnt exist", name))
-                .await;
+                .await.expect("couldnt send message");
         }
     }
 
