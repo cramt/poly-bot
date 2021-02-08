@@ -15,3 +15,5 @@ serde = { version = "1.0.122", features = ["derive"] }
 serde_json = "1.0.61"
 phf_codegen = "0.8"
 regex = "1.4.3"
+Inflector = "0.11.4"
+deunicode = "1.1.1"

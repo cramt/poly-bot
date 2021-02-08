@@ -1,6 +1,8 @@
 use proc_macro::TokenStream;
 use regex::Regex;
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use inflector::cases::snakecase::to_snake_case;
 
 #[proc_macro]
 pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
@@ -31,4 +33,53 @@ pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
         map.build()
     );
     rust_code.parse().expect("couldnt parse rust code")
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct EmojiEntry {
+    pub codes: String,
+    pub char: String,
+    pub name: String,
+    pub category: String,
+    pub group: String,
+    pub subgroup: String,
+}
+
+#[proc_macro]
+pub fn make_emoji_implementation(item: TokenStream) -> TokenStream {
+    fn correct_name<S: AsRef<str>>(s: S) -> String {
+        let mut s = to_snake_case(s.as_ref());
+        if s.chars().nth(0).unwrap().to_string().parse::<u8>().is_ok() {
+            s.insert(0, '_')
+        }
+        deunicode::deunicode(s.as_str())
+    }
+    let emoji_json_str = include_str!("../../emoji-names-list.json");
+    let emojis = serde_json::from_str::<Vec<EmojiEntry>>(emoji_json_str).unwrap();
+    let mut emoji_map = HashMap::new();
+    for emoji in emojis {
+        let name = correct_name(&emoji.name);
+        let name = if emoji_map.contains_key(&name) {
+            let mut i = 0usize;
+            while emoji_map.contains_key(&format!("{}{}", name, i)) {
+                i += 1;
+            }
+            format!("{}{}", name, i)
+        } else {
+            name.to_string()
+        };
+        emoji_map.insert(name, emoji.char);
+    }
+    let item = item.to_string();
+    let mut v = item.split(",").map(|x| x.trim()).collect::<Vec<&str>>();
+    let func = v.pop().unwrap();
+    let tt = v.pop().unwrap();
+    let a = emoji_map.into_iter().map(|(name, char)|
+        format!(r#"pub fn {}() -> {} {{
+            {}("{}")
+        }}
+        "#, name, tt, func, char)
+    ).collect::<String>();
+    //panic!(a);
+    a.parse().unwrap()
 }
