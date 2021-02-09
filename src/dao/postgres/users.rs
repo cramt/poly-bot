@@ -159,8 +159,7 @@ impl Users for UsersImpl {
                 .as_str(),
                 &[&id],
             )
-            .await
-            .unwrap()
+            .await?
             .into_iter()
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
@@ -248,8 +247,7 @@ impl Users for UsersImpl {
                     .collect::<Vec<&(dyn ToSql + Sync)>>()
                     .as_slice(),
             )
-            .await
-            .unwrap()
+            .await?
             .into_iter()
             .map(|x| {
                 let i: i64 = x.get(0);
@@ -288,8 +286,7 @@ impl Users for UsersImpl {
                 .as_str(),
                 &[&Sqlu64(id)],
             )
-            .await
-            .unwrap()
+            .await?
             .into_iter()
             .map(UsersDbRep::new)
             .collect::<Vec<UsersDbRep>>();
@@ -315,8 +312,7 @@ impl Users for UsersImpl {
                 .as_str(),
                 &[&username],
             )
-            .await
-            .unwrap()
+            .await?
             .into_iter()
             .map(UsersDbRep::new);
         client.close();
@@ -337,5 +333,56 @@ impl Users for UsersImpl {
 
     async fn update(&self, _user: User) -> Result<()> {
         unimplemented!()
+    }
+
+    async fn get_member_by_name(
+        &self,
+        parent_id: i64,
+        member_name: String,
+    ) -> Result<Option<User>, Report> {
+        let client = self.provider.open_client().await;
+        let r = client
+            .query(
+                format!(
+                    r"
+                WITH RECURSIVE members AS (
+                    SELECT
+                    {x}
+                    FROM
+                    users
+                    WHERE parent_system = (select * from $1)
+                    UNION
+                    SELECT
+                    {ux}
+                    FROM
+                    users u
+                    INNER JOIN
+                    members m
+                    ON
+                    m.id = u.parent_system
+                )
+                SELECT
+                {x}
+                FROM
+                members
+                WHERE name = $2
+                ",
+                    x = UsersDbRep::select_order(),
+                    ux = UsersDbRep::select_order_raw()
+                        .into_iter()
+                        .map(|x| format!("u.{}", x))
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                )
+                .as_str(),
+                &[&parent_id, &member_name],
+            )
+            .await?
+            .into_iter()
+            .nth(0)
+            .map(|x| UsersDbRep::new(x));
+        client.close();
+        let r = r.map(|x| x.model());
+        Ok(r)
     }
 }

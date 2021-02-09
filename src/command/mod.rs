@@ -8,9 +8,11 @@ use crate::command::color::Color;
 use crate::command::command_response::CommandResponse;
 use async_trait::async_trait;
 
+use crate::command::add_member::AddMember;
 use std::collections::HashMap;
 use std::ops::Deref;
 
+pub mod add_member;
 pub mod add_user;
 pub mod argument_parser;
 pub mod color;
@@ -50,6 +52,7 @@ static ALL_COMMANDS: Lazy<HashMap<&'static str, Box<dyn Command>>> = Lazy::new(|
         Box::new(Help::new()),
         Box::new(AddUser::new()),
         Box::new(Color::new()),
+        Box::new(AddMember::new()),
     ];
     v.into_iter().map(|x| (x.name(), x)).collect()
 });

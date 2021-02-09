@@ -20,6 +20,8 @@ pub trait Users {
     async fn delete(&self, user: User) -> Result<()>;
     async fn delete_by_discord_id(&self, id: u64) -> Result<()>;
     async fn update(&self, user: User) -> Result<()>;
+    async fn get_member_by_name(&self, parent_id: i64, member_name: String)
+        -> Result<Option<User>>;
 }
 
 pub fn default() -> Box<dyn Users + Sync + Send> {
