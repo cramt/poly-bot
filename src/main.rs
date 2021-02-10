@@ -22,22 +22,64 @@ use serenity::Client;
 
 use crate::dao::postgres::{apply_migrations, ConnectionProvider};
 
+use once_cell::sync::Lazy;
+use serenity::model::id::GuildId;
 use std::collections::HashMap;
+use std::ops::Deref;
+
+struct SerenityCommandContext {
+    ctx: Context,
+    msg: Message,
+}
+
+impl SerenityCommandContext {
+    pub fn new(ctx: Context, msg: Message) -> Self {
+        Self { ctx, msg }
+    }
+}
+
+#[async_trait]
+impl CommandContext for SerenityCommandContext {
+    fn text(&self) -> &str {
+        &self.msg.content
+    }
+
+    fn discord_id(&self) -> u64 {
+        self.msg.author.id.0
+    }
+
+    async fn guild_member_ids(&self) -> Vec<u64> {
+        match self.msg.guild_id {
+            None => Vec::new(),
+            Some(x) => x
+                .members(&self.ctx.http, None, None)
+                .await
+                .map(|x| x.into_iter().map(|y| y.user.id.0).collect())
+                .unwrap_or(Vec::new()),
+        }
+    }
+}
+
+static ALL_COMMANDS: Lazy<HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>> =
+    Lazy::new(|| all_commands());
 
 struct Handler {
-    commands: &'static HashMap<&'static str, Box<dyn Command>>,
+    commands: &'static HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
     prefix: String,
 }
 
 impl Handler {
-    pub fn new(commands: &'static HashMap<&'static str, Box<dyn Command>>, prefix: String) -> Self {
+    pub fn new(
+        commands: &'static HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
+        prefix: String,
+    ) -> Self {
         Self { commands, prefix }
     }
 }
 
 impl Default for Handler {
     fn default() -> Self {
-        Self::new(all_commands(), CONFIG.prefix.clone())
+        Self::new(ALL_COMMANDS.deref(), CONFIG.prefix.clone())
     }
 }
 
@@ -51,11 +93,11 @@ impl EventHandler for Handler {
         let name = StringArgumentParser::new().parse(&mut content).unwrap();
         if let Some(command) = self.commands.get(name.as_str()) {
             match command
-                .run(CommandContext::new(content, msg.author.id.0))
+                .run(SerenityCommandContext::new(ctx.clone(), msg.clone()))
                 .await
             {
                 Ok(val) => {
-                    val.respond((ctx, msg)).await;
+                    val.respond((ctx.clone(), msg.clone())).await;
                 }
                 Err(err) => {
                     msg.channel_id

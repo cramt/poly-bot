@@ -19,7 +19,10 @@ impl AddMember {
 }
 
 #[async_trait]
-impl Command for AddMember {
+impl<Ctx> Command<Ctx> for AddMember
+where
+    Ctx: CommandContext + 'static,
+{
     fn name(&self) -> &'static str {
         "add-member"
     }
@@ -32,12 +35,10 @@ impl Command for AddMember {
         unimplemented!()
     }
 
-    async fn run(&self, ctx: CommandContext) -> Result<CommandResponse> {
+    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
         let users = crate::dao::users::default();
-        let CommandContext {
-            discord_user_id,
-            mut text,
-        } = ctx;
+        let discord_user_id = ctx.discord_id();
+        let mut text = ctx.text().to_string();
         let str_parser = StringArgumentParser::new();
         let possible_member_name = str_parser.parse(&mut text)?;
 

@@ -22,6 +22,11 @@ pub trait Users {
     async fn update(&self, user: User) -> Result<()>;
     async fn get_member_by_name(&self, parent_id: i64, member_name: String)
         -> Result<Option<User>>;
+    async fn get_by_username_and_discord_ids(
+        &self,
+        username: String,
+        discord_ids: Vec<u64>,
+    ) -> Result<Vec<User>>;
 }
 
 pub fn default() -> Box<dyn Users + Sync + Send> {

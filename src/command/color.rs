@@ -15,7 +15,10 @@ impl Color {
 }
 
 #[async_trait]
-impl Command for Color {
+impl<Ctx> Command<Ctx> for Color
+where
+    Ctx: CommandContext + 'static,
+{
     fn name(&self) -> &'static str {
         "color"
     }
@@ -28,13 +31,14 @@ impl Command for Color {
         "//TODO"
     }
 
-    async fn run(&self, mut ctx: CommandContext) -> Result<CommandResponse> {
+    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
         let users = crate::dao::users::default();
+        let mut text = ctx.text().to_string();
         let mut user = users
-            .get_by_discord_id(ctx.discord_user_id.clone())
+            .get_by_discord_id(ctx.discord_id())
             .await?
             .ok_or(super::error::no_user_by_discord_id())?;
-        Ok(match ColorArgumentParser::new().parse(&mut ctx.text).ok() {
+        Ok(match ColorArgumentParser::new().parse(&mut text).ok() {
             None => CommandResponse::Text(user.color.to_string()),
             Some(color) => {
                 user.color = color;

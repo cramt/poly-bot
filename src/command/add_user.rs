@@ -13,7 +13,10 @@ use eyre::*;
 pub struct AddUser;
 
 #[async_trait]
-impl Command for AddUser {
+impl<Ctx> Command<Ctx> for AddUser
+where
+    Ctx: CommandContext + 'static,
+{
     fn name(&self) -> &'static str {
         "add-user"
     }
@@ -26,10 +29,11 @@ impl Command for AddUser {
         "//TODO"
     }
 
-    async fn run(&self, mut ctx: CommandContext) -> Result<CommandResponse> {
-        let (color, name) = AddUserArgumentParser::new().parse(&mut ctx.text)?;
+    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
+        let mut text = ctx.text().to_string();
+        let (color, name) = AddUserArgumentParser::new().parse(&mut text)?;
         let color = color.unwrap_or(Color::default());
-        let discord_id = ctx.discord_user_id;
+        let discord_id = ctx.discord_id();
         let _ = crate::dao::users::default()
             .add(UserNoId::new(name, color, None, vec![], Some(discord_id)))
             .await?;

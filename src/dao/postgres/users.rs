@@ -385,4 +385,41 @@ impl Users for UsersImpl {
         let r = r.map(|x| x.model());
         Ok(r)
     }
+
+    async fn get_by_username_and_discord_ids(
+        &self,
+        username: String,
+        discord_ids: Vec<u64>,
+    ) -> Result<Vec<User>, Report> {
+        let client = self.provider.open_client().await;
+        let dbrep_iter = client
+            .query(
+                format!(
+                    r"
+                    SELECT
+                    {}
+                    FROM
+                    users
+                    WHERE
+                    name = $1
+                    AND
+                    get_topmost_system(discord_id) = ANY($2)
+                    ",
+                    UsersDbRep::select_order()
+                )
+                .as_str(),
+                &[
+                    &username,
+                    &discord_ids
+                        .into_iter()
+                        .map(|x| Sqlu64(x))
+                        .collect::<Vec<Sqlu64>>(),
+                ],
+            )
+            .await?
+            .into_iter()
+            .map(UsersDbRep::new);
+        client.close();
+        Ok(dbrep_iter.map(|x| x.model()).collect())
+    }
 }
