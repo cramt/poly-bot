@@ -17,20 +17,64 @@ use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
 
 use super::ConnectionProvider;
+use crate::dao::postgres::DbRepCollectionUtils;
 
 #[derive(Debug)]
 pub struct UsersDbRep {
-    id: i64,
-    name: String,
-    color: Box<[u8]>,
-    parent_system_id: Option<i64>,
-    discord_id: Option<i64>,
+    pub id: i64,
+    pub name: String,
+    pub color: Box<[u8]>,
+    pub parent_system_id: Option<i64>,
+    pub discord_id: Option<i64>,
 }
 
 impl UsersDbRep {
-    pub fn create_tree_structure(v: Vec<Self>) -> Vec<User> {
+    fn transformed_discord_id(&self) -> Option<u64> {
+        self.discord_id
+            .as_ref()
+            .map(|x| unsafe { std::mem::transmute(x.clone()) })
+    }
+
+    fn transformed_color(&self) -> Color {
+        self.color.clone().into()
+    }
+}
+
+impl DbRep for UsersDbRep {
+    type Output = User;
+
+    fn new_with_start(row: &Row, start: &mut usize) -> Self {
+        Self {
+            id: row.get(start.post_increment()),
+            name: row.get(start.post_increment()),
+            color: row
+                .get::<_, &[u8]>(start.post_increment())
+                .to_vec()
+                .into_boxed_slice(),
+            parent_system_id: row.get(start.post_increment()),
+            discord_id: row.get(start.post_increment()),
+        }
+    }
+
+    fn model(self) -> Self::Output {
+        let color = self.transformed_color();
+        let discord_id = self.transformed_discord_id();
+        Self::Output::new(self.id, self.name, color, vec![], discord_id)
+    }
+
+    fn select_order_raw() -> Vec<String> {
+        vec![
+            String::from("id"),
+            String::from("name"),
+            String::from("color"),
+            String::from("parent_system"),
+            String::from("discord_id"),
+        ]
+    }
+
+    fn model_collection<T: Iterator<Item = Self>>(selves: T) -> Vec<Self::Output> {
         let (main, mut v): (Vec<Self>, Vec<Self>) =
-            v.into_iter().partition(|x| x.parent_system_id.is_none());
+            selves.partition(|x| x.parent_system_id.is_none());
         let mut main = main.into_iter().map(|x| x.model()).collect::<Vec<User>>();
         let mut map = main
             .iter_mut()
@@ -59,40 +103,6 @@ impl UsersDbRep {
             }
         }
         main
-    }
-
-    fn transformed_discord_id(&self) -> Option<u64> {
-        self.discord_id
-            .as_ref()
-            .map(|x| unsafe { std::mem::transmute(x.clone()) })
-    }
-
-    fn transformed_color(&self) -> Color {
-        self.color.clone().into()
-    }
-}
-
-impl DbRep for UsersDbRep {
-    type Output = User;
-
-    fn new(row: Row) -> Self {
-        Self {
-            id: row.get(0),
-            name: row.get(1),
-            color: row.get::<_, &[u8]>(2).to_vec().into_boxed_slice(),
-            parent_system_id: row.get(3),
-            discord_id: row.get(4),
-        }
-    }
-
-    fn model(self) -> Self::Output {
-        let color = self.transformed_color();
-        let discord_id = self.transformed_discord_id();
-        Self::Output::new(self.id, self.name, color, vec![], discord_id)
-    }
-
-    fn select_order_raw() -> &'static [&'static str] {
-        &["id", "name", "color", "parent_system", "discord_id"]
     }
 }
 
@@ -161,10 +171,10 @@ impl Users for UsersImpl {
             )
             .await?
             .into_iter()
-            .map(UsersDbRep::new)
+            .map(|x| UsersDbRep::new(&x))
             .collect::<Vec<UsersDbRep>>();
         client.close();
-        Ok(UsersDbRep::create_tree_structure(dbreps).into_iter().nth(0))
+        Ok(dbreps.model().into_iter().nth(0))
     }
 
     async fn add(&self, user: UserNoId) -> Result<User> {
@@ -184,9 +194,9 @@ impl Users for UsersImpl {
                 ",
                 my_id_ref,
                 id_ref,
-                n.increment(),
-                n.increment(),
-                n.increment()
+                n.pre_increment(),
+                n.pre_increment(),
+                n.pre_increment()
             );
             let (mut post_queries, mut id_refs) = user
                 .members
@@ -288,7 +298,7 @@ impl Users for UsersImpl {
             )
             .await?
             .into_iter()
-            .map(UsersDbRep::new)
+            .map(|x| UsersDbRep::new(&x))
             .collect::<Vec<UsersDbRep>>();
         client.close();
         Ok(dbreps.into_iter().nth(0).map(|x| x.model()))
@@ -314,7 +324,7 @@ impl Users for UsersImpl {
             )
             .await?
             .into_iter()
-            .map(UsersDbRep::new);
+            .map(|x| UsersDbRep::new(&x));
         client.close();
         Ok(dbrep_iter.map(|x| x.model()).collect())
     }
@@ -323,16 +333,56 @@ impl Users for UsersImpl {
         unimplemented!()
     }
 
-    async fn delete(&self, _user: User) -> Result<()> {
-        unimplemented!()
+    async fn delete(&self, user: User) -> Result<()> {
+        let client = self.provider.open_client().await;
+        let r = client
+            .execute(
+                r"
+        DELETE FROM users
+        WHERE id = $1
+        ",
+                &[&user.id],
+            )
+            .await;
+        client.close();
+        r?;
+        Ok(())
     }
 
-    async fn delete_by_discord_id(&self, _id: u64) -> Result<()> {
-        unimplemented!()
+    async fn delete_by_discord_id(&self, id: u64) -> Result<()> {
+        let client = self.provider.open_client().await;
+        let r = client
+            .execute(
+                r"
+        DELETE FROM users
+        WHERE discord_id = $1
+        ",
+                &[&Sqlu64(id)],
+            )
+            .await;
+        client.close();
+        r?;
+        Ok(())
     }
 
-    async fn update(&self, _user: User) -> Result<()> {
-        unimplemented!()
+    async fn update(&self, user: User) -> Result<()> {
+        let client = self.provider.open_client().await;
+        let color: Box<[u8]> = user.color.clone().into();
+        let r = client
+            .execute(
+                r"
+        UPDATE
+        users
+        SET
+        name = $1,
+        color = $2,
+        ",
+                &[&user.name, &color.to_vec()],
+            )
+            .await;
+        client.close();
+        r?;
+        Ok(())
     }
 
     async fn get_member_by_name(
@@ -380,7 +430,7 @@ impl Users for UsersImpl {
             .await?
             .into_iter()
             .nth(0)
-            .map(|x| UsersDbRep::new(x));
+            .map(|x| UsersDbRep::new(&x));
         client.close();
         let r = r.map(|x| x.model());
         Ok(r)
@@ -418,7 +468,7 @@ impl Users for UsersImpl {
             )
             .await?
             .into_iter()
-            .map(UsersDbRep::new);
+            .map(|x| UsersDbRep::new(&x));
         client.close();
         Ok(dbrep_iter.map(|x| x.model()).collect())
     }

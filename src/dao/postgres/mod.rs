@@ -112,15 +112,36 @@ pub trait PostgresImpl {
         Box::new(Self::new(ConnectionProvider::default()))
     }
 }
+
 pub trait DbRep {
     type Output;
-    fn new(row: Row) -> Self;
+    fn new(row: &Row) -> Self
+    where
+        Self: Sized,
+    {
+        Self::new_with_start(row, &mut 0)
+    }
+    fn new_with_start(row: &Row, start: &mut usize) -> Self;
     fn model(self) -> Self::Output;
-    fn select_order_raw() -> &'static [&'static str];
+    fn select_order_raw() -> Vec<String>;
     fn select_order() -> String {
         Self::select_order_raw().join(", ")
     }
+    fn model_collection<T: Iterator<Item = Self>>(selves: T) -> Vec<Self::Output>
+    where
+        Self: Sized;
 }
+
+pub trait DbRepCollectionUtils<T: DbRep>: IntoIterator<Item = T> {
+    fn model(self) -> Vec<T::Output>
+    where
+        Self: Sized,
+    {
+        T::model_collection(self.into_iter())
+    }
+}
+
+impl<T> DbRepCollectionUtils<T> for Vec<T> where T: DbRep {}
 
 #[derive(Debug)]
 pub struct Sqlu64(u64);

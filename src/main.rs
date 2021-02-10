@@ -30,18 +30,19 @@ use std::ops::Deref;
 struct SerenityCommandContext {
     ctx: Context,
     msg: Message,
+    content: String,
 }
 
 impl SerenityCommandContext {
-    pub fn new(ctx: Context, msg: Message) -> Self {
-        Self { ctx, msg }
+    pub fn new(ctx: Context, msg: Message, content: String) -> Self {
+        Self { ctx, msg, content }
     }
 }
 
 #[async_trait]
 impl CommandContext for SerenityCommandContext {
     fn text(&self) -> &str {
-        &self.msg.content
+        &self.content
     }
 
     fn discord_id(&self) -> u64 {
@@ -93,7 +94,11 @@ impl EventHandler for Handler {
         let name = StringArgumentParser::new().parse(&mut content).unwrap();
         if let Some(command) = self.commands.get(name.as_str()) {
             match command
-                .run(SerenityCommandContext::new(ctx.clone(), msg.clone()))
+                .run(SerenityCommandContext::new(
+                    ctx.clone(),
+                    msg.clone(),
+                    content,
+                ))
                 .await
             {
                 Ok(val) => {

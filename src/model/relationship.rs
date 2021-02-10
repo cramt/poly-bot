@@ -1,7 +1,7 @@
 use crate::model::relationship_type::RelationshipType;
 use crate::model::user::User;
 
-fn correct_order_users(left_user: User, right_user: User) -> (User, User) {
+pub fn correct_order_users(left_user: User, right_user: User) -> (User, User) {
     if left_user.id > right_user.id {
         (right_user, left_user)
     } else {
