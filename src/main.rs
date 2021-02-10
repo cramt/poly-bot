@@ -23,7 +23,7 @@ use serenity::Client;
 use crate::dao::postgres::{apply_migrations, ConnectionProvider};
 
 use once_cell::sync::Lazy;
-use serenity::model::id::GuildId;
+
 use std::collections::HashMap;
 use std::ops::Deref;
 
