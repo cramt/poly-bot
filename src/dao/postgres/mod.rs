@@ -3,7 +3,8 @@ pub mod singleton;
 pub mod users;
 
 use crate::migration_constants::MIGRATION_FILES;
-use crate::{config::CONFIG, utilities::shell::shell};
+use config::CONFIG;
+use utilities::shell::shell;
 
 use eyre::*;
 use std::fmt::Debug;

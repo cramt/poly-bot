@@ -1,17 +1,15 @@
 pub mod command;
-pub mod config;
 pub mod dao;
 pub mod migration_constants;
 pub mod model;
 pub mod polymap_generator;
 pub mod tests;
-pub mod utilities;
 
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 use crate::command::argument_parser::ArgumentParser;
 use crate::command::{all_commands, Command, CommandContext};
-use crate::config::CONFIG;
 use async_trait::async_trait;
+use config::CONFIG;
 use eyre::*;
 use serenity::client::Context;
 use serenity::client::EventHandler;

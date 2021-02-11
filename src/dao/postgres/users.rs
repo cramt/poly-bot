@@ -1,20 +1,18 @@
+use crate::dao::postgres::{DbRep, PostgresImpl, Sqlu64};
 use crate::dao::users::Users;
 use crate::model::user::{User, UserNoId};
-use crate::{
-    dao::postgres::{DbRep, PostgresImpl, Sqlu64},
-    utilities::std_additions::PostgresClientUtils,
-};
+use utilities::std_additions::PostgresClientUtils;
 
 use crate::model::id_tree::IdTree;
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 
 use crate::model::color::Color;
-use crate::utilities::std_additions::NumUtils;
 use eyre::*;
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
+use utilities::std_additions::NumUtils;
 
 use super::ConnectionProvider;
 use crate::dao::postgres::DbRepCollectionUtils;

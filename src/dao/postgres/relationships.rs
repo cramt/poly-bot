@@ -8,9 +8,9 @@ use eyre::*;
 use super::ConnectionProvider;
 use crate::dao::postgres::users::UsersDbRep;
 use crate::model::relationship_type::RelationshipType;
-use crate::utilities::std_additions::{NumUtils, PostgresClientUtils};
 use std::collections::HashMap;
 use tokio_postgres::Row;
+use utilities::std_additions::{NumUtils, PostgresClientUtils};
 
 #[derive(Debug)]
 pub struct RelationshipsDbRep {

@@ -37,4 +37,4 @@ impl ToString for ConfigDb {
 }
 
 pub const CONFIG: Lazy<Config> =
-    Lazy::new(|| serde_json::from_str::<Config>(include_str!("../SECRET.json")).unwrap());
+    Lazy::new(|| serde_json::from_str::<Config>(include_str!("../../SECRET.json")).unwrap());
