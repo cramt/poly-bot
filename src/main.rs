@@ -1,7 +1,6 @@
 pub mod command;
 pub mod dao;
 pub mod migration_constants;
-pub mod polymap_generator;
 pub mod tests;
 
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;

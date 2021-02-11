@@ -3,6 +3,7 @@ use proc_macro::TokenStream;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use syn::{parse_macro_input, LitStr};
 
 #[proc_macro]
 pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
@@ -11,7 +12,7 @@ pub fn make_css_color_names_map(_: TokenStream) -> TokenStream {
     }
 
     let re = Regex::new(r"#([0-f][0-f])([0-f][0-f])([0-f][0-f])").expect("regex failed to parse");
-    let color_str = include_str!("../../css-color-names.json");
+    let color_str = include_str!("../../res/css-color-names.json");
     let hashmap =
         serde_json::from_str::<HashMap<&str, &str>>(color_str).expect("json failed to parse");
     let mut map = phf_codegen::Map::new();
@@ -54,7 +55,7 @@ pub fn make_emoji_implementation(item: TokenStream) -> TokenStream {
         }
         deunicode::deunicode(s.as_str())
     }
-    let emoji_json_str = include_str!("../../emoji-names-list.json");
+    let emoji_json_str = include_str!("../../res/emoji-names-list.json");
     let emojis = serde_json::from_str::<Vec<EmojiEntry>>(emoji_json_str).unwrap();
     let mut emoji_map = HashMap::new();
     for emoji in emojis {
@@ -88,4 +89,11 @@ pub fn make_emoji_implementation(item: TokenStream) -> TokenStream {
         .collect::<String>();
     //panic!(a);
     a.parse().unwrap()
+}
+
+#[proc_macro]
+pub fn include_base64(item: TokenStream) -> TokenStream {
+    let buffer = std::fs::read(parse_macro_input!(item as LitStr).value()).unwrap();
+
+    format!("\"{}\"", base64::encode(buffer)).parse().unwrap()
 }

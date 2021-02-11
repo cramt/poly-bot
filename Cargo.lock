@@ -920,6 +920,7 @@ name = "macros"
 version = "0.1.0"
 dependencies = [
  "Inflector",
+ "base64 0.13.0",
  "deunicode",
  "phf",
  "phf_codegen",
@@ -1233,13 +1234,12 @@ dependencies = [
  "dot",
  "eyre",
  "futures",
- "headless_chrome",
  "include_dir",
  "itertools",
  "macros",
  "model",
  "once_cell",
- "percent-encoding 2.1.0",
+ "polymap_generator",
  "regex",
  "serde",
  "serde_json",
@@ -1247,6 +1247,19 @@ dependencies = [
  "tokio",
  "tokio-postgres",
  "tokio-test",
+ "utilities",
+]
+
+[[package]]
+name = "polymap_generator"
+version = "0.1.0"
+dependencies = [
+ "config",
+ "headless_chrome",
+ "macros",
+ "model",
+ "once_cell",
+ "percent-encoding 2.1.0",
  "utilities",
 ]
 
