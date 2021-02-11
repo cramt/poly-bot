@@ -31,7 +31,7 @@ where
         "//TODO"
     }
 
-    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
+    async fn run(&self, ctx: &Ctx) -> Result<CommandResponse> {
         let users = crate::dao::users::default();
         let mut text = ctx.text().to_string();
         let mut user = users

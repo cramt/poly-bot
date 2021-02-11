@@ -22,7 +22,7 @@ where
         "\"help\" takes no arguments"
     }
 
-    async fn run(&self, _: Ctx) -> Result<CommandResponse> {
+    async fn run(&self, _: &Ctx) -> Result<CommandResponse> {
         Ok(CommandResponse::TextBlock(
             all_commands::<Ctx>()
                 .into_iter()

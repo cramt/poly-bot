@@ -31,7 +31,7 @@ pub trait Command<Ctx: CommandContext>: Send + Sync {
     fn name(&self) -> &'static str;
     fn help(&self) -> &'static str;
     fn argument_help(&self) -> &'static str;
-    async fn run(&self, ctx: Ctx) -> Result<CommandResponse>;
+    async fn run(&self, ctx: &Ctx) -> Result<CommandResponse>;
 }
 
 pub fn all_commands<Ctx: CommandContext + 'static>() -> HashMap<&'static str, Box<dyn Command<Ctx>>>

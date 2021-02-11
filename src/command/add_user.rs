@@ -29,7 +29,7 @@ where
         "//TODO"
     }
 
-    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
+    async fn run(&self, ctx: &Ctx) -> Result<CommandResponse> {
         let mut text = ctx.text().to_string();
         let (color, name) = AddUserArgumentParser::new().parse(&mut text)?;
         let color = color.unwrap_or(Color::default());

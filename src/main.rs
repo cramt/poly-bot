@@ -9,7 +9,6 @@ pub mod utilities;
 
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 use crate::command::argument_parser::ArgumentParser;
-use crate::command::command_response::DiscordResponse;
 use crate::command::{all_commands, Command, CommandContext};
 use crate::config::CONFIG;
 use async_trait::async_trait;
@@ -24,6 +23,7 @@ use crate::dao::postgres::{apply_migrations, ConnectionProvider};
 
 use once_cell::sync::Lazy;
 
+use crate::command::command_response::DiscordResponse;
 use std::collections::HashMap;
 use std::ops::Deref;
 
@@ -36,6 +36,10 @@ struct SerenityCommandContext {
 impl SerenityCommandContext {
     pub fn new(ctx: Context, msg: Message, content: String) -> Self {
         Self { ctx, msg, content }
+    }
+
+    pub fn ctx_and_msg(self) -> (Context, Message) {
+        (self.ctx, self.msg)
     }
 }
 
@@ -64,28 +68,54 @@ impl CommandContext for SerenityCommandContext {
 static ALL_COMMANDS: Lazy<HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>> =
     Lazy::new(|| all_commands());
 
-struct Handler {
-    commands: &'static HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
+struct Handler<'a> {
+    commands: &'a HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
     prefix: String,
 }
 
-impl Handler {
+impl<'a> Handler<'a> {
     pub fn new(
-        commands: &'static HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
+        commands: &'a HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
         prefix: String,
     ) -> Self {
         Self { commands, prefix }
     }
 }
 
-impl Default for Handler {
+impl<'a> Default for Handler<'a>
+where
+    'a: 'static,
+{
     fn default() -> Self {
         Self::new(ALL_COMMANDS.deref(), CONFIG.prefix.clone())
     }
 }
 
+async fn run(
+    command: &Box<dyn Command<SerenityCommandContext>>,
+    ctx: Context,
+    msg: Message,
+    content: String,
+) {
+    let command_context = SerenityCommandContext::new(ctx, msg, content);
+    match command.run(&command_context).await {
+        Ok(val) => {
+            val.respond(command_context.ctx_and_msg()).await;
+        }
+        Err(err) => {
+            command_context
+                .msg
+                .channel_id
+                .clone()
+                .say(&command_context.ctx.http, err)
+                .await
+                .expect("couldnt send message");
+        }
+    }
+}
+
 #[async_trait]
-impl EventHandler for Handler {
+impl EventHandler for Handler<'_> {
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.author.bot || !msg.content.starts_with(&self.prefix) {
             return;
@@ -93,24 +123,7 @@ impl EventHandler for Handler {
         let mut content = msg.content[self.prefix.len()..].to_string();
         let name = StringArgumentParser::new().parse(&mut content).unwrap();
         if let Some(command) = self.commands.get(name.as_str()) {
-            match command
-                .run(SerenityCommandContext::new(
-                    ctx.clone(),
-                    msg.clone(),
-                    content,
-                ))
-                .await
-            {
-                Ok(val) => {
-                    val.respond((ctx.clone(), msg.clone())).await;
-                }
-                Err(err) => {
-                    msg.channel_id
-                        .say(&ctx.http, err)
-                        .await
-                        .expect("couldnt send message");
-                }
-            }
+            run(command, ctx, msg, content).await;
         } else {
             msg.channel_id
                 .say(&ctx.http, format!("command {} doesnt exist", name))

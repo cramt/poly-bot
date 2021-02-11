@@ -36,7 +36,7 @@ where
         unimplemented!()
     }
 
-    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
+    async fn run(&self, ctx: &Ctx) -> Result<CommandResponse> {
         let users = crate::dao::users::default();
         let relationships = crate::dao::relationships::default();
         let discord_user_id = ctx.discord_id();
@@ -48,7 +48,7 @@ where
         let rest = RestArgumentParser::new().parse(&mut text)?;
 
         async fn find_target_user<Ctx2: CommandContext>(
-            ctx: Ctx2,
+            ctx: &Ctx2,
             users: &Box<dyn Users + Sync + Send>,
             rest: String,
         ) -> Result<Vec<User>> {

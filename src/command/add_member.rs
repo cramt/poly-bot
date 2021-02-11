@@ -35,7 +35,7 @@ where
         unimplemented!()
     }
 
-    async fn run(&self, ctx: Ctx) -> Result<CommandResponse> {
+    async fn run(&self, ctx: &Ctx) -> Result<CommandResponse> {
         let users = crate::dao::users::default();
         let discord_user_id = ctx.discord_id();
         let mut text = ctx.text().to_string();
