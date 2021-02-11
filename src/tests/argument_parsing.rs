@@ -9,8 +9,8 @@ mod argument_parsing {
     use crate::command::argument_parser::ArgumentParser;
 
     use crate::command::argument_parser::or_argument_parser::OrArgumentParser;
-    use crate::model::color::Color;
-    use crate::model::relationship_type::RelationshipType;
+    use model::color::Color;
+    use model::relationship_type::RelationshipType;
 
     #[test]
     fn single_string_argument_parsing() {

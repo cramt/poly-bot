@@ -1,13 +1,13 @@
 use crate::dao::postgres::{DbRep, PostgresImpl};
 use crate::dao::relationships::Relationships;
-use crate::model::relationship::{Relationship, RelationshipNoId};
-use crate::model::user::User;
 use async_trait::async_trait;
 use eyre::*;
+use model::relationship::{Relationship, RelationshipNoId};
+use model::user::User;
 
 use super::ConnectionProvider;
 use crate::dao::postgres::users::UsersDbRep;
-use crate::model::relationship_type::RelationshipType;
+use model::relationship_type::RelationshipType;
 use std::collections::HashMap;
 use tokio_postgres::Row;
 use utilities::std_additions::{NumUtils, PostgresClientUtils};

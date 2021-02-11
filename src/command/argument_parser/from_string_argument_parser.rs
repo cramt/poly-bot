@@ -1,9 +1,9 @@
 use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
-use crate::model::color::Color;
-use crate::model::relationship_type::RelationshipType;
 use eyre::Report;
 use eyre::Result;
+use model::color::Color;
+use model::relationship_type::RelationshipType;
 use serde::ser::StdError;
 use std::marker::PhantomData;
 use std::str::FromStr;

@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/macros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/config/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/model/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/utilities/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>

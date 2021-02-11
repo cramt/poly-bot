@@ -17,7 +17,6 @@ tokio-postgres = { version = "0.7.0", features = ["runtime", "with-bit-vec-0_6"]
 async-trait = "0.1.42"
 tokio-test = "0.4.0"
 eyre = "0.6.5"
-phf = { version = "0.8", features = ["macros"] }
 bit-vec = "0.6.3"
 headless_chrome = { git = "https://github.com/atroche/rust-headless-chrome.git" }
 percent-encoding = "2.1.0"
@@ -31,6 +30,7 @@ itertools = "0.10.0"
 macros = { path = "./macros" }
 utilities = { path = "./utilities" }
 config = { path = "./config" }
+model = { path = "./model" }
 
 [workspace]
-members = ["macros", "utilities", "config"]
+members = ["macros", "utilities", "config", "model"]

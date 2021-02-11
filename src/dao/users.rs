@@ -1,5 +1,5 @@
 use crate::dao::postgres::PostgresImpl;
-use crate::model::user::{User, UserNoId};
+use model::user::{User, UserNoId};
 
 use async_trait::async_trait;
 use eyre::*;

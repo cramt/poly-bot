@@ -1,6 +1,6 @@
-use crate::model::relationship::Relationship;
-use crate::model::user::User;
 use config::CONFIG;
+use model::relationship::Relationship;
+use model::user::User;
 use std::io::Write;
 use std::process::Stdio;
 use utilities::shell::shell_raw;

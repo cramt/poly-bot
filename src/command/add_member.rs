@@ -4,10 +4,10 @@ use crate::command::argument_parser::ArgumentParser;
 use crate::command::command_response::CommandResponse;
 use crate::command::error::no_user_by_discord_id;
 use crate::command::{Command, CommandContext};
-use crate::model::color::Color;
-use crate::model::user::UserNoId;
 use async_trait::async_trait;
 use eyre::*;
+use model::color::Color;
+use model::user::UserNoId;
 
 #[derive(Debug)]
 pub struct AddMember;

@@ -5,10 +5,10 @@ use crate::command::command_response::CommandResponse;
 use crate::command::error::no_user_by_discord_id;
 use crate::command::{Command, CommandContext};
 use crate::dao::users::Users;
-use crate::model::relationship::RelationshipNoId;
-use crate::model::user::User;
 use async_trait::async_trait;
 use eyre::*;
+use model::relationship::RelationshipNoId;
+use model::user::User;
 
 #[derive(Debug)]
 pub struct AddRelationship;

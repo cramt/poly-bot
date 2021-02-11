@@ -1,7 +1,7 @@
 use crate::dao::postgres::PostgresImpl;
-use crate::model::relationship::{Relationship, RelationshipNoId};
-use crate::model::user::User;
 use eyre::*;
+use model::relationship::{Relationship, RelationshipNoId};
+use model::user::User;
 
 use async_trait::async_trait;
 

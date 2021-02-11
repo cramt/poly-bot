@@ -55,9 +55,9 @@ mod dao {
 
     mod user {
         use crate::dao::users;
-        use crate::model::color::Color;
-        use crate::model::user::UserNoId;
         use crate::tests::dao::dao::{discord_id_provider, wait_for_test_db_ready};
+        use model::color::Color;
+        use model::user::UserNoId;
 
         #[tokio::test]
         async fn add_user() {

@@ -1,6 +1,6 @@
-use crate::model::color::Color;
-use crate::model::id_tree::IdTree;
-use crate::model::RelationalId;
+use crate::color::Color;
+use crate::id_tree::IdTree;
+use crate::RelationalId;
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]

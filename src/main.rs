@@ -1,7 +1,6 @@
 pub mod command;
 pub mod dao;
 pub mod migration_constants;
-pub mod model;
 pub mod polymap_generator;
 pub mod tests;
 

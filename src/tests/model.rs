@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod model {
     mod color {
-        use crate::model::color::Color;
+        use model::color::Color;
 
         #[test]
         fn bits_to_color() {
