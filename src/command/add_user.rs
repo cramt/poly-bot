@@ -32,7 +32,7 @@ where
     async fn run(&self, ctx: &Ctx) -> Result<CommandResponse> {
         let mut text = ctx.text().to_string();
         let (color, name) = AddUserArgumentParser::new().parse(&mut text)?;
-        let color = color.unwrap_or(Color::default());
+        let color = color.unwrap_or_default();
         let discord_id = ctx.discord_id();
         let _ = crate::dao::users::default()
             .add(UserNoId::new(name, color, None, vec![], Some(discord_id)))
@@ -44,6 +44,12 @@ where
 impl AddUser {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for AddUser {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

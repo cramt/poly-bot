@@ -94,7 +94,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let new = self.inner.next()?;
-        let re = (self.last_element.clone()?, new.clone());
+        let re = (self.last_element.take()?, new.clone());
         self.last_element = Some(new);
         Some(re)
     }

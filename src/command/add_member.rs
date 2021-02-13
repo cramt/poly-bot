@@ -6,7 +6,7 @@ use crate::command::error::no_user_by_discord_id;
 use crate::command::{Command, CommandContext};
 use async_trait::async_trait;
 use eyre::*;
-use model::color::Color;
+
 use model::user::UserNoId;
 
 #[derive(Debug)]
@@ -15,6 +15,12 @@ pub struct AddMember;
 impl AddMember {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for AddMember {
+    fn default() -> Self {
+        unimplemented!()
     }
 }
 
@@ -45,7 +51,7 @@ where
         let top_user = users
             .get_by_discord_id(discord_user_id)
             .await?
-            .ok_or(no_user_by_discord_id())?;
+            .ok_or_else(no_user_by_discord_id)?;
 
         let top_user = match users
             .get_member_by_name(top_user.id, possible_member_name.clone())
@@ -59,7 +65,7 @@ where
         };
 
         let (color, name) = AddUserArgumentParser::new().parse(&mut text)?;
-        let color = color.unwrap_or(Color::default());
+        let color = color.unwrap_or_default();
         let _ = users
             .add(UserNoId::new(
                 name,

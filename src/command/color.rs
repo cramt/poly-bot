@@ -14,6 +14,12 @@ impl Color {
     }
 }
 
+impl Default for Color {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl<Ctx> Command<Ctx> for Color
 where
@@ -37,7 +43,7 @@ where
         let mut user = users
             .get_by_discord_id(ctx.discord_id())
             .await?
-            .ok_or(super::error::no_user_by_discord_id())?;
+            .ok_or_else(super::error::no_user_by_discord_id)?;
         Ok(match ColorArgumentParser::new().parse(&mut text).ok() {
             None => CommandResponse::Text(user.color.to_string()),
             Some(color) => {

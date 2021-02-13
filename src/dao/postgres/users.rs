@@ -30,7 +30,7 @@ impl UsersDbRep {
     fn transformed_discord_id(&self) -> Option<u64> {
         self.discord_id
             .as_ref()
-            .map(|x| unsafe { std::mem::transmute(x.clone()) })
+            .map(|x| unsafe { std::mem::transmute(*x) })
     }
 
     fn transformed_color(&self) -> Color {
@@ -76,7 +76,7 @@ impl DbRep for UsersDbRep {
         let mut main = main.into_iter().map(|x| x.model()).collect::<Vec<User>>();
         let mut map = main
             .iter_mut()
-            .map(|x| (x.id.clone(), x))
+            .map(|x| (x.id, x))
             .collect::<HashMap<i64, &mut User>>();
         loop {
             let (now, later): (Vec<Self>, Vec<Self>) = v
@@ -172,7 +172,7 @@ impl Users for UsersImpl {
             .map(|x| UsersDbRep::new(&x))
             .collect::<Vec<UsersDbRep>>();
         client.close();
-        Ok(dbreps.model().into_iter().nth(0))
+        Ok(dbreps.model().into_iter().next())
     }
 
     async fn add(&self, user: UserNoId) -> Result<User> {
@@ -225,7 +225,7 @@ impl Users for UsersImpl {
             let color: Box<[u8]> = user.color.clone().into();
             let color = color.to_vec();
             v.push(Box::new(color));
-            let discord_id = user.discord_id.as_ref().map(|x| Sqlu64(x.clone()));
+            let discord_id = user.discord_id.as_ref().map(|x| Sqlu64(*x));
             v.push(Box::new(discord_id));
 
             for m in user.members.iter() {
@@ -278,7 +278,7 @@ impl Users for UsersImpl {
 
     async fn get_by_discord_id(&self, id: u64) -> Result<Option<User>> {
         let client = self.provider.open_client().await;
-        let dbreps = client
+        let mut dbreps = client
             .query(
                 format!(
                     r"
@@ -296,10 +296,9 @@ impl Users for UsersImpl {
             )
             .await?
             .into_iter()
-            .map(|x| UsersDbRep::new(&x))
-            .collect::<Vec<UsersDbRep>>();
+            .map(|x| UsersDbRep::new(&x));
         client.close();
-        Ok(dbreps.into_iter().nth(0).map(|x| x.model()))
+        Ok(dbreps.next().map(|x| x.model()))
     }
 
     async fn get_by_username(&self, username: String) -> Result<Vec<User>> {
@@ -427,7 +426,7 @@ impl Users for UsersImpl {
             )
             .await?
             .into_iter()
-            .nth(0)
+            .next()
             .map(|x| UsersDbRep::new(&x));
         client.close();
         let r = r.map(|x| x.model());
@@ -458,10 +457,7 @@ impl Users for UsersImpl {
                 .as_str(),
                 &[
                     &username,
-                    &discord_ids
-                        .into_iter()
-                        .map(|x| Sqlu64(x))
-                        .collect::<Vec<Sqlu64>>(),
+                    &discord_ids.into_iter().map(Sqlu64).collect::<Vec<Sqlu64>>(),
                 ],
             )
             .await?

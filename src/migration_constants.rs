@@ -4,11 +4,11 @@ use regex::Regex;
 
 const MIGRATION_DIR: Dir = include_dir!("./migrations");
 
-pub const MIGRATION_FILES: Lazy<Vec<(usize, String)>> = Lazy::new(|| {
+pub static MIGRATION_FILES: Lazy<Vec<(usize, String)>> = Lazy::new(|| {
     let regex = Regex::new(r"([0-9]+).sql").unwrap();
     MIGRATION_DIR
         .files()
-        .into_iter()
+        .iter()
         .map(|x| {
             let captures = match regex.captures(x.path().to_str().unwrap()) {
                 None => return None,

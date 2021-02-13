@@ -9,6 +9,7 @@ use async_trait::async_trait;
 use eyre::*;
 use model::relationship::RelationshipNoId;
 use model::user::User;
+use std::ops::Deref;
 
 #[derive(Debug)]
 pub struct AddRelationship;
@@ -16,6 +17,12 @@ pub struct AddRelationship;
 impl AddRelationship {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl Default for AddRelationship {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -49,7 +56,7 @@ where
 
         async fn find_target_user<Ctx2: CommandContext>(
             ctx: &Ctx2,
-            users: &Box<dyn Users + Sync + Send>,
+            users: &(dyn Users + Sync + Send),
             rest: String,
         ) -> Result<Vec<User>> {
             let other_users = ctx.guild_member_ids().await;
@@ -60,17 +67,17 @@ where
 
         async fn find_own_user(
             discord_user_id: u64,
-            users: &Box<dyn Users + Sync + Send>,
+            users: &(dyn Users + Sync + Send),
         ) -> Result<Result<User>> {
             users
                 .get_by_discord_id(discord_user_id)
                 .await
-                .map(|x| x.ok_or(no_user_by_discord_id()))
+                .map(|x| x.ok_or_else(no_user_by_discord_id))
         }
 
         let (target_user, own_user) = futures::future::join(
-            find_target_user(ctx, &users, rest),
-            find_own_user(discord_user_id, &users),
+            find_target_user(ctx, users.deref(), rest),
+            find_own_user(discord_user_id, users.deref()),
         )
         .await;
         let mut target_user = target_user?;

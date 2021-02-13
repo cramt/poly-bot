@@ -12,7 +12,7 @@ mod dao {
     static ATOMIC_DISCORD_ID: AtomicU64 = AtomicU64::new(0);
 
     pub fn discord_id_provider() -> Option<u64> {
-        Some(ATOMIC_DISCORD_ID.fetch_add(1, Ordering::SeqCst).clone())
+        Some(ATOMIC_DISCORD_ID.fetch_add(1, Ordering::SeqCst))
     }
 
     static READY_FIRST: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(true));
@@ -20,7 +20,7 @@ mod dao {
     pub async fn wait_for_test_db_ready() {
         let mut guard = READY_FIRST.lock().unwrap();
         let val = guard.deref_mut();
-        if val.clone() {
+        if *val {
             let client = ConnectionProvider::default().open_client().await;
             let mut tables = client
                 .query(
@@ -145,7 +145,7 @@ mod dao {
                 ))
                 .await
                 .unwrap();
-            let found_user = client.get(user.id.clone()).await.unwrap().unwrap();
+            let found_user = client.get(user.id).await.unwrap().unwrap();
             assert_eq!(user.id, found_user.id);
             assert_eq!(user.name, found_user.name);
             assert_eq!(user.color, found_user.color);
@@ -197,8 +197,7 @@ mod dao {
                 .await
                 .unwrap()
                 .into_iter()
-                .find(|x| x.id.clone() == user.id)
-                .is_some());
+                .any(|x| x.id == user.id));
         }
     }
 }

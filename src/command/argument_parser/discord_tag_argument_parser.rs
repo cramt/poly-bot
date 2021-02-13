@@ -14,12 +14,12 @@ impl ArgumentParser for DiscordTagArgumentParser {
     fn parse(&self, input: &mut String) -> Result<Self::Output, Report> {
         DISCORD_TAG_REGEX
             .captures(StringArgumentParser::new().parse(input)?.as_str())
-            .ok_or(eyre!("couldnt parse discord tag"))?
+            .ok_or_else(|| eyre!("couldnt parse discord tag"))?
             .get(1)
-            .ok_or(eyre!("couldnt parse discord tag"))?
+            .ok_or_else(|| eyre!("couldnt parse discord tag"))?
             .as_str()
             .parse()
-            .map_err(|x| Report::new(x))
+            .map_err(Report::new)
     }
 
     fn new() -> Self {

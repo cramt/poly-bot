@@ -10,7 +10,7 @@ impl ArgumentParser for StringArgumentParser {
     fn parse(&self, input: &mut String) -> Result<Self::Output> {
         let mut out = String::new();
         loop {
-            if input.len() == 0 {
+            if input.is_empty() {
                 break;
             }
             match input.remove(0) {

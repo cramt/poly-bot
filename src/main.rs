@@ -56,13 +56,13 @@ impl CommandContext for SerenityCommandContext {
                 .members(&self.ctx.http, None, None)
                 .await
                 .map(|x| x.into_iter().map(|y| y.user.id.0).collect())
-                .unwrap_or(Vec::new()),
+                .unwrap_or_default(),
         }
     }
 }
 
 static ALL_COMMANDS: Lazy<HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>> =
-    Lazy::new(|| all_commands());
+    Lazy::new(all_commands);
 
 struct Handler<'a> {
     commands: &'a HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>,
@@ -88,7 +88,7 @@ where
 }
 
 async fn run(
-    command: &Box<dyn Command<SerenityCommandContext>>,
+    command: &dyn Command<SerenityCommandContext>,
     ctx: Context,
     msg: Message,
     content: String,
@@ -119,7 +119,7 @@ impl EventHandler for Handler<'_> {
         let mut content = msg.content[self.prefix.len()..].to_string();
         let name = StringArgumentParser::new().parse(&mut content).unwrap();
         if let Some(command) = self.commands.get(name.as_str()) {
-            run(command, ctx, msg, content).await;
+            run(command.deref(), ctx, msg, content).await;
         } else {
             msg.channel_id
                 .say(&ctx.http, format!("command {} doesnt exist", name))
@@ -145,7 +145,7 @@ async fn ensure_discord_client() -> Result<()> {
         .expect("failed to spawn client")
         .start()
         .await
-        .map_err(|x| Report::new(x))
+        .map_err(Report::new)
 }
 
 #[tokio::main]

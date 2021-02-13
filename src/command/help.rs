@@ -39,3 +39,9 @@ impl Help {
         Self
     }
 }
+
+impl Default for Help {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -30,13 +30,13 @@ pub async fn apply_migrations(client: &Client) -> Result<()> {
     let mut new_schema_version = -1;
     for (version, sql) in MIGRATION_FILES
         .iter()
-        .filter(|(i, _)| schema_version.clone() < (i.clone() as i32))
+        .filter(|(i, _)| schema_version < (*i as i32))
     {
         client
             .execute(sql.as_str(), &[])
             .await
-            .map_err(|x| Report::new(x))?;
-        new_schema_version = version.clone() as i32
+            .map_err(Report::new)?;
+        new_schema_version = *version as i32
     }
     if new_schema_version.is_positive() {
         client.execute("DELETE FROM info", &[]).await.unwrap();
@@ -46,7 +46,7 @@ pub async fn apply_migrations(client: &Client) -> Result<()> {
                 &[&new_schema_version],
             )
             .await
-            .map_err(|x| Report::new(x))?;
+            .map_err(Report::new)?;
     };
     Ok(())
 }
@@ -82,7 +82,7 @@ impl ConnectionProvider {
 fn docker_config_string() -> &'static str {
     let container_name = "poly-bot-postgres-test-container";
     if shell(format!(r#"docker ps -aqf "name={}""#, container_name), true)
-        .unwrap_or("".to_string())
+        .unwrap_or_else(|| "".to_string())
         .is_empty()
     {
         println!("postgres docker container isnt running, starting it");
