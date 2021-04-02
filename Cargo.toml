@@ -7,29 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-include_dir = "0.6"
-tokio = { version = "1.2", features = ["full"] }
-once_cell = "1.5.2"
-regex = "1.4.3"
-serde = { version = "1.0.123", features = ["derive"] }
-serde_json = "1.0.62"
-tokio-postgres = { version = "0.7.0", features = ["runtime", "with-bit-vec-0_6"] }
-async-trait = "0.1.42"
-tokio-test = "0.4.0"
-eyre = "0.6.5"
-bit-vec = "0.6.3"
-dot = "0.1.4"
-color-eyre = "0.5.10"
-serenity = { version = "0.10.2", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
-futures = "0.3.12"
-Inflector = "0.11.4"
-itertools = "0.10.0"
+macros = {path = "./macros"}
+utilities = {path = "./utilities"}
+config = {path = "./config"}
+polymap_generator = {path = "./polymap_generator"}
+poly_bot_core = {path = "./poly_bot_core"}
+bot = {path = "./bot"}
+postgres_dao_impl = {path = "./postgres_dao_impl"}
 
-macros = { path = "./macros" }
-utilities = { path = "./utilities" }
-config = { path = "./config" }
-model = { path = "./model" }
-polymap_generator = { path = "./polymap_generator" }
 
 [workspace]
-members = ["macros", "utilities", "config", "model", "polymap_generator"]
+members = ["macros", "utilities", "config", "polymap_generator", "poly_bot_core", "bot", "postgres_dao_impl"]

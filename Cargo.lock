@@ -167,6 +167,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "color-eyre",
+ "config",
+ "eyre",
+ "futures",
+ "once_cell",
+ "poly_bot_core",
+ "postgres_dao_impl",
+ "regex",
+ "serde",
+ "serde_json",
+ "serenity",
+ "tokio",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -366,18 +385,6 @@ checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
 dependencies = [
  "generic-array",
 ]
-
-[[package]]
-name = "dot"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a74b6c4d4a1cff5f454164363c16b72fa12463ca6b31f4b5f2035a65fa3d5906"
-
-[[package]]
-name = "either"
-version = "1.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "encoding_rs"
@@ -847,15 +854,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47be2f14c678be2fdcab04ab1171db51b2762ce6f0a8ee87c8dd4a04ed216135"
 
 [[package]]
-name = "itertools"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37d572918e350e82412fe766d24b15e6682fb2ed2bbe018280caa810397cb319"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1005,16 +1003,6 @@ checksum = "5a33c1b55807fbed163481b5ba66db4b2fa6cde694a5027be10fb724206c5897"
 dependencies = [
  "socket2",
  "winapi",
-]
-
-[[package]]
-name = "model"
-version = "0.1.0"
-dependencies = [
- "macros",
- "once_cell",
- "phf",
- "regex",
 ]
 
 [[package]]
@@ -1226,27 +1214,29 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 name = "poly-bot"
 version = "0.1.0"
 dependencies = [
- "Inflector",
- "async-trait",
- "bit-vec",
- "color-eyre",
+ "bot",
  "config",
- "dot",
+ "macros",
+ "poly_bot_core",
+ "polymap_generator",
+ "postgres_dao_impl",
+ "utilities",
+]
+
+[[package]]
+name = "poly_bot_core"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "color-eyre",
  "eyre",
  "futures",
- "include_dir",
- "itertools",
  "macros",
- "model",
  "once_cell",
- "polymap_generator",
+ "phf",
  "regex",
  "serde",
  "serde_json",
- "serenity",
- "tokio",
- "tokio-postgres",
- "tokio-test",
  "utilities",
 ]
 
@@ -1257,9 +1247,9 @@ dependencies = [
  "config",
  "headless_chrome",
  "macros",
- "model",
  "once_cell",
  "percent-encoding 2.1.0",
+ "poly_bot_core",
  "utilities",
 ]
 
@@ -1291,6 +1281,23 @@ dependencies = [
  "bytes 1.0.1",
  "fallible-iterator",
  "postgres-protocol",
+]
+
+[[package]]
+name = "postgres_dao_impl"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "color-eyre",
+ "config",
+ "eyre",
+ "include_dir",
+ "once_cell",
+ "poly_bot_core",
+ "regex",
+ "tokio",
+ "tokio-postgres",
+ "utilities",
 ]
 
 [[package]]
@@ -1996,19 +2003,6 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
-]
-
-[[package]]
-name = "tokio-test"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c7d205f6f59b03f9e824ac86eaba635a98395f287756ecc8a06464779c399bf"
-dependencies = [
- "async-stream",
- "bytes 1.0.1",
- "futures-core",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]

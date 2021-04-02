@@ -1,0 +1,22 @@
+[package]
+name = "bot"
+version = "0.1.0"
+authors = ["Alexandra Østermark <alex.cramt@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serenity = { version = "0.10.2", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+eyre = "0.6.5"
+color-eyre = "0.5.10"
+tokio = { version = "1.2", features = ["full"] }
+once_cell = "1.5.2"
+regex = "1.4.3"
+serde = { version = "1.0.123", features = ["derive"] }
+serde_json = "1.0.62"
+async-trait = "0.1.42"
+poly_bot_core = { path = "../poly_bot_core" }
+postgres_dao_impl = { path = "../postgres_dao_impl" }
+config = { path = "../config" }
+futures = "0.3.12"
