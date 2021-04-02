@@ -1,7 +1,7 @@
-use eyre::*;
-use async_trait::async_trait;
-use crate::model::relationship::{RelationshipNoId, Relationship};
+use crate::model::relationship::{Relationship, RelationshipNoId};
 use crate::model::user::User;
+use async_trait::async_trait;
+use eyre::*;
 
 #[async_trait]
 pub trait Relationships {

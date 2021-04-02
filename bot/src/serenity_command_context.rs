@@ -1,9 +1,9 @@
-use serenity::client::Context;
-use serenity::model::channel::Message;
+use crate::DAO;
 use async_trait::async_trait;
 use poly_bot_core::command::CommandContext;
 use poly_bot_core::dao::Dao;
-use crate::DAO;
+use serenity::client::Context;
+use serenity::model::channel::Message;
 use std::ops::Deref;
 
 pub struct SerenityCommandContext {

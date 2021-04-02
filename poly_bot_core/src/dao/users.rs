@@ -1,6 +1,6 @@
+use crate::model::user::{User, UserNoId};
 use async_trait::async_trait;
 use eyre::*;
-use crate::model::user::{UserNoId, User};
 
 #[async_trait]
 pub trait Users {

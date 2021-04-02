@@ -1,7 +1,7 @@
-use std::ops::Deref;
 use crate::model::color::Color;
-use crate::RelationalId;
 use crate::model::id_tree::IdTree;
+use crate::RelationalId;
+use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub struct User {

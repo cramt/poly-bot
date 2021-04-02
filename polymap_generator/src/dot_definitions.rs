@@ -1,10 +1,10 @@
 use config::CONFIG;
+use poly_bot_core::model::relationship::Relationship;
+use poly_bot_core::model::user::User;
 use std::io::Write;
 use std::ops::Deref;
 use std::process::Stdio;
 use utilities::shell::shell_raw;
-use poly_bot_core::model::user::User;
-use poly_bot_core::model::relationship::Relationship;
 
 #[derive(Debug, Clone)]
 pub struct DotScript(String);

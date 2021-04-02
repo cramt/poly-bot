@@ -4,10 +4,10 @@ use crate::command::argument_parser::rest_argument_parser::RestArgumentParser;
 use crate::command::argument_parser::ArgumentParser;
 use crate::command::command_response::CommandResponse;
 use crate::command::{Command, CommandContext};
+use crate::model::color::Color;
+use crate::model::user::UserNoId;
 use async_trait::async_trait;
 use eyre::*;
-use crate::model::user::UserNoId;
-use crate::model::color::Color;
 
 #[derive(Debug)]
 pub struct AddUser;
@@ -34,7 +34,9 @@ where
         let (color, name) = AddUserArgumentParser::new().parse(&mut text)?;
         let color = color.unwrap_or_default();
         let discord_id = ctx.discord_id();
-        let _ = ctx.dao().users
+        let _ = ctx
+            .dao()
+            .users
             .add(UserNoId::new(name, color, None, vec![], Some(discord_id)))
             .await?;
         Ok(CommandResponse::thumbs_up())

@@ -1,6 +1,6 @@
-use crate::dao::users::Users;
-use crate::dao::singleton::Singleton;
 use crate::dao::relationships::Relationships;
+use crate::dao::singleton::Singleton;
+use crate::dao::users::Users;
 
 pub mod relationships;
 pub mod singleton;

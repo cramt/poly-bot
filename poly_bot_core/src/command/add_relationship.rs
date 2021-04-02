@@ -1,15 +1,15 @@
+use crate::command::argument_parser::from_string_argument_parser::RelationshipTypeArgumentParser;
+use crate::command::argument_parser::rest_argument_parser::RestArgumentParser;
+use crate::command::argument_parser::ArgumentParser;
+use crate::command::command_response::CommandResponse;
+use crate::command::error::no_user_by_discord_id;
+use crate::command::{Command, CommandContext};
+use crate::dao::users::Users;
+use crate::model::relationship::RelationshipNoId;
+use crate::model::user::User;
 use async_trait::async_trait;
 use eyre::*;
 use std::ops::Deref;
-use crate::command::{Command, CommandContext};
-use crate::dao::users::Users;
-use crate::command::error::no_user_by_discord_id;
-use crate::command::command_response::CommandResponse;
-use crate::model::relationship::RelationshipNoId;
-use crate::model::user::User;
-use crate::command::argument_parser::from_string_argument_parser::RelationshipTypeArgumentParser;
-use crate::command::argument_parser::ArgumentParser;
-use crate::command::argument_parser::rest_argument_parser::RestArgumentParser;
 
 #[derive(Debug)]
 pub struct AddRelationship;

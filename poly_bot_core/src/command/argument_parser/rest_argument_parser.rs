@@ -1,5 +1,5 @@
-use eyre::Result;
 use crate::command::argument_parser::ArgumentParser;
+use eyre::Result;
 
 pub struct RestArgumentParser;
 

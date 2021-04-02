@@ -1,7 +1,7 @@
-use poly_bot_core::command::command_response::CommandResponse;
-use serenity::model::channel::{Message, ReactionType};
-use serenity::client::Context;
 use async_trait::async_trait;
+use poly_bot_core::command::command_response::CommandResponse;
+use serenity::client::Context;
+use serenity::model::channel::{Message, ReactionType};
 
 #[async_trait]
 pub trait DiscordResponse {

@@ -3,17 +3,17 @@ use utilities::std_additions::PostgresClientUtils;
 use async_trait::async_trait;
 use std::collections::{HashMap, VecDeque};
 
+use crate::DbRepCollectionUtils;
+use crate::{ConnectionProvider, DbRep, PostgresImpl, Sqlu64};
 use eyre::*;
+use poly_bot_core::dao::users::Users;
+use poly_bot_core::model::color::Color;
+use poly_bot_core::model::id_tree::IdTree;
+use poly_bot_core::model::user::{User, UserNoId};
 use std::ops::Deref;
 use tokio_postgres::types::ToSql;
 use tokio_postgres::Row;
 use utilities::std_additions::NumUtils;
-use poly_bot_core::model::color::Color;
-use crate::{DbRep, ConnectionProvider, PostgresImpl, Sqlu64};
-use poly_bot_core::model::user::{User, UserNoId};
-use poly_bot_core::dao::users::Users;
-use poly_bot_core::model::id_tree::IdTree;
-use crate::DbRepCollectionUtils;
 
 #[derive(Debug)]
 pub struct UsersDbRep {

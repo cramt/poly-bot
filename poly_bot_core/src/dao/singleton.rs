@@ -1,7 +1,7 @@
-use async_trait::async_trait;
-use eyre::*;
 use crate::model::relationship::Relationship;
 use crate::model::user::User;
+use async_trait::async_trait;
+use eyre::*;
 
 #[async_trait]
 pub trait Singleton {

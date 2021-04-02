@@ -1,17 +1,17 @@
+mod discord_response;
 mod handler;
 mod serenity_command_context;
-mod discord_response;
 
+use crate::handler::Handler;
+use config::CONFIG;
+use eyre::*;
 use once_cell::sync::Lazy;
 use poly_bot_core::dao::Dao;
-use postgres_dao_impl::users::UsersImpl;
-use postgres_dao_impl::{PostgresImpl, ConnectionProvider, apply_migrations};
 use postgres_dao_impl::relationships::RelationshipsImpl;
 use postgres_dao_impl::singleton::SingletonImpl;
-use eyre::*;
+use postgres_dao_impl::users::UsersImpl;
+use postgres_dao_impl::{apply_migrations, ConnectionProvider, PostgresImpl};
 use serenity::Client;
-use config::CONFIG;
-use crate::handler::Handler;
 
 pub static DAO: Lazy<Dao> = Lazy::new(|| Dao {
     users: UsersImpl::default(),

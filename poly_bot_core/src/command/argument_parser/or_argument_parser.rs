@@ -1,8 +1,8 @@
+use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
+use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
 use eyre::*;
 use std::marker::PhantomData;
 use utilities::error::aggregate_errors;
-use crate::command::argument_parser::{SingleWordArgumentParser, ArgumentParser};
-use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 
 pub struct OrArgumentParser<A: SingleWordArgumentParser, B: SingleWordArgumentParser> {
     a: PhantomData<A>,

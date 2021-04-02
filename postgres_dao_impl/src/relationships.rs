@@ -1,15 +1,15 @@
 use async_trait::async_trait;
 use eyre::*;
 
+use crate::users::UsersDbRep;
+use crate::{ConnectionProvider, DbRep, PostgresImpl};
+use poly_bot_core::dao::relationships::Relationships;
+use poly_bot_core::model::relationship::{Relationship, RelationshipNoId};
+use poly_bot_core::model::relationship_type::RelationshipType;
+use poly_bot_core::model::user::User;
 use std::collections::HashMap;
 use tokio_postgres::Row;
 use utilities::std_additions::{NumUtils, PostgresClientUtils};
-use crate::users::UsersDbRep;
-use poly_bot_core::model::relationship::{Relationship, RelationshipNoId};
-use crate::{DbRep, ConnectionProvider, PostgresImpl};
-use poly_bot_core::model::relationship_type::RelationshipType;
-use poly_bot_core::model::user::User;
-use poly_bot_core::dao::relationships::Relationships;
 
 #[derive(Debug)]
 pub struct RelationshipsDbRep {

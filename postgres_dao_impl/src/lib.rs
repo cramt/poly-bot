@@ -1,7 +1,7 @@
+mod migration_constants;
 pub mod relationships;
 pub mod singleton;
 pub mod users;
-mod migration_constants;
 
 use crate::migration_constants::MIGRATION_FILES;
 use config::CONFIG;
@@ -108,8 +108,8 @@ impl Default for ConnectionProvider {
 pub trait PostgresImpl {
     fn new(provider: ConnectionProvider) -> Self;
     fn default() -> Box<Self>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         Box::new(Self::new(ConnectionProvider::default()))
     }
@@ -118,8 +118,8 @@ pub trait PostgresImpl {
 pub trait DbRep {
     type Output;
     fn new(row: &Row) -> Self
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         Self::new_with_start(row, &mut 0)
     }
@@ -130,14 +130,14 @@ pub trait DbRep {
         Self::select_order_raw().join(", ")
     }
     fn model_collection<T: Iterator<Item = Self>>(selves: T) -> Vec<Self::Output>
-        where
-            Self: Sized;
+    where
+        Self: Sized;
 }
 
 pub trait DbRepCollectionUtils<T: DbRep>: IntoIterator<Item = T> {
     fn model(self) -> Vec<T::Output>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         T::model_collection(self.into_iter())
     }
@@ -150,16 +150,16 @@ pub struct Sqlu64(u64);
 
 impl ToSql for Sqlu64 {
     fn to_sql(&self, ty: &Type, out: &mut BytesMut) -> Result<IsNull, Box<dyn Error + Sync + Send>>
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         let signed: i64 = unsafe { std::mem::transmute(self.0) };
         signed.to_sql(ty, out)
     }
 
     fn accepts(ty: &Type) -> bool
-        where
-            Self: Sized,
+    where
+        Self: Sized,
     {
         i64::accepts(ty)
     }

@@ -1,6 +1,6 @@
+use crate::{ConnectionProvider, PostgresImpl};
 use async_trait::async_trait;
 use eyre::*;
-use crate::{PostgresImpl, ConnectionProvider};
 use poly_bot_core::dao::singleton::Singleton;
 use poly_bot_core::model::relationship::Relationship;
 use poly_bot_core::model::user::User;

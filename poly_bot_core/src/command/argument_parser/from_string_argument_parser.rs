@@ -1,12 +1,12 @@
+use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
+use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
+use crate::model::color::Color;
+use crate::model::relationship_type::RelationshipType;
 use eyre::Report;
 use eyre::Result;
 use serde::ser::StdError;
 use std::marker::PhantomData;
 use std::str::FromStr;
-use crate::command::argument_parser::{ArgumentParser, SingleWordArgumentParser};
-use crate::model::relationship_type::RelationshipType;
-use crate::model::color::Color;
-use crate::command::argument_parser::string_argument_parser::StringArgumentParser;
 
 pub struct FromStringArgumentParser<T: FromStr> {
     a: PhantomData<T>,

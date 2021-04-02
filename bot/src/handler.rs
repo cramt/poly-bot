@@ -1,16 +1,16 @@
-use poly_bot_core::command::{all_commands, Command};
-use once_cell::sync::Lazy;
-use std::collections::HashMap;
+use crate::discord_response::DiscordResponse;
 use crate::serenity_command_context::SerenityCommandContext;
-use std::ops::Deref;
+use async_trait::async_trait;
 use config::CONFIG;
+use once_cell::sync::Lazy;
+use poly_bot_core::command::argument_parser::string_argument_parser::StringArgumentParser;
+use poly_bot_core::command::argument_parser::ArgumentParser;
+use poly_bot_core::command::{all_commands, Command};
 use serenity::client::{Context, EventHandler};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use async_trait::async_trait;
-use crate::discord_response::DiscordResponse;
-use poly_bot_core::command::argument_parser::string_argument_parser::StringArgumentParser;
-use poly_bot_core::command::argument_parser::ArgumentParser;
+use std::collections::HashMap;
+use std::ops::Deref;
 
 pub static ALL_COMMANDS: Lazy<HashMap<&'static str, Box<dyn Command<SerenityCommandContext>>>> =
     Lazy::new(all_commands);
@@ -30,8 +30,8 @@ impl<'a> Handler<'a> {
 }
 
 impl<'a> Default for Handler<'a>
-    where
-        'a: 'static,
+where
+    'a: 'static,
 {
     fn default() -> Self {
         Self::new(ALL_COMMANDS.deref(), CONFIG.prefix.clone())
