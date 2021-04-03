@@ -1,6 +1,8 @@
 mod migration_constants;
 pub mod relationships;
 pub mod singleton;
+#[cfg(test)]
+mod tests;
 pub mod users;
 
 use crate::migration_constants::MIGRATION_FILES;
