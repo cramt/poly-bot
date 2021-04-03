@@ -7,16 +7,21 @@ use config::CONFIG;
 use eyre::*;
 use once_cell::sync::Lazy;
 use poly_bot_core::dao::Dao;
+use poly_bot_core::Using;
+use polymap_generator_dot_chromium_impl::DotChromiumPolymapGenerator;
 use postgres_dao_impl::relationships::RelationshipsImpl;
 use postgres_dao_impl::singleton::SingletonImpl;
 use postgres_dao_impl::users::UsersImpl;
 use postgres_dao_impl::{apply_migrations, ConnectionProvider, PostgresImpl};
 use serenity::Client;
 
-pub static DAO: Lazy<Dao> = Lazy::new(|| Dao {
-    users: UsersImpl::default(),
-    relationships: RelationshipsImpl::default(),
-    singleton: SingletonImpl::default(),
+pub static USING: Lazy<Using> = Lazy::new(|| Using {
+    dao: Dao {
+        users: UsersImpl::default(),
+        relationships: RelationshipsImpl::default(),
+        singleton: SingletonImpl::default(),
+    },
+    polymap_generator: DotChromiumPolymapGenerator::new(),
 });
 
 async fn ensure_database() -> Result<()> {

@@ -8,7 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/config/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/model/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/utilities/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/polymap_generator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/polymap_generator_dot_chromium_impl/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bot/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/poly_bot_core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/postgres_dao_impl/src" isTestSource="false" />

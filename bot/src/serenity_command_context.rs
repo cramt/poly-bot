@@ -1,7 +1,7 @@
-use crate::DAO;
+use crate::USING;
 use async_trait::async_trait;
 use poly_bot_core::command::CommandContext;
-use poly_bot_core::dao::Dao;
+use poly_bot_core::Using;
 use serenity::client::Context;
 use serenity::model::channel::Message;
 use std::ops::Deref;
@@ -43,7 +43,7 @@ impl CommandContext for SerenityCommandContext {
         }
     }
 
-    fn dao(&self) -> &Dao {
-        DAO.deref()
+    fn using(&self) -> &Using {
+        USING.deref()
     }
 }

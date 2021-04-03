@@ -177,6 +177,7 @@ dependencies = [
  "futures",
  "once_cell",
  "poly_bot_core",
+ "polymap_generator_dot_chromium_impl",
  "postgres_dao_impl",
  "regex",
  "serde",
@@ -1218,7 +1219,7 @@ dependencies = [
  "config",
  "macros",
  "poly_bot_core",
- "polymap_generator",
+ "polymap_generator_dot_chromium_impl",
  "postgres_dao_impl",
  "utilities",
 ]
@@ -1241,9 +1242,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "polymap_generator"
+name = "polymap_generator_dot_chromium_impl"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "config",
  "headless_chrome",
  "macros",

@@ -10,11 +10,11 @@ edition = "2018"
 macros = {path = "./macros"}
 utilities = {path = "./utilities"}
 config = {path = "./config"}
-polymap_generator = {path = "./polymap_generator"}
+polymap_generator_dot_chromium_impl = {path = "polymap_generator_dot_chromium_impl" }
 poly_bot_core = {path = "./poly_bot_core"}
 bot = {path = "./bot"}
 postgres_dao_impl = {path = "./postgres_dao_impl"}
 
 
 [workspace]
-members = ["macros", "utilities", "config", "polymap_generator", "poly_bot_core", "bot", "postgres_dao_impl"]
+members = ["macros", "utilities", "config", "polymap_generator_dot_chromium_impl", "poly_bot_core", "bot", "postgres_dao_impl"]

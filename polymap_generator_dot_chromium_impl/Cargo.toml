@@ -1,5 +1,5 @@
 [package]
-name = "polymap_generator"
+name = "polymap_generator_dot_chromium_impl"
 version = "0.1.0"
 authors = ["Alexandra Østermark <alex.cramt@gmail.com>"]
 edition = "2018"
@@ -14,3 +14,4 @@ macros = { path = "../macros" }
 utilities = { path = "../utilities" }
 config = { path = "../config" }
 poly_bot_core = {path = "../poly_bot_core"}
+async-trait = "0.1.42"

@@ -10,6 +10,8 @@ use crate::command::add_relationship::AddRelationship;
 use crate::command::help::Help;
 use crate::dao::Dao;
 use std::collections::HashMap;
+use crate::Using;
+use crate::polymap_generator::BoxPolymapGenerator;
 
 pub mod add_member;
 pub mod add_relationship;
@@ -25,7 +27,13 @@ pub trait CommandContext: Send + Sync {
     fn text(&self) -> &str;
     fn discord_id(&self) -> u64;
     async fn guild_member_ids(&self) -> Vec<u64>;
-    fn dao(&self) -> &Dao;
+    fn using(&self) -> &Using;
+    fn dao(&self) -> &Dao {
+        &self.using().dao
+    }
+    fn polymap_generator(&self) -> &BoxPolymapGenerator {
+        &self.using().polymap_generator
+    }
 }
 
 #[async_trait]
